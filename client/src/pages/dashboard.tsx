@@ -245,13 +245,13 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
+              <PieChart margin={{ left: 80, right: 20 }}>
                 <Pie
                   data={customerStatusData}
                   cx="50%"
                   cy="50%"
                   innerRadius={40}
-                  outerRadius={80}
+                  outerRadius={70}
                   paddingAngle={2}
                   dataKey="value"
                   label={({ name, percent }) =>
