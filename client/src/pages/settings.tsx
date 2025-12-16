@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { MessageCircle, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { MessageCircle, Building2, AlertCircle, CheckCircle2, Key, User, Lock } from 'lucide-react';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -20,6 +20,10 @@ export default function Settings() {
     phone: '+91 98765 43210',
     email: 'contact@autogarage.com',
     address: 'Shop No. 15, Industrial Area, Pune',
+    adminUsername: 'admin',
+    adminPassword: '',
+    whatsappPhoneNumberId: '',
+    whatsappAccessToken: '',
   });
 
   const { data: templates = [] } = useQuery({
@@ -120,6 +124,42 @@ export default function Settings() {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="text-foreground font-medium flex items-center gap-2">
+              <Lock className="w-5 h-5 text-purple-500" />
+              Admin Credentials
+            </CardTitle>
+            <CardDescription>
+              Update your admin login credentials
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="adminUsername">Admin Username</Label>
+              <Input 
+                id="adminUsername"
+                value={settings.adminUsername}
+                onChange={(e) => setSettings({...settings, adminUsername: e.target.value})}
+                className="bg-background border-border"
+                data-testid="input-admin-username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="adminPassword">New Password</Label>
+              <Input 
+                id="adminPassword"
+                type="password"
+                value={settings.adminPassword}
+                onChange={(e) => setSettings({...settings, adminPassword: e.target.value})}
+                className="bg-background border-border"
+                placeholder="Enter new password to change"
+                data-testid="input-admin-password"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground font-medium flex items-center gap-2">
               <MessageCircle className="w-5 h-5 text-green-500" />
               WhatsApp Business API Setup
             </CardTitle>
@@ -128,34 +168,43 @@ export default function Settings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-amber-800">Setup Required</p>
-                  <p className="text-amber-700 mt-1">
-                    To enable WhatsApp messaging, you need to set the following environment variables in the Secrets tab:
-                  </p>
-                  <ul className="mt-2 space-y-1 text-amber-700">
-                    <li><code className="bg-amber-100 px-1 rounded">WHATSAPP_PHONE_NUMBER_ID</code> - Your WhatsApp Business phone number ID</li>
-                    <li><code className="bg-amber-100 px-1 rounded">WHATSAPP_ACCESS_TOKEN</code> - Your permanent access token from Meta Developer Console</li>
-                  </ul>
-                  <p className="text-amber-700 mt-2">
-                    Get these from the <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="underline font-medium">Meta Developer Console</a> after setting up WhatsApp Business Cloud API.
-                  </p>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="whatsappPhoneNumberId">WhatsApp Phone Number ID</Label>
+              <Input 
+                id="whatsappPhoneNumberId"
+                value={settings.whatsappPhoneNumberId}
+                onChange={(e) => setSettings({...settings, whatsappPhoneNumberId: e.target.value})}
+                className="bg-background border-border"
+                placeholder="Your WhatsApp Business phone number ID"
+                data-testid="input-whatsapp-phone-id"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="whatsappAccessToken">WhatsApp Access Token</Label>
+              <Input 
+                id="whatsappAccessToken"
+                type="password"
+                value={settings.whatsappAccessToken}
+                onChange={(e) => setSettings({...settings, whatsappAccessToken: e.target.value})}
+                className="bg-background border-border"
+                placeholder="Your permanent access token"
+                data-testid="input-whatsapp-token"
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label>How to get your credentials:</Label>
-              <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
-                <li>Go to Meta Developer Console and create an app</li>
-                <li>Add WhatsApp Business product to your app</li>
-                <li>Go to WhatsApp &gt; API Setup to find your Phone Number ID</li>
-                <li>Generate a permanent access token from System Users</li>
-                <li>Add both values to the Secrets tab in this Replit</li>
-              </ol>
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Key className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-blue-800 dark:text-blue-300">How to get your credentials:</p>
+                  <ol className="mt-2 space-y-1 text-blue-700 dark:text-blue-400 list-decimal list-inside">
+                    <li>Go to <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="underline font-medium">Meta Developer Console</a> and create an app</li>
+                    <li>Add WhatsApp Business product to your app</li>
+                    <li>Go to WhatsApp &gt; API Setup to find your Phone Number ID</li>
+                    <li>Generate a permanent access token from System Users</li>
+                  </ol>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

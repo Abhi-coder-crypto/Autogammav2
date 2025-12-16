@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, Car, User, Phone, ChevronRight } from 'lucide-react';
+import { Plus, Search, Car, User, Phone, ChevronRight, FileText } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +54,25 @@ export default function Jobs() {
     queryKey: ['technicians'],
     queryFn: api.technicians.list,
   });
+
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['invoices'],
+    queryFn: () => api.invoices.list(),
+  });
+
+  const generateInvoiceMutation = useMutation({
+    mutationFn: (jobId: string) => api.jobs.generateInvoice(jobId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast({ title: 'Invoice created successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to create invoice', variant: 'destructive' });
+    }
+  });
+
+  const hasInvoice = (jobId: string) => invoices.some((inv: any) => inv.jobId === jobId);
 
   const createJobMutation = useMutation({
     mutationFn: api.jobs.create,
@@ -304,25 +323,46 @@ export default function Jobs() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Total: </span>
-                    <span className="font-semibold">₹{job.totalAmount.toLocaleString('en-IN')}</span>
+                <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-border text-sm">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <span className="text-muted-foreground">Total: </span>
+                      <span className="font-semibold">₹{job.totalAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Paid: </span>
+                      <span className="font-semibold text-green-500">₹{job.paidAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        job.paymentStatus === 'Paid' && 'border-green-500/30 text-green-500',
+                        job.paymentStatus === 'Partially Paid' && 'border-yellow-500/30 text-yellow-500',
+                        job.paymentStatus === 'Pending' && 'border-red-500/30 text-red-500'
+                      )}
+                    >
+                      {job.paymentStatus}
+                    </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Paid: </span>
-                    <span className="font-semibold text-green-500">₹{job.paidAmount.toLocaleString('en-IN')}</span>
-                  </div>
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      job.paymentStatus === 'Paid' && 'border-green-500/30 text-green-500',
-                      job.paymentStatus === 'Partially Paid' && 'border-yellow-500/30 text-yellow-500',
-                      job.paymentStatus === 'Pending' && 'border-red-500/30 text-red-500'
+                    {hasInvoice(job._id) ? (
+                      <Badge className="bg-green-100 text-green-700 border-green-200">
+                        <FileText className="w-3 h-3 mr-1" />
+                        Invoice Created
+                      </Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => generateInvoiceMutation.mutate(job._id)}
+                        disabled={generateInvoiceMutation.isPending || job.totalAmount <= 0}
+                        data-testid={`button-create-invoice-${job._id}`}
+                      >
+                        <FileText className="w-4 h-4 mr-1" />
+                        Create Invoice
+                      </Button>
                     )}
-                  >
-                    {job.paymentStatus}
-                  </Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>

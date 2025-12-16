@@ -4,14 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { IndianRupee, CreditCard, Search, TrendingUp, Clock, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { IndianRupee, CreditCard, Search, CheckCircle, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'wouter';
 
 export default function PaymentTracking() {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
     queryKey: ['invoices'],
@@ -25,21 +23,19 @@ export default function PaymentTracking() {
 
   const isLoading = invoicesLoading || jobsLoading;
 
-  const filteredInvoices = invoices.filter((inv: any) => {
+  const paidInvoices = invoices.filter((inv: any) => inv.paymentStatus === 'Paid');
+
+  const filteredInvoices = paidInvoices.filter((inv: any) => {
     const matchesSearch = 
       inv.customerName?.toLowerCase().includes(search.toLowerCase()) ||
       inv.plateNumber?.toLowerCase().includes(search.toLowerCase()) ||
       inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || inv.paymentStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
-  const paidCount = invoices.filter((inv: any) => inv.paymentStatus === 'Paid').length;
-  const partialCount = invoices.filter((inv: any) => inv.paymentStatus === 'Partially Paid').length;
-  const pendingCount = invoices.filter((inv: any) => inv.paymentStatus === 'Pending').length;
+  const paidCount = paidInvoices.length;
 
-  const totalCollected = invoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0);
-  const totalPending = invoices.reduce((sum: number, inv: any) => sum + ((inv.totalAmount || 0) - (inv.paidAmount || 0)), 0);
+  const totalCollected = paidInvoices.reduce((sum: number, inv: any) => sum + (inv.totalAmount || 0), 0);
 
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
@@ -49,12 +45,8 @@ export default function PaymentTracking() {
     }
   };
 
-  const getPaymentStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Paid': return <CheckCircle className="w-4 h-4" />;
-      case 'Partially Paid': return <Clock className="w-4 h-4" />;
-      default: return <AlertCircle className="w-4 h-4" />;
-    }
+  const getPaymentStatusIcon = () => {
+    return <CheckCircle className="w-4 h-4" />;
   };
 
   return (
@@ -64,63 +56,34 @@ export default function PaymentTracking() {
         <h1 className="font-display text-3xl font-bold tracking-tight text-foreground" data-testid="text-payments-title">
           Payment Tracking
         </h1>
-        <p className="text-muted-foreground mt-1">Monitor and track all payment statuses</p>
+        <p className="text-muted-foreground mt-1">View all completed and paid invoices</p>
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800" data-testid="card-collected">
-          <CardContent className="p-4">
-            <p className="text-sm text-green-600 dark:text-green-400 font-medium">Total Collected</p>
-            <p className="text-2xl font-bold mt-1 text-green-900 dark:text-green-100 flex items-center">
-              <IndianRupee className="w-5 h-5" />
-              {totalCollected.toLocaleString('en-IN')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800" data-testid="card-pending-total">
-          <CardContent className="p-4">
-            <p className="text-sm text-red-600 dark:text-red-400 font-medium">Total Pending</p>
-            <p className="text-2xl font-bold mt-1 text-red-900 dark:text-red-100 flex items-center">
-              <IndianRupee className="w-5 h-5" />
-              {totalPending.toLocaleString('en-IN')}
-            </p>
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">Total Revenue Collected</p>
+                <p className="text-3xl font-bold mt-1 text-green-900 dark:text-green-100 flex items-center">
+                  <IndianRupee className="w-6 h-6" />
+                  {totalCollected.toLocaleString('en-IN')}
+                </p>
+              </div>
+              <IndianRupee className="w-10 h-10 text-green-500" />
+            </div>
           </CardContent>
         </Card>
 
         <Card className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800" data-testid="card-paid-count">
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Paid</p>
-                <p className="text-2xl font-bold mt-1 text-emerald-900 dark:text-emerald-100">{paidCount}</p>
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Paid Invoices</p>
+                <p className="text-3xl font-bold mt-1 text-emerald-900 dark:text-emerald-100">{paidCount}</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-emerald-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800" data-testid="card-partial-count">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">Partial</p>
-                <p className="text-2xl font-bold mt-1 text-yellow-900 dark:text-yellow-100">{partialCount}</p>
-              </div>
-              <Clock className="w-8 h-8 text-yellow-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800" data-testid="card-pending-count">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-red-600 dark:text-red-400 font-medium">Pending</p>
-                <p className="text-2xl font-bold mt-1 text-red-900 dark:text-red-100">{pendingCount}</p>
-              </div>
-              <AlertCircle className="w-8 h-8 text-red-500" />
+              <CheckCircle className="w-10 h-10 text-emerald-500" />
             </div>
           </CardContent>
         </Card>
@@ -138,17 +101,6 @@ export default function PaymentTracking() {
             data-testid="input-search-payments"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]" data-testid="select-status-filter">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="Paid">Paid</SelectItem>
-            <SelectItem value="Partially Paid">Partially Paid</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Payment List */}

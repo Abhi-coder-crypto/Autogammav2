@@ -9,6 +9,8 @@ import Jobs from "@/pages/jobs";
 import Customers from "@/pages/customers";
 import CustomerRegistration from "@/pages/register";
 import CustomerFunnel from "@/pages/funnel";
+import CustomerService from "@/pages/customer-service";
+import ServiceFunnel from "@/pages/service-funnel";
 import Technicians from "@/pages/technicians";
 import Inventory from "@/pages/inventory";
 import Appointments from "@/pages/appointments";
@@ -25,6 +27,8 @@ function Router() {
         <Route path="/register" component={CustomerRegistration} />
         <Route path="/funnel" component={CustomerFunnel} />
         <Route path="/customers" component={Customers} />
+        <Route path="/customer-service" component={CustomerService} />
+        <Route path="/service-funnel" component={ServiceFunnel} />
         <Route path="/jobs" component={Jobs} />
         <Route path="/technicians" component={Technicians} />
         <Route path="/billing" component={Billing} />
