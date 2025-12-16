@@ -19,6 +19,7 @@ import {
   Mail,
   MapPin,
   X,
+  CheckCircle,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +50,19 @@ export default function Billing() {
     },
     onError: () => {
       toast({ title: "Failed to generate invoice", variant: "destructive" });
+    },
+  });
+
+  const markPaidMutation = useMutation({
+    mutationFn: (invoiceId: string) => api.invoices.markPaid(invoiceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      setViewDialogOpen(false);
+      toast({ title: "Invoice marked as paid" });
+    },
+    onError: () => {
+      toast({ title: "Failed to mark invoice as paid", variant: "destructive" });
     },
   });
 
@@ -364,6 +378,18 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                       >
                         <Download className="w-4 h-4" />
                       </Button>
+                      {invoice.paymentStatus !== "Paid" && (
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => markPaidMutation.mutate(invoice._id)}
+                          disabled={markPaidMutation.isPending}
+                          data-testid={`button-mark-paid-${invoice._id}`}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Mark Paid
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -496,7 +522,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                   </div>
                   {selectedInvoice.taxRate > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax ({selectedInvoice.taxRate}%):</span>
+                      <span className="text-muted-foreground">GST ({selectedInvoice.taxRate}%):</span>
                       <span className="flex items-center">
                         <IndianRupee className="w-3 h-3" />
                         {selectedInvoice.tax.toLocaleString("en-IN")}
@@ -537,9 +563,22 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                 </div>
               </div>
 
-              <Badge className={`${getPaymentStatusColor(selectedInvoice.paymentStatus)} w-fit`}>
-                {selectedInvoice.paymentStatus}
-              </Badge>
+              <div className="flex items-center gap-4">
+                <Badge className={`${getPaymentStatusColor(selectedInvoice.paymentStatus)} w-fit`}>
+                  {selectedInvoice.paymentStatus}
+                </Badge>
+                {selectedInvoice.paymentStatus !== "Paid" && (
+                  <Button
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => markPaidMutation.mutate(selectedInvoice._id)}
+                    disabled={markPaidMutation.isPending}
+                    data-testid="button-mark-paid-dialog"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Mark as Paid
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>

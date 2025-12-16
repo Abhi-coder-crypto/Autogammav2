@@ -36,14 +36,18 @@ export const api = {
     update: (id: string, data: any) => request<any>(`/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     updateStage: (id: string, stage: string) => request<any>(`/jobs/${id}/stage`, { method: 'PATCH', body: JSON.stringify({ stage }) }),
     addPayment: (id: string, payment: any) => request<any>(`/jobs/${id}/payment`, { method: 'POST', body: JSON.stringify(payment) }),
+    addMaterials: (id: string, materials: { inventoryId: string; quantity: number }[]) => 
+      request<any>(`/jobs/${id}/materials`, { method: 'POST', body: JSON.stringify({ materials }) }),
     getInvoice: (id: string) => request<any>(`/jobs/${id}/invoice`),
     generateInvoice: (id: string, taxRate?: number, discount?: number) => 
-      request<any>(`/jobs/${id}/invoice`, { method: 'POST', body: JSON.stringify({ taxRate, discount }) }),
+      request<any>(`/jobs/${id}/invoice`, { method: 'POST', body: JSON.stringify({ taxRate: taxRate ?? 18, discount: discount ?? 0 }) }),
   },
   
   invoices: {
     list: () => request<any[]>('/invoices'),
     get: (id: string) => request<any>(`/invoices/${id}`),
+    markPaid: (id: string, paidAmount?: number) => 
+      request<any>(`/invoices/${id}/pay`, { method: 'PATCH', body: JSON.stringify({ paidAmount }) }),
   },
   
   technicians: {

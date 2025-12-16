@@ -321,7 +321,146 @@ export class MongoStorage implements IStorage {
     return invoice.save();
   }
 
-  async generateInvoiceForJob(jobId: string, taxRate: number = 0, discount: number = 0): Promise<IInvoice | null> {
+  async updateInvoice(id: string, data: Partial<IInvoice>): Promise<IInvoice | null> {
+    if (!mongoose.Types.ObjectId.isValid(id)) return null;
+    return Invoice.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  async markInvoicePaid(id: string, paymentAmount?: number): Promise<IInvoice | null> {
+    if (!mongoose.Types.ObjectId.isValid(id)) return null;
+    const invoice = await Invoice.findById(id);
+    if (!invoice) return null;
+
+    const remainingBalance = invoice.totalAmount - invoice.paidAmount;
+    if (remainingBalance <= 0) return invoice;
+    
+    const requestedAmount = paymentAmount ?? remainingBalance;
+    if (requestedAmount <= 0) return null;
+    
+    const actualApplied = Math.min(requestedAmount, remainingBalance);
+    const newPaidAmount = invoice.paidAmount + actualApplied;
+    
+    const paymentStatus = newPaidAmount >= invoice.totalAmount ? 'Paid' : (newPaidAmount > 0 ? 'Partially Paid' : 'Pending');
+
+    const updatedInvoice = await Invoice.findByIdAndUpdate(id, {
+      paidAmount: newPaidAmount,
+      paymentStatus
+    }, { new: true });
+
+    if (updatedInvoice) {
+      const job = await Job.findById(invoice.jobId);
+      if (job) {
+        const newJobPaidAmount = job.paidAmount + actualApplied;
+        await Job.findByIdAndUpdate(invoice.jobId, {
+          paidAmount: newJobPaidAmount,
+          paymentStatus,
+          payments: [...job.payments, { amount: actualApplied, mode: 'Cash', date: new Date(), notes: `Invoice ${invoice.invoiceNumber} payment` }],
+          updatedAt: new Date()
+        });
+      }
+    }
+
+    return updatedInvoice;
+  }
+
+  async addPaymentToJobWithInvoiceSync(jobId: string, payment: { amount: number; mode: string; notes?: string }): Promise<IJob | null> {
+    if (!mongoose.Types.ObjectId.isValid(jobId)) return null;
+    const job = await Job.findById(jobId);
+    if (!job) return null;
+
+    const jobRemainingBalance = Math.max(0, job.totalAmount - job.paidAmount);
+    if (jobRemainingBalance <= 0) return job;
+    
+    const actualApplied = Math.min(payment.amount, jobRemainingBalance);
+    if (actualApplied <= 0) return job;
+    
+    const newPaidAmount = job.paidAmount + actualApplied;
+    let paymentStatus: 'Pending' | 'Partially Paid' | 'Paid' = 'Pending';
+    
+    if (newPaidAmount >= job.totalAmount) {
+      paymentStatus = 'Paid';
+    } else if (newPaidAmount > 0) {
+      paymentStatus = 'Partially Paid';
+    }
+
+    const updatedJob = await Job.findByIdAndUpdate(jobId, {
+      paidAmount: newPaidAmount,
+      paymentStatus,
+      payments: [...job.payments, { amount: actualApplied, mode: payment.mode, notes: payment.notes, date: new Date() }],
+      updatedAt: new Date()
+    }, { new: true });
+
+    const invoice = await Invoice.findOne({ jobId });
+    if (invoice) {
+      const invoiceRemainingBalance = Math.max(0, invoice.totalAmount - invoice.paidAmount);
+      const invoiceActualApplied = Math.min(actualApplied, invoiceRemainingBalance);
+      if (invoiceActualApplied > 0) {
+        const invoiceNewPaidAmount = invoice.paidAmount + invoiceActualApplied;
+        const invoicePaymentStatus = invoiceNewPaidAmount >= invoice.totalAmount ? 'Paid' : (invoiceNewPaidAmount > 0 ? 'Partially Paid' : 'Pending');
+        await Invoice.findByIdAndUpdate(invoice._id, {
+          paidAmount: invoiceNewPaidAmount,
+          paymentStatus: invoicePaymentStatus
+        });
+      }
+    }
+
+    return updatedJob;
+  }
+
+  async addMaterialsToJob(jobId: string, materials: { inventoryId: string; quantity: number }[]): Promise<IJob | null> {
+    if (!mongoose.Types.ObjectId.isValid(jobId)) return null;
+    const job = await Job.findById(jobId);
+    if (!job) return null;
+
+    if (job.stage === 'Completed' || job.stage === 'Cancelled') {
+      throw new Error('Cannot add materials to a completed or cancelled job');
+    }
+
+    const validatedMaterials: { item: IInventoryItem; quantity: number }[] = [];
+    for (const mat of materials) {
+      const item = await this.getInventoryItem(mat.inventoryId);
+      if (!item) {
+        throw new Error(`Inventory item not found: ${mat.inventoryId}`);
+      }
+      if (item.quantity < mat.quantity) {
+        throw new Error(`Insufficient stock for ${item.name}. Available: ${item.quantity}, Requested: ${mat.quantity}`);
+      }
+      validatedMaterials.push({ item, quantity: mat.quantity });
+    }
+
+    const newMaterials: { inventoryId: mongoose.Types.ObjectId; name: string; quantity: number; cost: number }[] = [];
+    for (const { item, quantity } of validatedMaterials) {
+      newMaterials.push({
+        inventoryId: item._id as mongoose.Types.ObjectId,
+        name: item.name,
+        quantity: quantity,
+        cost: item.price * quantity
+      });
+    }
+
+    const allMaterials = [...job.materials, ...newMaterials];
+    const materialsTotal = allMaterials.reduce((sum, m) => sum + m.cost, 0);
+    const servicesTotal = job.serviceItems.reduce((sum, s) => sum + s.cost, 0);
+    const totalAmount = materialsTotal + servicesTotal;
+
+    const updatedJob = await Job.findByIdAndUpdate(jobId, {
+      materials: allMaterials,
+      totalAmount,
+      updatedAt: new Date()
+    }, { new: true });
+
+    if (!updatedJob) {
+      throw new Error('Failed to update job with materials');
+    }
+
+    for (const { item, quantity } of validatedMaterials) {
+      await this.adjustInventory(item._id!.toString(), -quantity);
+    }
+
+    return updatedJob;
+  }
+
+  async generateInvoiceForJob(jobId: string, taxRate: number = 18, discount: number = 0): Promise<IInvoice | null> {
     const job = await this.getJob(jobId);
     if (!job) return null;
 

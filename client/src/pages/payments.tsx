@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { IndianRupee, CreditCard, Search, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { IndianRupee, CreditCard, Search, TrendingUp, Clock, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'wouter';
 
@@ -13,26 +13,33 @@ export default function PaymentTracking() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { data: jobs = [], isLoading } = useQuery({
+  const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
+    queryKey: ['invoices'],
+    queryFn: () => api.invoices.list(),
+  });
+
+  const { data: jobs = [], isLoading: jobsLoading } = useQuery({
     queryKey: ['jobs'],
     queryFn: () => api.jobs.list(),
   });
 
-  // Filter jobs with payment info
-  const paymentJobs = jobs.filter((job: any) => {
+  const isLoading = invoicesLoading || jobsLoading;
+
+  const filteredInvoices = invoices.filter((inv: any) => {
     const matchesSearch = 
-      job.customerName?.toLowerCase().includes(search.toLowerCase()) ||
-      job.plateNumber?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || job.paymentStatus === statusFilter;
+      inv.customerName?.toLowerCase().includes(search.toLowerCase()) ||
+      inv.plateNumber?.toLowerCase().includes(search.toLowerCase()) ||
+      inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || inv.paymentStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const paidCount = jobs.filter((j: any) => j.paymentStatus === 'Paid').length;
-  const partialCount = jobs.filter((j: any) => j.paymentStatus === 'Partially Paid').length;
-  const pendingCount = jobs.filter((j: any) => j.paymentStatus === 'Pending').length;
+  const paidCount = invoices.filter((inv: any) => inv.paymentStatus === 'Paid').length;
+  const partialCount = invoices.filter((inv: any) => inv.paymentStatus === 'Partially Paid').length;
+  const pendingCount = invoices.filter((inv: any) => inv.paymentStatus === 'Pending').length;
 
-  const totalCollected = jobs.reduce((sum: number, j: any) => sum + (j.paidAmount || 0), 0);
-  const totalPending = jobs.reduce((sum: number, j: any) => sum + ((j.totalAmount || 0) - (j.paidAmount || 0)), 0);
+  const totalCollected = invoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0);
+  const totalPending = invoices.reduce((sum: number, inv: any) => sum + ((inv.totalAmount || 0) - (inv.paidAmount || 0)), 0);
 
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
@@ -149,60 +156,64 @@ export default function PaymentTracking() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-blue-500" />
-            Payment Records
+            Payment Records (Invoices)
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <p className="text-muted-foreground text-center py-8">Loading...</p>
-          ) : paymentJobs.length === 0 ? (
+          ) : filteredInvoices.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No payment records found</p>
           ) : (
             <div className="space-y-3">
-              {paymentJobs.map((job: any) => (
+              {filteredInvoices.map((invoice: any) => (
                 <div 
-                  key={job._id}
-                  className="flex items-center justify-between p-4 bg-accent/30 rounded-lg hover:bg-accent/50 transition-colors"
-                  data-testid={`payment-item-${job._id}`}
+                  key={invoice._id}
+                  className="flex items-center justify-between p-4 bg-accent/30 rounded-lg hover:bg-accent/50 transition-colors flex-wrap gap-4"
+                  data-testid={`payment-item-${invoice._id}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg ${getPaymentStatusColor(job.paymentStatus)}`}>
-                      {getPaymentStatusIcon(job.paymentStatus)}
+                    <div className={`p-2 rounded-lg ${getPaymentStatusColor(invoice.paymentStatus)}`}>
+                      {getPaymentStatusIcon(invoice.paymentStatus)}
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{job.customerName}</p>
-                      <p className="text-sm text-muted-foreground">{job.vehicleName} - {job.plateNumber}</p>
+                      <p className="font-medium text-foreground flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        {invoice.invoiceNumber}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{invoice.customerName}</p>
+                      <p className="text-xs text-muted-foreground">{invoice.vehicleName} - {invoice.plateNumber}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-6 flex-wrap">
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Total</p>
+                      <p className="text-sm text-muted-foreground">Total (incl. GST)</p>
                       <p className="font-bold text-foreground flex items-center justify-end">
                         <IndianRupee className="w-4 h-4" />
-                        {(job.totalAmount || 0).toLocaleString('en-IN')}
+                        {(invoice.totalAmount || 0).toLocaleString('en-IN')}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Paid</p>
                       <p className="font-bold text-green-600 flex items-center justify-end">
                         <IndianRupee className="w-4 h-4" />
-                        {(job.paidAmount || 0).toLocaleString('en-IN')}
+                        {(invoice.paidAmount || 0).toLocaleString('en-IN')}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Balance</p>
                       <p className="font-bold text-red-600 flex items-center justify-end">
                         <IndianRupee className="w-4 h-4" />
-                        {((job.totalAmount || 0) - (job.paidAmount || 0)).toLocaleString('en-IN')}
+                        {((invoice.totalAmount || 0) - (invoice.paidAmount || 0)).toLocaleString('en-IN')}
                       </p>
                     </div>
-                    <Badge className={`${getPaymentStatusColor(job.paymentStatus)} min-w-[100px] justify-center`}>
-                      {job.paymentStatus}
+                    <Badge className={`${getPaymentStatusColor(invoice.paymentStatus)} min-w-[100px] justify-center`}>
+                      {invoice.paymentStatus}
                     </Badge>
-                    <Link href={`/jobs/${job._id}`}>
-                      <Button variant="outline" size="sm" data-testid={`button-add-payment-${job._id}`}>
-                        Add Payment
+                    <Link href="/billing">
+                      <Button variant="outline" size="sm" data-testid={`button-view-invoice-${invoice._id}`}>
+                        View Invoice
                       </Button>
                     </Link>
                   </div>

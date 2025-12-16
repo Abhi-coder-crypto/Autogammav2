@@ -134,8 +134,8 @@ export async function registerRoutes(
         await sendStageUpdateMessage(customer.phone, stage, job.vehicleName, job.plateNumber);
       }
       
-      if (stage === 'Completed' && job.totalAmount > 0) {
-        await storage.generateInvoiceForJob(req.params.id);
+      if (stage === 'Completed') {
+        await storage.generateInvoiceForJob(req.params.id, 18, 0);
       }
       
       res.json(job);
@@ -146,25 +146,9 @@ export async function registerRoutes(
 
   app.post("/api/jobs/:id/payment", async (req, res) => {
     try {
-      const job = await storage.getJob(req.params.id);
-      if (!job) return res.status(404).json({ message: "Job not found" });
-
       const payment = req.body;
-      const newPaidAmount = job.paidAmount + payment.amount;
-      let paymentStatus: 'Pending' | 'Partially Paid' | 'Paid' = 'Pending';
-      
-      if (newPaidAmount >= job.totalAmount) {
-        paymentStatus = 'Paid';
-      } else if (newPaidAmount > 0) {
-        paymentStatus = 'Partially Paid';
-      }
-
-      const updatedJob = await storage.updateJob(req.params.id, {
-        paidAmount: newPaidAmount,
-        paymentStatus,
-        payments: [...job.payments, { ...payment, date: new Date() }]
-      });
-
+      const updatedJob = await storage.addPaymentToJobWithInvoiceSync(req.params.id, payment);
+      if (!updatedJob) return res.status(404).json({ message: "Job not found" });
       res.json(updatedJob);
     } catch (error) {
       res.status(500).json({ message: "Failed to add payment" });
@@ -361,12 +345,34 @@ export async function registerRoutes(
 
   app.post("/api/jobs/:id/invoice", async (req, res) => {
     try {
-      const { taxRate, discount } = req.body;
+      const { taxRate = 18, discount = 0 } = req.body;
       const invoice = await storage.generateInvoiceForJob(req.params.id, taxRate, discount);
       if (!invoice) return res.status(404).json({ message: "Job not found" });
       res.status(201).json(invoice);
     } catch (error) {
       res.status(500).json({ message: "Failed to generate invoice" });
+    }
+  });
+
+  app.post("/api/jobs/:id/materials", async (req, res) => {
+    try {
+      const { materials } = req.body;
+      const job = await storage.addMaterialsToJob(req.params.id, materials);
+      if (!job) return res.status(404).json({ message: "Job not found" });
+      res.json(job);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to add materials" });
+    }
+  });
+
+  app.patch("/api/invoices/:id/pay", async (req, res) => {
+    try {
+      const { paidAmount } = req.body;
+      const invoice = await storage.markInvoicePaid(req.params.id, paidAmount);
+      if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+      res.json(invoice);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark invoice as paid" });
     }
   });
 
