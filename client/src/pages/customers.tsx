@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, User, Phone, Car, ChevronRight, MapPin, Wrench } from 'lucide-react';
+import { Plus, Search, User, Phone, Car, ChevronRight, MapPin, Wrench, X } from 'lucide-react';
 import { Link } from 'wouter';
 
 const CUSTOMER_STATUSES = ['Inquired', 'Working', 'Waiting', 'Completed'];
@@ -34,11 +34,26 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Customers() {
   const [search, setSearch] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showServiceForm, setShowServiceForm] = useState(false);
   const [vehicleDialogOpen, setVehicleDialogOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedServiceCustomerId, setSelectedServiceCustomerId] = useState<string>('');
   const [newCustomerStatus, setNewCustomerStatus] = useState('Inquired');
   const [formErrors, setFormErrors] = useState<{ phone?: string; email?: string }>({});
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    service: '',
+    vehicleMake: '',
+    vehicleModel: '',
+    vehicleYear: '',
+    vehicleColor: '',
+    plateNumber: ''
+  });
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -47,15 +62,71 @@ export default function Customers() {
     queryFn: () => api.customers.list(search || undefined),
   });
 
+  const { data: allCustomers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => api.customers.list(),
+  });
+
+  const handleCustomerSelect = (customerId: string) => {
+    setSelectedServiceCustomerId(customerId);
+    
+    if (customerId && customerId !== 'new') {
+      const customer = allCustomers.find((c: any) => c._id === customerId);
+      if (customer) {
+        const vehicle = customer.vehicles?.[0] || {};
+        setFormData({
+          name: customer.name || '',
+          phone: customer.phone || '',
+          email: customer.email || '',
+          address: customer.address || '',
+          service: '',
+          vehicleMake: vehicle.make || '',
+          vehicleModel: vehicle.model || '',
+          vehicleYear: vehicle.year || '',
+          vehicleColor: vehicle.color || '',
+          plateNumber: vehicle.plateNumber || ''
+        });
+        setNewCustomerStatus(customer.status || 'Inquired');
+      }
+    } else {
+      setFormData({
+        name: '',
+        phone: '',
+        email: '',
+        address: '',
+        service: '',
+        vehicleMake: '',
+        vehicleModel: '',
+        vehicleYear: '',
+        vehicleColor: '',
+        plateNumber: ''
+      });
+      setNewCustomerStatus('Inquired');
+    }
+  };
+
   const createCustomerMutation = useMutation({
     mutationFn: api.customers.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      setDialogOpen(false);
-      toast({ title: 'Customer created successfully' });
+      setShowServiceForm(false);
+      setSelectedServiceCustomerId('');
+      setFormData({
+        name: '',
+        phone: '',
+        email: '',
+        address: '',
+        service: '',
+        vehicleMake: '',
+        vehicleModel: '',
+        vehicleYear: '',
+        vehicleColor: '',
+        plateNumber: ''
+      });
+      toast({ title: 'Customer service added successfully' });
     },
     onError: () => {
-      toast({ title: 'Failed to create customer', variant: 'destructive' });
+      toast({ title: 'Failed to add customer service', variant: 'destructive' });
     }
   });
 
@@ -84,19 +155,14 @@ export default function Customers() {
 
   const handleCreateCustomer = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    
-    const phone = formData.get('phone') as string;
-    const email = formData.get('email') as string;
     
     const newErrors: { phone?: string; email?: string } = {};
     
-    if (!validatePhone(phone)) {
+    if (!validatePhone(formData.phone)) {
       newErrors.phone = "Please enter a valid 10-digit mobile number";
     }
     
-    if (!validateEmail(email)) {
+    if (!validateEmail(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
     
@@ -106,23 +172,34 @@ export default function Customers() {
     }
     
     setFormErrors({});
-    
-    createCustomerMutation.mutate({
-      name: formData.get('name') as string,
-      phone: phone,
-      email: email || undefined,
-      address: formData.get('address') as string || undefined,
-      status: newCustomerStatus,
-      service: formData.get('service') as string,
-      vehicles: [{
-        make: formData.get('vehicleMake') as string,
-        model: formData.get('vehicleModel') as string,
-        year: formData.get('vehicleYear') as string,
-        plateNumber: formData.get('plateNumber') as string,
-        color: formData.get('vehicleColor') as string,
-      }]
-    });
-    setNewCustomerStatus('Inquired');
+
+    if (selectedServiceCustomerId && selectedServiceCustomerId !== 'new') {
+      updateCustomerMutation.mutate({
+        id: selectedServiceCustomerId,
+        data: {
+          service: formData.service,
+          status: newCustomerStatus
+        }
+      });
+      setShowServiceForm(false);
+      setSelectedServiceCustomerId('');
+    } else {
+      createCustomerMutation.mutate({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || undefined,
+        address: formData.address || undefined,
+        status: newCustomerStatus,
+        service: formData.service,
+        vehicles: [{
+          make: formData.vehicleMake,
+          model: formData.vehicleModel,
+          year: formData.vehicleYear,
+          plateNumber: formData.plateNumber,
+          color: formData.vehicleColor,
+        }]
+      });
+    }
   };
 
   const handleAddVehicle = (e: React.FormEvent<HTMLFormElement>) => {
@@ -130,16 +207,16 @@ export default function Customers() {
     if (!selectedCustomerId) return;
     
     const form = e.currentTarget;
-    const formData = new FormData(form);
+    const fd = new FormData(form);
     
     addVehicleMutation.mutate({
       id: selectedCustomerId,
       vehicle: {
-        make: formData.get('make') as string,
-        model: formData.get('model') as string,
-        year: formData.get('year') as string,
-        plateNumber: formData.get('plateNumber') as string,
-        color: formData.get('color') as string,
+        make: fd.get('make') as string,
+        model: fd.get('model') as string,
+        year: fd.get('year') as string,
+        plateNumber: fd.get('plateNumber') as string,
+        color: fd.get('color') as string,
       }
     });
   };
@@ -159,52 +236,105 @@ export default function Customers() {
           <p className="text-muted-foreground mt-1">Manage customer records, vehicles, and services</p>
         </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" data-testid="button-new-customer">
-              <Plus className="w-4 h-4 mr-2" />
-              New Customer
+        <Button 
+          className="bg-primary hover:bg-primary/90" 
+          data-testid="button-add-service"
+          onClick={() => setShowServiceForm(!showServiceForm)}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Customer Service
+        </Button>
+      </div>
+
+      {showServiceForm && (
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
+            <CardTitle>Add Customer Service</CardTitle>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => {
+                setShowServiceForm(false);
+                setSelectedServiceCustomerId('');
+              }}
+            >
+              <X className="w-4 h-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Customer</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateCustomer} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreateCustomer} className="space-y-6">
+              <div className="space-y-2">
+                <Label>Select Existing Customer (Optional)</Label>
+                <Select value={selectedServiceCustomerId} onValueChange={handleCustomerSelect}>
+                  <SelectTrigger data-testid="select-existing-customer">
+                    <SelectValue placeholder="Select a customer or add new below" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">-- Add New Customer --</SelectItem>
+                    {allCustomers.map((customer: any) => (
+                      <SelectItem key={customer._id} value={customer._id}>
+                        {customer.name} - {customer.phone}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label>Name *</Label>
-                  <Input name="name" required placeholder="Customer name" data-testid="input-customer-name" />
+                  <Input 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    required={!selectedServiceCustomerId || selectedServiceCustomerId === 'new'}
+                    disabled={!!selectedServiceCustomerId && selectedServiceCustomerId !== 'new'}
+                    placeholder="Customer name" 
+                    data-testid="input-customer-name" 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Phone *</Label>
                   <Input 
-                    name="phone" 
-                    required 
+                    value={formData.phone}
+                    onChange={(e) => {
+                      setFormData({...formData, phone: e.target.value});
+                      if (formErrors.phone) setFormErrors({ ...formErrors, phone: undefined });
+                    }}
+                    required={!selectedServiceCustomerId || selectedServiceCustomerId === 'new'}
+                    disabled={!!selectedServiceCustomerId && selectedServiceCustomerId !== 'new'}
                     placeholder="10-digit mobile number" 
                     data-testid="input-customer-phone"
                     className={formErrors.phone ? "border-red-500" : ""}
-                    onChange={() => formErrors.phone && setFormErrors({ ...formErrors, phone: undefined })}
                   />
                   {formErrors.phone && <p className="text-sm text-red-500">{formErrors.phone}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
                   <Input 
-                    name="email" 
-                    type="email" 
+                    value={formData.email}
+                    onChange={(e) => {
+                      setFormData({...formData, email: e.target.value});
+                      if (formErrors.email) setFormErrors({ ...formErrors, email: undefined });
+                    }}
+                    type="email"
+                    disabled={!!selectedServiceCustomerId && selectedServiceCustomerId !== 'new'}
                     placeholder="email@example.com" 
                     data-testid="input-customer-email"
                     className={formErrors.email ? "border-red-500" : ""}
-                    onChange={() => formErrors.email && setFormErrors({ ...formErrors, email: undefined })}
                   />
                   {formErrors.email && <p className="text-sm text-red-500">{formErrors.email}</p>}
                 </div>
-                <div className="col-span-2 space-y-2">
+                <div className="space-y-2">
                   <Label>Address</Label>
-                  <Input name="address" placeholder="Full address" data-testid="input-customer-address" />
+                  <Input 
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                    disabled={!!selectedServiceCustomerId && selectedServiceCustomerId !== 'new'}
+                    placeholder="Full address" 
+                    data-testid="input-customer-address" 
+                  />
                 </div>
-                <div className="col-span-2 space-y-2">
+                <div className="space-y-2">
                   <Label>Status</Label>
                   <Select value={newCustomerStatus} onValueChange={setNewCustomerStatus}>
                     <SelectTrigger>
@@ -219,51 +349,105 @@ export default function Customers() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Service Required *</Label>
-                <Input name="service" required placeholder="e.g., PPF, Ceramic Coating, Denting" data-testid="input-customer-service" />
-              </div>
-
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">First Vehicle</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Make *</Label>
-                    <Input name="vehicleMake" required placeholder="Toyota" data-testid="input-vehicle-make" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Model *</Label>
-                    <Input name="vehicleModel" required placeholder="Fortuner" data-testid="input-vehicle-model" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Year</Label>
-                    <Input name="vehicleYear" placeholder="2023" data-testid="input-vehicle-year" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Color *</Label>
-                    <Input name="vehicleColor" required placeholder="White" data-testid="input-vehicle-color" />
-                  </div>
-                  <div className="col-span-2 space-y-2">
-                    <Label>Plate Number *</Label>
-                    <Input name="plateNumber" required placeholder="MH02 AB 1234" data-testid="input-plate-number" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Service Required *</Label>
+                  <Input 
+                    value={formData.service}
+                    onChange={(e) => setFormData({...formData, service: e.target.value})}
+                    required 
+                    placeholder="e.g., PPF, Ceramic Coating, Denting" 
+                    data-testid="input-customer-service" 
+                  />
                 </div>
               </div>
 
+              {(!selectedServiceCustomerId || selectedServiceCustomerId === 'new') && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Vehicle Details</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Make *</Label>
+                      <Input 
+                        value={formData.vehicleMake}
+                        onChange={(e) => setFormData({...formData, vehicleMake: e.target.value})}
+                        required 
+                        placeholder="Toyota" 
+                        data-testid="input-vehicle-make" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Model *</Label>
+                      <Input 
+                        value={formData.vehicleModel}
+                        onChange={(e) => setFormData({...formData, vehicleModel: e.target.value})}
+                        required 
+                        placeholder="Fortuner" 
+                        data-testid="input-vehicle-model" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Year</Label>
+                      <Input 
+                        value={formData.vehicleYear}
+                        onChange={(e) => setFormData({...formData, vehicleYear: e.target.value})}
+                        placeholder="2023" 
+                        data-testid="input-vehicle-year" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Color *</Label>
+                      <Input 
+                        value={formData.vehicleColor}
+                        onChange={(e) => setFormData({...formData, vehicleColor: e.target.value})}
+                        required 
+                        placeholder="White" 
+                        data-testid="input-vehicle-color" 
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label>Plate Number *</Label>
+                      <Input 
+                        value={formData.plateNumber}
+                        onChange={(e) => setFormData({...formData, plateNumber: e.target.value})}
+                        required 
+                        placeholder="MH02 AB 1234" 
+                        data-testid="input-plate-number" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedServiceCustomerId && selectedServiceCustomerId !== 'new' && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Selected Vehicle</h4>
+                  <div className="flex items-center gap-2 p-3 bg-accent/50 rounded-lg">
+                    <Car className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{formData.vehicleMake} {formData.vehicleModel} ({formData.vehicleColor})</p>
+                      <p className="text-sm text-muted-foreground">{formData.plateNumber}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <Button 
                 type="submit" 
-                className="w-full bg-primary"
-                disabled={createCustomerMutation.isPending}
+                className="w-full md:w-auto bg-primary"
+                disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}
                 data-testid="button-submit-customer"
               >
-                {createCustomerMutation.isPending ? 'Creating...' : 'Add Customer'}
+                {createCustomerMutation.isPending || updateCustomerMutation.isPending 
+                  ? 'Saving...' 
+                  : (selectedServiceCustomerId && selectedServiceCustomerId !== 'new')
+                    ? 'Update Customer Service' 
+                    : 'Add Customer Service'
+                }
               </Button>
             </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -327,9 +511,9 @@ export default function Customers() {
                 </div>
 
                 {customer.service && (
-                  <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                    <Wrench className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-700">{customer.service}</span>
+                  <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <Wrench className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">{customer.service}</span>
                   </div>
                 )}
 
