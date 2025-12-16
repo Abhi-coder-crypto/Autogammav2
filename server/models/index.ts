@@ -139,7 +139,7 @@ const JobSchema = new Schema<IJob>({
   vehicleIndex: { type: Number, required: true },
   customerName: { type: String, required: true },
   vehicleName: { type: String, required: true },
-  plateNumber: { type: String, required: true },
+  plateNumber: { type: String, default: '' },
   stage: { 
     type: String, 
     enum: ['New Lead', 'Inspection Done', 'Work In Progress', 'Ready for Delivery', 'Completed', 'Cancelled'],

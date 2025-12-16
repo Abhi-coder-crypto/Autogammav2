@@ -289,7 +289,8 @@ export async function registerRoutes(
       if (!job) return res.status(404).json({ message: "Appointment not found" });
       res.json(job);
     } catch (error) {
-      res.status(500).json({ message: "Failed to convert appointment" });
+      console.error('Convert appointment error:', error);
+      res.status(500).json({ message: "Failed to convert appointment", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
