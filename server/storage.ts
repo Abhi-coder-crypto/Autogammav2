@@ -1,5 +1,5 @@
-import { Customer, Job, Technician, Inventory, Appointment, WhatsAppTemplate } from './models';
-import type { ICustomer, IJob, ITechnician, IInventoryItem, IAppointment, IWhatsAppTemplate, JobStage } from './models';
+import { Customer, Job, Technician, Inventory, Appointment, WhatsAppTemplate, Invoice } from './models';
+import type { ICustomer, IJob, ITechnician, IInventoryItem, IAppointment, IWhatsAppTemplate, IInvoice, JobStage } from './models';
 import mongoose from 'mongoose';
 
 export interface IStorage {
@@ -39,6 +39,12 @@ export interface IStorage {
   
   getWhatsAppTemplates(): Promise<IWhatsAppTemplate[]>;
   updateWhatsAppTemplate(stage: JobStage, message: string, isActive: boolean): Promise<IWhatsAppTemplate | null>;
+  
+  getInvoices(): Promise<IInvoice[]>;
+  getInvoice(id: string): Promise<IInvoice | null>;
+  getInvoiceByJob(jobId: string): Promise<IInvoice | null>;
+  createInvoice(data: Partial<IInvoice>): Promise<IInvoice>;
+  generateInvoiceForJob(jobId: string, taxRate?: number, discount?: number): Promise<IInvoice | null>;
   
   getDashboardStats(): Promise<{
     totalJobs: number;
@@ -267,7 +273,8 @@ export class MongoStorage implements IStorage {
       activeJobs,
       completedJobs,
       jobsByStage,
-      revenueData
+      paidRevenue,
+      pendingData
     ] = await Promise.all([
       Job.countDocuments(),
       Job.countDocuments({ stage: { $nin: ['Completed', 'Cancelled'] } }),
@@ -276,8 +283,12 @@ export class MongoStorage implements IStorage {
         { $group: { _id: '$stage', count: { $sum: 1 } } }
       ]),
       Job.aggregate([
-        { $match: { stage: 'Completed' } },
-        { $group: { _id: null, total: { $sum: '$totalAmount' }, pending: { $sum: { $subtract: ['$totalAmount', '$paidAmount'] } } } }
+        { $match: { stage: 'Completed', paymentStatus: 'Paid' } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+      ]),
+      Job.aggregate([
+        { $match: { stage: 'Completed', paymentStatus: { $ne: 'Paid' } } },
+        { $group: { _id: null, pending: { $sum: { $subtract: ['$totalAmount', '$paidAmount'] } } } }
       ])
     ]);
 
@@ -285,10 +296,93 @@ export class MongoStorage implements IStorage {
       totalJobs,
       activeJobs,
       completedJobs,
-      pendingPayments: revenueData[0]?.pending || 0,
-      totalRevenue: revenueData[0]?.total || 0,
+      pendingPayments: pendingData[0]?.pending || 0,
+      totalRevenue: paidRevenue[0]?.total || 0,
       jobsByStage: jobsByStage.map(s => ({ stage: s._id, count: s.count }))
     };
+  }
+
+  async getInvoices(): Promise<IInvoice[]> {
+    return Invoice.find().sort({ createdAt: -1 });
+  }
+
+  async getInvoice(id: string): Promise<IInvoice | null> {
+    if (!mongoose.Types.ObjectId.isValid(id)) return null;
+    return Invoice.findById(id);
+  }
+
+  async getInvoiceByJob(jobId: string): Promise<IInvoice | null> {
+    if (!mongoose.Types.ObjectId.isValid(jobId)) return null;
+    return Invoice.findOne({ jobId });
+  }
+
+  async createInvoice(data: Partial<IInvoice>): Promise<IInvoice> {
+    const invoice = new Invoice(data);
+    return invoice.save();
+  }
+
+  async generateInvoiceForJob(jobId: string, taxRate: number = 0, discount: number = 0): Promise<IInvoice | null> {
+    const job = await this.getJob(jobId);
+    if (!job) return null;
+
+    const existingInvoice = await this.getInvoiceByJob(jobId);
+    if (existingInvoice) return existingInvoice;
+
+    const customer = await this.getCustomer(job.customerId.toString());
+
+    const items: { description: string; quantity: number; unitPrice: number; total: number; type: 'service' | 'material' }[] = [];
+
+    for (const service of job.serviceItems) {
+      items.push({
+        description: service.description,
+        quantity: 1,
+        unitPrice: service.cost,
+        total: service.cost,
+        type: 'service'
+      });
+    }
+
+    for (const material of job.materials) {
+      const inventoryItem = await this.getInventoryItem(material.inventoryId.toString());
+      const unitPrice = inventoryItem?.price || material.cost / material.quantity;
+      items.push({
+        description: material.name,
+        quantity: material.quantity,
+        unitPrice: unitPrice,
+        total: unitPrice * material.quantity,
+        type: 'material'
+      });
+    }
+
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const tax = (subtotal * taxRate) / 100;
+    const totalAmount = subtotal + tax - discount;
+
+    const invoiceCount = await Invoice.countDocuments();
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${String(invoiceCount + 1).padStart(5, '0')}`;
+
+    const invoice = await this.createInvoice({
+      invoiceNumber,
+      jobId: job._id as mongoose.Types.ObjectId,
+      customerId: job.customerId,
+      customerName: job.customerName,
+      customerPhone: customer?.phone || '',
+      customerEmail: customer?.email,
+      customerAddress: customer?.address,
+      vehicleName: job.vehicleName,
+      plateNumber: job.plateNumber,
+      items,
+      subtotal,
+      tax,
+      taxRate,
+      discount,
+      totalAmount,
+      paidAmount: job.paidAmount,
+      paymentStatus: job.paymentStatus,
+      notes: job.notes
+    });
+
+    return invoice;
   }
 }
 

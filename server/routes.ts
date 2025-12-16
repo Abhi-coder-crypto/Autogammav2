@@ -134,6 +134,10 @@ export async function registerRoutes(
         await sendStageUpdateMessage(customer.phone, stage, job.vehicleName, job.plateNumber);
       }
       
+      if (stage === 'Completed' && job.totalAmount > 0) {
+        await storage.generateInvoiceForJob(req.params.id);
+      }
+      
       res.json(job);
     } catch (error) {
       res.status(500).json({ message: "Failed to update job stage" });
@@ -323,6 +327,46 @@ export async function registerRoutes(
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  app.get("/api/invoices", async (req, res) => {
+    try {
+      const invoices = await storage.getInvoices();
+      res.json(invoices);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
+  app.get("/api/invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+      res.json(invoice);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch invoice" });
+    }
+  });
+
+  app.get("/api/jobs/:id/invoice", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoiceByJob(req.params.id);
+      if (!invoice) return res.status(404).json({ message: "Invoice not found for this job" });
+      res.json(invoice);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch invoice" });
+    }
+  });
+
+  app.post("/api/jobs/:id/invoice", async (req, res) => {
+    try {
+      const { taxRate, discount } = req.body;
+      const invoice = await storage.generateInvoiceForJob(req.params.id, taxRate, discount);
+      if (!invoice) return res.status(404).json({ message: "Job not found" });
+      res.status(201).json(invoice);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate invoice" });
     }
   });
 

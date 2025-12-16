@@ -70,9 +70,12 @@ export default function Jobs() {
 
   const updateStageMutation = useMutation({
     mutationFn: ({ id, stage }: { id: string; stage: string }) => api.jobs.updateStage(id, stage),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      if (variables.stage === 'Completed') {
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      }
       toast({ title: 'Stage updated' });
     }
   });

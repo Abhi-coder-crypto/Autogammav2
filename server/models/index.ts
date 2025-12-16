@@ -102,6 +102,36 @@ export interface IWhatsAppTemplate extends Document {
   isActive: boolean;
 }
 
+export interface IInvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  type: 'service' | 'material';
+}
+
+export interface IInvoice extends Document {
+  invoiceNumber: string;
+  jobId: mongoose.Types.ObjectId;
+  customerId: mongoose.Types.ObjectId;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  customerAddress?: string;
+  vehicleName: string;
+  plateNumber: string;
+  items: IInvoiceItem[];
+  subtotal: number;
+  tax: number;
+  taxRate: number;
+  discount: number;
+  totalAmount: number;
+  paidAmount: number;
+  paymentStatus: PaymentStatus;
+  notes?: string;
+  createdAt: Date;
+}
+
 const VehicleSchema = new Schema<IVehicle>({
   make: { type: String, default: '' },
   model: { type: String, default: '' },
@@ -210,9 +240,40 @@ const WhatsAppTemplateSchema = new Schema<IWhatsAppTemplate>({
   isActive: { type: Boolean, default: true }
 });
 
+const InvoiceItemSchema = new Schema<IInvoiceItem>({
+  description: { type: String, required: true },
+  quantity: { type: Number, required: true, default: 1 },
+  unitPrice: { type: Number, required: true },
+  total: { type: Number, required: true },
+  type: { type: String, enum: ['service', 'material'], required: true }
+});
+
+const InvoiceSchema = new Schema<IInvoice>({
+  invoiceNumber: { type: String, required: true, unique: true },
+  jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true },
+  customerId: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
+  customerName: { type: String, required: true },
+  customerPhone: { type: String, required: true },
+  customerEmail: { type: String },
+  customerAddress: { type: String },
+  vehicleName: { type: String, required: true },
+  plateNumber: { type: String, required: true },
+  items: [InvoiceItemSchema],
+  subtotal: { type: Number, required: true },
+  tax: { type: Number, default: 0 },
+  taxRate: { type: Number, default: 0 },
+  discount: { type: Number, default: 0 },
+  totalAmount: { type: Number, required: true },
+  paidAmount: { type: Number, default: 0 },
+  paymentStatus: { type: String, enum: ['Pending', 'Partially Paid', 'Paid'], default: 'Pending' },
+  notes: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+
 export const Customer = mongoose.model<ICustomer>('Customer', CustomerSchema);
 export const Job = mongoose.model<IJob>('Job', JobSchema);
 export const Technician = mongoose.model<ITechnician>('Technician', TechnicianSchema);
 export const Inventory = mongoose.model<IInventoryItem>('Inventory', InventorySchema);
 export const Appointment = mongoose.model<IAppointment>('Appointment', AppointmentSchema);
 export const WhatsAppTemplate = mongoose.model<IWhatsAppTemplate>('WhatsAppTemplate', WhatsAppTemplateSchema);
+export const Invoice = mongoose.model<IInvoice>('Invoice', InvoiceSchema);

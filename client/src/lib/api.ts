@@ -36,6 +36,14 @@ export const api = {
     update: (id: string, data: any) => request<any>(`/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     updateStage: (id: string, stage: string) => request<any>(`/jobs/${id}/stage`, { method: 'PATCH', body: JSON.stringify({ stage }) }),
     addPayment: (id: string, payment: any) => request<any>(`/jobs/${id}/payment`, { method: 'POST', body: JSON.stringify(payment) }),
+    getInvoice: (id: string) => request<any>(`/jobs/${id}/invoice`),
+    generateInvoice: (id: string, taxRate?: number, discount?: number) => 
+      request<any>(`/jobs/${id}/invoice`, { method: 'POST', body: JSON.stringify({ taxRate, discount }) }),
+  },
+  
+  invoices: {
+    list: () => request<any[]>('/invoices'),
+    get: (id: string) => request<any>(`/invoices/${id}`),
   },
   
   technicians: {

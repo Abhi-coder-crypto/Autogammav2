@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { api, queryClient } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import {
   IndianRupee,
   FileText,
@@ -11,36 +13,67 @@ import {
   Search,
   Eye,
   Printer,
+  Plus,
+  Car,
+  Phone,
+  Mail,
+  MapPin,
+  X,
 } from "lucide-react";
-import { useState } from "react";
-import { Link } from "wouter";
+import { useState, useRef } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Billing() {
   const [search, setSearch] = useState("");
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
-  const { data: jobs = [], isLoading } = useQuery({
+  const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
+    queryKey: ["invoices"],
+    queryFn: () => api.invoices.list(),
+  });
+
+  const { data: jobs = [], isLoading: jobsLoading } = useQuery({
     queryKey: ["jobs"],
     queryFn: () => api.jobs.list(),
   });
 
-  // Filter completed jobs with amounts
-  const billedJobs = jobs.filter(
-    (job: any) =>
-      job.totalAmount > 0 &&
-      (job.customerName?.toLowerCase().includes(search.toLowerCase()) ||
-        job.plateNumber?.toLowerCase().includes(search.toLowerCase())),
+  const generateInvoiceMutation = useMutation({
+    mutationFn: ({ jobId, taxRate, discount }: { jobId: string; taxRate?: number; discount?: number }) =>
+      api.jobs.generateInvoice(jobId, taxRate, discount),
+    onSuccess: (invoice) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast({ title: `Invoice ${invoice.invoiceNumber} generated successfully` });
+    },
+    onError: () => {
+      toast({ title: "Failed to generate invoice", variant: "destructive" });
+    },
+  });
+
+  const completedJobsWithoutInvoice = jobs.filter((job: any) => {
+    const hasInvoice = invoices.some((inv: any) => inv.jobId === job._id);
+    return job.stage === "Completed" && job.totalAmount > 0 && !hasInvoice;
+  });
+
+  const filteredInvoices = invoices.filter(
+    (invoice: any) =>
+      invoice.customerName?.toLowerCase().includes(search.toLowerCase()) ||
+      invoice.plateNumber?.toLowerCase().includes(search.toLowerCase()) ||
+      invoice.invoiceNumber?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalRevenue = billedJobs.reduce(
-    (sum: number, job: any) => sum + (job.paidAmount || 0),
-    0,
-  );
-  const pendingAmount = billedJobs.reduce(
-    (sum: number, job: any) =>
-      sum + ((job.totalAmount || 0) - (job.paidAmount || 0)),
-    0,
-  );
-  const totalInvoices = billedJobs.length;
+  const totalRevenue = invoices
+    .filter((inv: any) => inv.paymentStatus === "Paid")
+    .reduce((sum: number, inv: any) => sum + (inv.totalAmount || 0), 0);
+  
+  const pendingAmount = invoices
+    .filter((inv: any) => inv.paymentStatus !== "Paid")
+    .reduce((sum: number, inv: any) => sum + ((inv.totalAmount || 0) - (inv.paidAmount || 0)), 0);
+  
+  const totalInvoices = invoices.length;
+  const paidInvoices = invoices.filter((inv: any) => inv.paymentStatus === "Paid").length;
 
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
@@ -53,14 +86,80 @@ export default function Billing() {
     }
   };
 
+  const handlePrint = () => {
+    if (printRef.current) {
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Invoice ${selectedInvoice?.invoiceNumber}</title>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .company-name { font-size: 24px; font-weight: bold; }
+                .invoice-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                .customer-info { margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                th { background-color: #f5f5f5; }
+                .totals { text-align: right; }
+                .total-row { font-weight: bold; font-size: 18px; }
+                @media print { body { print-color-adjust: exact; } }
+              </style>
+            </head>
+            <body>
+              ${printRef.current.innerHTML}
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
+  };
+
+  const handleDownload = () => {
+    if (!selectedInvoice) return;
+    
+    const invoiceText = `
+Invoice: ${selectedInvoice.invoiceNumber}
+Date: ${new Date(selectedInvoice.createdAt).toLocaleDateString('en-IN')}
+
+Customer: ${selectedInvoice.customerName}
+Phone: ${selectedInvoice.customerPhone}
+Vehicle: ${selectedInvoice.vehicleName} - ${selectedInvoice.plateNumber}
+
+Items:
+${selectedInvoice.items.map((item: any) => 
+  `${item.description} - Qty: ${item.quantity} x Rs.${item.unitPrice} = Rs.${item.total}`
+).join('\n')}
+
+Subtotal: Rs.${selectedInvoice.subtotal.toLocaleString('en-IN')}
+Tax (${selectedInvoice.taxRate}%): Rs.${selectedInvoice.tax.toLocaleString('en-IN')}
+Discount: Rs.${selectedInvoice.discount.toLocaleString('en-IN')}
+Total: Rs.${selectedInvoice.totalAmount.toLocaleString('en-IN')}
+Paid: Rs.${selectedInvoice.paidAmount.toLocaleString('en-IN')}
+Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocaleString('en-IN')}
+    `;
+    
+    const blob = new Blob([invoiceText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedInvoice.invoiceNumber}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const isLoading = invoicesLoading || jobsLoading;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <h1
-          className="font-display text-3xl font-bold tracking-tight"
-          data-testid="text-billing-title"
-        >
+        <h1 className="font-display text-3xl font-bold tracking-tight" data-testid="text-billing-title">
           Billing & Invoices
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -68,18 +167,12 @@ export default function Billing() {
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-        <Card
-          className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
-          data-testid="card-total-revenue"
-        >
+        <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800" data-testid="card-total-revenue">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                  Total Revenue
-                </p>
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">Total Revenue</p>
                 <p className="text-3xl font-bold mt-1 text-green-900 dark:text-green-100 flex items-center">
                   <IndianRupee className="w-6 h-6" />
                   {totalRevenue.toLocaleString("en-IN")}
@@ -92,16 +185,11 @@ export default function Billing() {
           </CardContent>
         </Card>
 
-        <Card
-          className="bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800"
-          data-testid="card-pending-amount"
-        >
+        <Card className="bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800" data-testid="card-pending-amount">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
-                  Pending Amount
-                </p>
+                <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Pending Amount</p>
                 <p className="text-3xl font-bold mt-1 text-orange-900 dark:text-orange-100 flex items-center">
                   <IndianRupee className="w-6 h-6" />
                   {pendingAmount.toLocaleString("en-IN")}
@@ -114,16 +202,11 @@ export default function Billing() {
           </CardContent>
         </Card>
 
-        <Card
-          className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
-          data-testid="card-total-invoices"
-        >
+        <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" data-testid="card-total-invoices">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                  Total Invoices
-                </p>
+                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Total Invoices</p>
                 <p className="text-3xl font-bold mt-1 text-blue-900 dark:text-blue-100">
                   {totalInvoices}
                 </p>
@@ -136,11 +219,57 @@ export default function Billing() {
         </Card>
       </div>
 
-      {/* Search */}
+      {completedJobsWithoutInvoice.length > 0 && (
+        <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <Plus className="w-5 h-5" />
+              Generate Invoices for Completed Jobs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {completedJobsWithoutInvoice.map((job: any) => (
+                <div
+                  key={job._id}
+                  className="flex items-center justify-between p-3 bg-background rounded-lg"
+                  data-testid={`pending-invoice-${job._id}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Car className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{job.customerName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {job.vehicleName} - {job.plateNumber}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <p className="font-bold flex items-center">
+                      <IndianRupee className="w-4 h-4" />
+                      {(job.totalAmount || 0).toLocaleString("en-IN")}
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => generateInvoiceMutation.mutate({ jobId: job._id })}
+                      disabled={generateInvoiceMutation.isPending}
+                      data-testid={`button-generate-invoice-${job._id}`}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Generate Invoice
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search by customer name or vehicle number..."
+          placeholder="Search by customer name, vehicle number, or invoice number..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -148,8 +277,7 @@ export default function Billing() {
         />
       </div>
 
-      {/* Invoices List */}
-      <Card className="border-orange-200 dark:border-orange-800">
+      <Card className="border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-500" />
@@ -159,17 +287,17 @@ export default function Billing() {
         <CardContent>
           {isLoading ? (
             <p className="text-muted-foreground text-center py-8">Loading...</p>
-          ) : billedJobs.length === 0 ? (
+          ) : filteredInvoices.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
               No invoices found
             </p>
           ) : (
             <div className="space-y-3">
-              {billedJobs.map((job: any) => (
+              {filteredInvoices.map((invoice: any) => (
                 <div
-                  key={job._id}
-                  className="flex items-center justify-between p-4 bg-accent/30 rounded-lg hover:bg-accent/50 transition-colors"
-                  data-testid={`invoice-item-${job._id}`}
+                  key={invoice._id}
+                  className="flex items-center justify-between p-4 bg-accent/30 rounded-lg hover:bg-accent/50 transition-colors flex-wrap gap-4"
+                  data-testid={`invoice-item-${invoice._id}`}
                 >
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -177,49 +305,62 @@ export default function Billing() {
                     </div>
                     <div>
                       <p className="font-medium text-foreground">
-                        {job.customerName}
+                        {invoice.invoiceNumber}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {job.vehicleName} - {job.plateNumber}
+                        {invoice.customerName} - {invoice.plateNumber}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(invoice.createdAt).toLocaleDateString("en-IN")}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-wrap">
                     <div className="text-right">
                       <p className="font-bold text-foreground flex items-center justify-end">
                         <IndianRupee className="w-4 h-4" />
-                        {(job.totalAmount || 0).toLocaleString("en-IN")}
+                        {(invoice.totalAmount || 0).toLocaleString("en-IN")}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Paid: <IndianRupee className="w-3 h-3 inline" />
-                        {(job.paidAmount || 0).toLocaleString("en-IN")}
+                        {(invoice.paidAmount || 0).toLocaleString("en-IN")}
                       </p>
                     </div>
-                    <Badge className={getPaymentStatusColor(job.paymentStatus)}>
-                      {job.paymentStatus}
+                    <Badge className={getPaymentStatusColor(invoice.paymentStatus)}>
+                      {invoice.paymentStatus}
                     </Badge>
                     <div className="flex gap-2">
-                      <Link href={`/jobs/${job._id}`}>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          data-testid={`button-view-invoice-${job._id}`}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </Link>
                       <Button
                         variant="outline"
                         size="icon"
-                        data-testid={`button-print-invoice-${job._id}`}
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setViewDialogOpen(true);
+                        }}
+                        data-testid={`button-view-invoice-${invoice._id}`}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setTimeout(handlePrint, 100);
+                        }}
+                        data-testid={`button-print-invoice-${invoice._id}`}
                       >
                         <Printer className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="outline"
                         size="icon"
-                        data-testid={`button-download-invoice-${job._id}`}
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setTimeout(handleDownload, 100);
+                        }}
+                        data-testid={`button-download-invoice-${invoice._id}`}
                       >
                         <Download className="w-4 h-4" />
                       </Button>
@@ -231,6 +372,178 @@ export default function Billing() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between gap-4">
+              <span>Invoice {selectedInvoice?.invoiceNumber}</span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="icon" onClick={handlePrint}>
+                  <Printer className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={handleDownload}>
+                  <Download className="w-4 h-4" />
+                </Button>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedInvoice && (
+            <div ref={printRef} className="space-y-6">
+              <div className="header text-center">
+                <h2 className="company-name text-2xl font-bold">Auto Garage CRM</h2>
+                <p className="text-muted-foreground">Tax Invoice</p>
+              </div>
+
+              <div className="flex justify-between gap-4 flex-wrap">
+                <div>
+                  <p className="text-sm text-muted-foreground">Invoice Number</p>
+                  <p className="font-bold">{selectedInvoice.invoiceNumber}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Date</p>
+                  <p className="font-bold">
+                    {new Date(selectedInvoice.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Customer Details</h3>
+                  <p className="font-medium">{selectedInvoice.customerName}</p>
+                  {selectedInvoice.customerPhone && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Phone className="w-3 h-3" /> {selectedInvoice.customerPhone}
+                    </p>
+                  )}
+                  {selectedInvoice.customerEmail && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Mail className="w-3 h-3" /> {selectedInvoice.customerEmail}
+                    </p>
+                  )}
+                  {selectedInvoice.customerAddress && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> {selectedInvoice.customerAddress}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Vehicle Details</h3>
+                  <p className="font-medium flex items-center gap-1">
+                    <Car className="w-4 h-4" /> {selectedInvoice.vehicleName}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Plate: {selectedInvoice.plateNumber}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="font-semibold mb-3">Items</h3>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-3">Description</th>
+                        <th className="text-center p-3">Qty</th>
+                        <th className="text-right p-3">Unit Price</th>
+                        <th className="text-right p-3">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedInvoice.items?.map((item: any, index: number) => (
+                        <tr key={index} className="border-t">
+                          <td className="p-3">
+                            {item.description}
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              {item.type}
+                            </Badge>
+                          </td>
+                          <td className="text-center p-3">{item.quantity}</td>
+                          <td className="text-right p-3">
+                            <IndianRupee className="w-3 h-3 inline" />
+                            {item.unitPrice.toLocaleString("en-IN")}
+                          </td>
+                          <td className="text-right p-3">
+                            <IndianRupee className="w-3 h-3 inline" />
+                            {item.total.toLocaleString("en-IN")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <div className="w-64 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal:</span>
+                    <span className="flex items-center">
+                      <IndianRupee className="w-3 h-3" />
+                      {selectedInvoice.subtotal.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  {selectedInvoice.taxRate > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tax ({selectedInvoice.taxRate}%):</span>
+                      <span className="flex items-center">
+                        <IndianRupee className="w-3 h-3" />
+                        {selectedInvoice.tax.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
+                  {selectedInvoice.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount:</span>
+                      <span className="flex items-center">
+                        -<IndianRupee className="w-3 h-3" />
+                        {selectedInvoice.discount.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total:</span>
+                    <span className="flex items-center">
+                      <IndianRupee className="w-4 h-4" />
+                      {selectedInvoice.totalAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-green-600">
+                    <span>Paid:</span>
+                    <span className="flex items-center">
+                      <IndianRupee className="w-3 h-3" />
+                      {selectedInvoice.paidAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-orange-600">
+                    <span>Balance Due:</span>
+                    <span className="flex items-center">
+                      <IndianRupee className="w-3 h-3" />
+                      {(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <Badge className={`${getPaymentStatusColor(selectedInvoice.paymentStatus)} w-fit`}>
+                {selectedInvoice.paymentStatus}
+              </Badge>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
