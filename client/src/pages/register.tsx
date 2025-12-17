@@ -159,52 +159,6 @@ export default function CustomerRegistration() {
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center gap-4">
-            {/* Step 1 */}
-            <div className="flex flex-col items-center">
-              <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
-                  step >= 1
-                    ? "bg-blue-500 border-blue-500 text-white"
-                    : "border-muted-foreground text-muted-foreground"
-                }`}
-              >
-                {step > 1 ? <Check className="w-5 h-5" /> : "1"}
-              </div>
-              <span
-                className={`text-sm mt-2 ${step >= 1 ? "text-blue-500 font-medium" : "text-muted-foreground"}`}
-              >
-                Customer Info
-              </span>
-            </div>
-
-            {/* Line */}
-            <div
-              className={`w-32 h-1 rounded ${step > 1 ? "bg-blue-500" : "bg-muted"}`}
-            />
-
-            {/* Step 2 */}
-            <div className="flex flex-col items-center">
-              <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
-                  step >= 2
-                    ? "bg-blue-500 border-blue-500 text-white"
-                    : "border-muted-foreground text-muted-foreground"
-                }`}
-              >
-                {step > 2 ? <Check className="w-5 h-5" /> : "2"}
-              </div>
-              <span
-                className={`text-sm mt-2 ${step >= 2 ? "text-blue-500 font-medium" : "text-muted-foreground"}`}
-              >
-                Vehicle Details
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* Step 1: Customer Information */}
         {step === 1 && (
           <Card
