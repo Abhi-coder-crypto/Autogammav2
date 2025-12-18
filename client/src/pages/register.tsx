@@ -41,19 +41,48 @@ const VEHICLE_TYPES = [
   "Other",
 ];
 
+const PPF_PACKAGES = [
+  // Elite
+  "Elite - Small Cars - TPU 5Y (Gloss) - ₹55,000",
+  "Elite - Small Cars - TPU 5Y (Matt) - ₹60,000",
+  "Elite - Small Cars - TPU 7Y (Gloss) - ₹70,000",
+  "Elite - Small Cars - TPU 8Y (Gloss) - ₹80,000",
+  "Elite - Small Cars - TPU 10Y (Gloss) - ₹95,000",
+  "Elite - Hatchback/Small Sedan - TPU 5Y (Gloss) - ₹60,000",
+  "Elite - Hatchback/Small Sedan - TPU 5Y (Matt) - ₹65,000",
+  "Elite - Hatchback/Small Sedan - TPU 7Y (Gloss) - ₹75,000",
+  "Elite - Hatchback/Small Sedan - TPU 8Y (Gloss) - ₹85,000",
+  "Elite - Hatchback/Small Sedan - TPU 10Y (Gloss) - ₹1,05,000",
+  "Elite - Mid-size Sedan/Compact SUV/MUV - TPU 5Y (Gloss) - ₹70,000",
+  "Elite - Mid-size Sedan/Compact SUV/MUV - TPU 5Y (Matt) - ₹75,000",
+  "Elite - Mid-size Sedan/Compact SUV/MUV - TPU 7Y (Gloss) - ₹90,000",
+  "Elite - Mid-size Sedan/Compact SUV/MUV - TPU 8Y (Gloss) - ₹95,000",
+  "Elite - Mid-size Sedan/Compact SUV/MUV - TPU 10Y (Gloss) - ₹1,12,500",
+  "Elite - SUV/MPV - TPU 5Y (Gloss) - ₹80,000",
+  "Elite - SUV/MPV - TPU 5Y (Matt) - ₹85,000",
+  "Elite - SUV/MPV - TPU 7Y (Gloss) - ₹95,000",
+  "Elite - SUV/MPV - TPU 8Y (Gloss) - ₹1,05,000",
+  "Elite - SUV/MPV - TPU 10Y (Gloss) - ₹1,20,000",
+  // Garware P
+  "Garware P - Small Cars - ₹62,000",
+  "Garware P - Hatchback/Small Sedan - ₹65,000",
+  "Garware P - Mid-size Sedan/Compact SUV/MUV - ₹70,000",
+  "Garware P - SUV/MPV - ₹85,000",
+  "Garware P - Small Cars - 10Y - ₹80,000",
+  "Garware P - Hatchback/Small Sedan - 10Y - ₹85,000",
+  "Garware P - Mid-size Sedan/Compact SUV/MUV - 10Y - ₹90,000",
+  "Garware P - SUV/MPV - 10Y - ₹95,000",
+  // Garware N
+  "Garware N - Small Cars - 7Y - ₹1,05,000",
+  "Garware N - Hatchback/Small Sedan - 7Y - ₹1,10,000",
+  "Garware N - Mid-size Sedan/Compact SUV/MUV - 7Y - ₹1,15,000",
+  "Garware N - SUV/MPV - 7Y - ₹1,20,000",
+];
+
 const SERVICE_OPTIONS = {
   ppf: {
     label: "PPF Services",
-    options: [
-      "PPF - Elite TPU 5 Years (Gloss)",
-      "PPF - Elite TPU 5 Years (Matt)",
-      "PPF - Elite TPU 7 Years (Gloss)",
-      "PPF - Elite TPU 8 Years (Gloss)",
-      "PPF - Elite TPU 10 Years (Gloss)",
-      "PPF - Garware Plus",
-      "PPF - Garware Premium",
-      "PPF - Garware Matt",
-    ],
+    options: PPF_PACKAGES,
   },
   services: {
     label: "Other Services",
