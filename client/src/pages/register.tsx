@@ -174,19 +174,16 @@ export default function CustomerRegistration() {
     vehicleData.make && vehicleData.model && vehicleData.plateNumber;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 py-8 px-4">
+    <div className="bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="mb-3">
           <h1
-            className="font-display text-3xl font-bold tracking-tight"
+            className="font-display text-xl font-bold tracking-tight"
             data-testid="text-registration-title"
           >
             Customer Registration
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Register your vehicle with us for exclusive services and offers
-          </p>
         </div>
 
         {/* Step 1: Customer Information */}
@@ -195,14 +192,11 @@ export default function CustomerRegistration() {
             className="border-orange-200 dark:border-orange-800"
             data-testid="card-customer-info"
           >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-500" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <User className="w-4 h-4 text-blue-500" />
                 Customer Information
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Please provide your personal details
-              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
