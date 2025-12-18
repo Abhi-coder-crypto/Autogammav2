@@ -62,6 +62,15 @@ export default function CustomerService() {
             inventoryId: item.inventoryId,
             quantity: item.quantity
           })));
+          
+          // Automatically reduce inventory for each item used
+          for (const item of selectedItems) {
+            try {
+              await api.inventory.adjust(item.inventoryId, -item.quantity);
+            } catch (error: any) {
+              console.error(`Failed to reduce inventory for ${item.name}:`, error);
+            }
+          }
         } catch (error: any) {
           console.error('Failed to add materials:', error);
         }
@@ -73,7 +82,7 @@ export default function CustomerService() {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       resetForm();
-      toast({ title: 'Service created successfully!' });
+      toast({ title: 'Service created successfully! Inventory reduced automatically.' });
     },
     onError: (error: any) => {
       toast({ title: error?.message || 'Failed to create service', variant: 'destructive' });
