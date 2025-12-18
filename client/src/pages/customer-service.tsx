@@ -26,7 +26,7 @@ export default function CustomerService() {
   const [originalServiceCost, setOriginalServiceCost] = useState<string>('');
   const [discountPercentage, setDiscountPercentage] = useState<string>('0');
   const [laborCost, setLaborCost] = useState<string>('');
-  const [selectedItems, setSelectedItems] = useState<{ inventoryId: string; quantity: number; name: string; price: number }[]>([]);
+  const [selectedItems, setSelectedItems] = useState<{ inventoryId: string; quantity: number; name: string; unit: string }[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [itemQuantity, setItemQuantity] = useState<string>('1');
 
@@ -148,7 +148,7 @@ export default function CustomerService() {
         inventoryId: selectedItemId,
         quantity: qty,
         name: item.name,
-        price: item.price
+        unit: item.unit
       }]);
     }
 
@@ -377,7 +377,7 @@ export default function CustomerService() {
                       <SelectContent>
                         {inventory.filter((item: any) => item.quantity > 0).map((item: any) => (
                           <SelectItem key={item._id} value={item._id}>
-                            {item.name} ({item.quantity} {item.unit} available) - ₹{item.price}/{item.unit}
+                            {item.name} ({item.quantity} {item.unit} available)
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -406,7 +406,7 @@ export default function CustomerService() {
                           <div>
                             <p className="font-medium">{item.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {item.quantity} x ₹{item.price} = ₹{(item.quantity * item.price).toLocaleString('en-IN')}
+                              {item.quantity} {item.unit}
                             </p>
                           </div>
                           <Button
