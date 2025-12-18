@@ -95,10 +95,10 @@ export default function CustomerService() {
 
   // Auto-fill service cost when customer is selected
   useEffect(() => {
-    if (selectedCustomer && selectedCustomer.serviceCost) {
+    if (selectedCustomer && selectedCustomer.serviceCost > 0) {
       setServiceCost(selectedCustomer.serviceCost.toString());
     }
-  }, [selectedCustomerId]);
+  }, [selectedCustomerId, selectedCustomer]);
 
   const handleAddItem = () => {
     if (!selectedItemId) {

@@ -266,7 +266,13 @@ export default function CustomerRegistration() {
       : customerData.serviceName;
     
     // Calculate total service cost (PPF + Other Services if both selected)
-    const totalServiceCost = (customerData.ppfPrice || 0) + (customerData.serviceName ? customerData.servicePrice : 0);
+    let totalServiceCost = 0;
+    if (customerData.ppfPrice > 0) {
+      totalServiceCost += customerData.ppfPrice;
+    }
+    if (customerData.serviceName && customerData.servicePrice > 0) {
+      totalServiceCost += customerData.servicePrice;
+    }
     
     createCustomerMutation.mutate({
       name: customerData.name,
@@ -275,7 +281,7 @@ export default function CustomerRegistration() {
       address: `${customerData.address}, ${customerData.city}, ${customerData.district}, ${customerData.state}`,
       status: customerData.status,
       service: selectedService || undefined,
-      serviceCost: totalServiceCost || 0,
+      serviceCost: totalServiceCost,
       vehicles: [
         {
           make: vehicleData.make,
