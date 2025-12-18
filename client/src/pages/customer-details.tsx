@@ -53,7 +53,7 @@ export default function CustomerDetails() {
       </div>
 
       {/* Customer Info */}
-      <Card className="border-2 border-primary" data-testid={`customer-details-${customerId}`}>
+      <Card className="border border-amber-200 dark:border-amber-800" data-testid={`customer-details-${customerId}`}>
         <CardContent className="p-6 space-y-6">
           {/* Header */}
           <div>

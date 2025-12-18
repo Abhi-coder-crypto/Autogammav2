@@ -53,7 +53,7 @@ export default function RegisteredCustomers() {
         <div className="space-y-2">
           {filteredCustomers.map((customer: any) => (
             <Link key={customer._id} href={`/customer-details/${customer._id}`}>
-              <Card className="cursor-pointer hover-elevate border-2 border-primary" data-testid={`customer-card-${customer._id}`}>
+              <Card className="cursor-pointer hover-elevate border border-amber-200 dark:border-amber-800" data-testid={`customer-card-${customer._id}`}>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-base">{customer.name}</h3>
                   <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
