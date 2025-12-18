@@ -10,7 +10,7 @@ const navItems = [
   { href: '/customer-service', label: 'Customers Service', icon: Wrench },
   { href: '/service-funnel', label: 'Services Funnel', icon: Filter },
   { href: '/jobs', label: 'Jobs', icon: Wrench },
-  { href: '/invoices', label: 'Invoices', icon: FileText },
+  { href: '/invoices', label: 'Invoices & Tracking', icon: FileText },
   { href: '/technicians', label: 'Technicians', icon: UserCog },
   { href: '/inventory', label: 'Inventory', icon: Package },
   { href: '/appointments', label: 'Appointments', icon: Calendar },

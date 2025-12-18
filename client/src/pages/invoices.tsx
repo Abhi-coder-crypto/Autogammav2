@@ -22,7 +22,7 @@ import {
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function Billing() {
+export default function Invoices() {
   const [search, setSearch] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -148,11 +148,11 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight" data-testid="text-billing-title">
-          Billing & Invoices
+        <h1 className="font-display text-3xl font-bold tracking-tight" data-testid="text-invoices-title">
+          Invoices & Tracking
         </h1>
         <p className="text-muted-foreground mt-1">
-          Manage invoices and billing records
+          Manage invoices, track payments, and view billing records
         </p>
       </div>
 
