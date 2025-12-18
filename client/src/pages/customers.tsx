@@ -16,13 +16,14 @@ const CUSTOMER_STATUSES = ['Inquired', 'Working', 'Waiting', 'Completed'];
 
 const validatePhone = (phone: string): boolean => {
   const phoneRegex = /^[0-9]{10}$/;
-  return phoneRegex.test(phone.replace(/[\s+\-]/g, ''));
+  const cleanedPhone = phone.replace(/[\s+\-]/g, '');
+  return phoneRegex.test(cleanedPhone) && cleanedPhone.length === 10;
 };
 
 const validateEmail = (email: string): boolean => {
-  if (!email) return true;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  if (!email) return false;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+  return emailRegex.test(email.toLowerCase());
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -158,12 +159,12 @@ export default function Customers() {
     
     const newErrors: { phone?: string; email?: string } = {};
     
-    if (!validatePhone(formData.phone)) {
+    if (!formData.phone || !validatePhone(formData.phone)) {
       newErrors.phone = "Please enter a valid 10-digit mobile number";
     }
     
-    if (!validateEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+    if (!formData.email || !validateEmail(formData.email)) {
+      newErrors.email = "Please enter a valid Gmail address";
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -293,23 +294,25 @@ export default function Customers() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Phone *</Label>
+                  <Label>Phone Number (10 digits) *</Label>
                   <Input 
                     value={formData.phone}
                     onChange={(e) => {
-                      setFormData({...formData, phone: e.target.value});
+                      const value = e.target.value.replace(/[^\d]/g, '').slice(0, 10);
+                      setFormData({...formData, phone: value});
                       if (formErrors.phone) setFormErrors({ ...formErrors, phone: undefined });
                     }}
                     required={!selectedServiceCustomerId || selectedServiceCustomerId === 'new'}
                     disabled={!!selectedServiceCustomerId && selectedServiceCustomerId !== 'new'}
-                    placeholder="10-digit mobile number" 
+                    placeholder="9876543210" 
+                    maxLength={10}
                     data-testid="input-customer-phone"
                     className={formErrors.phone ? "border-red-500" : ""}
                   />
                   {formErrors.phone && <p className="text-sm text-red-500">{formErrors.phone}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label>Gmail Email *</Label>
                   <Input 
                     value={formData.email}
                     onChange={(e) => {
@@ -317,8 +320,9 @@ export default function Customers() {
                       if (formErrors.email) setFormErrors({ ...formErrors, email: undefined });
                     }}
                     type="email"
+                    required={!selectedServiceCustomerId || selectedServiceCustomerId === 'new'}
                     disabled={!!selectedServiceCustomerId && selectedServiceCustomerId !== 'new'}
-                    placeholder="email@example.com" 
+                    placeholder="name@gmail.com" 
                     data-testid="input-customer-email"
                     className={formErrors.email ? "border-red-500" : ""}
                   />
