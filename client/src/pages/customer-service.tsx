@@ -169,17 +169,30 @@ export default function CustomerService() {
       try {
         const prefs = await api.customers.getVehiclePreferences(selectedCustomerId, parseInt(selectedVehicleIndex, 10));
         if (prefs) {
-          if (prefs.ppfCategory) setPpfCategory(prefs.ppfCategory);
-          if (prefs.ppfVehicleType) setPpfVehicleType(prefs.ppfVehicleType);
-          if (prefs.ppfWarranty) setPpfWarranty(prefs.ppfWarranty);
-          // Always set the price from preferences if available
-          if (typeof prefs.ppfPrice === 'number') {
-            setPpfPrice(prefs.ppfPrice);
+          // Set PPF details
+          const category = prefs.ppfCategory || '';
+          const vehicleType = prefs.ppfVehicleType || '';
+          const warranty = prefs.ppfWarranty || '';
+          let price = prefs.ppfPrice || 0;
+          
+          // If price is 0 but we have category/vehicleType/warranty, calculate it
+          if (price === 0 && category && vehicleType && warranty) {
+            const categoryData = PPF_CATEGORIES[category];
+            if (categoryData && categoryData[vehicleType] && categoryData[vehicleType][warranty]) {
+              price = categoryData[vehicleType][warranty];
+            }
           }
-          if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) setLaborCost(prefs.laborCost.toString());
+          
+          setPpfCategory(category);
+          setPpfVehicleType(vehicleType);
+          setPpfWarranty(warranty);
+          setPpfPrice(price);
+          
+          if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) {
+            setLaborCost(prefs.laborCost.toString());
+          }
           if (Array.isArray(prefs.otherServices) && prefs.otherServices.length > 0) {
             setSelectedOtherServices(prefs.otherServices);
-            // Also populate the first service in the dropdowns for editing
             const firstService = prefs.otherServices[0];
             if (firstService.name) setOtherServiceName(firstService.name);
             if (firstService.vehicleType) setOtherServiceVehicleType(firstService.vehicleType);
@@ -196,19 +209,24 @@ export default function CustomerService() {
   }, [selectedCustomerId, selectedVehicleIndex]);
 
   useEffect(() => {
-    // Only recalculate price if warranty was manually changed and price is still 0
-    // This ensures we don't override prices loaded from preferences
-    if (ppfCategory && ppfVehicleType && ppfWarranty && ppfPrice === 0) {
+    // Only auto-calculate price when user manually changes warranty (not from preferences loading)
+    // Skip if all required fields are empty (form was reset) or if price is already set from preferences
+    if (!ppfCategory || !ppfVehicleType || !ppfWarranty) {
+      if (!ppfWarranty) {
+        setPpfPrice(0);
+      }
+      return;
+    }
+    
+    // Only calculate if price is 0 (hasn't been set yet from preferences)
+    if (ppfPrice === 0) {
       const categoryData = PPF_CATEGORIES[ppfCategory];
       if (categoryData && categoryData[ppfVehicleType] && categoryData[ppfVehicleType][ppfWarranty]) {
         const calculatedPrice = categoryData[ppfVehicleType][ppfWarranty];
         setPpfPrice(calculatedPrice);
       }
-    } else if (!ppfWarranty) {
-      // Only reset to 0 if warranty is explicitly cleared
-      setPpfPrice(0);
     }
-  }, [ppfCategory, ppfVehicleType, ppfWarranty, ppfPrice]);
+  }, [ppfCategory, ppfVehicleType, ppfWarranty]);
 
   const handleAddVehicle = () => {
     if (!selectedCustomerId) {
