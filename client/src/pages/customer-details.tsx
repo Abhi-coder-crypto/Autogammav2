@@ -150,7 +150,12 @@ export default function CustomerDetails() {
                 data-testid={`card-history-detail-${job._id}`}
               >
                 <CardContent className="p-4 space-y-3">
-                  {/* Header */}
+                  {/* Header - Service Title if available */}
+                  {job.serviceName && (
+                    <div className="text-sm font-bold text-primary">{job.serviceName}</div>
+                  )}
+                  
+                  {/* Header - Vehicle Info */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <h3 className="font-bold text-base">{job.vehicleName}</h3>

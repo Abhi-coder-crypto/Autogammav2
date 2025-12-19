@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Search } from "lucide-react";
+import { Phone, Search, Mail, MapPin, Car } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 
@@ -77,12 +77,32 @@ export default function RegisteredCustomers() {
           {filteredCustomers.map((customer: any) => (
             <Link key={customer._id} href={`/customer-details/${customer._id}`}>
               <Card className="cursor-pointer hover-elevate border border-amber-200 dark:border-amber-800" data-testid={`customer-card-${customer._id}`}>
-                <CardContent className="p-4">
+                <CardContent className="p-4 space-y-2">
                   <h3 className="font-semibold text-base">{customer.name}</h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                    <Phone className="w-3.5 h-3.5" />
-                    {customer.phone}
-                  </p>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>{customer.phone}</span>
+                    </div>
+                    {customer.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">{customer.email}</span>
+                      </div>
+                    )}
+                    {customer.address && (
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{customer.address}</span>
+                      </div>
+                    )}
+                    {customer.vehicles && customer.vehicles.length > 0 && (
+                      <div className="flex items-center gap-2 font-medium text-primary">
+                        <Car className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>{customer.vehicles.length} vehicle{customer.vehicles.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </Link>
