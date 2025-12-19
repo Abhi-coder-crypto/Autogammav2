@@ -169,12 +169,25 @@ export default function CustomerService() {
       try {
         const prefs = await api.customers.getVehiclePreferences(selectedCustomerId, parseInt(selectedVehicleIndex, 10));
         if (prefs) {
-          if (prefs.ppfCategory) setPpfCategory(prefs.ppfCategory);
-          if (prefs.ppfVehicleType) setPpfVehicleType(prefs.ppfVehicleType);
-          if (prefs.ppfWarranty) setPpfWarranty(prefs.ppfWarranty);
-          if (prefs.ppfPrice) setPpfPrice(prefs.ppfPrice);
-          if (prefs.laborCost) setLaborCost(prefs.laborCost.toString());
-          if (prefs.otherServices && prefs.otherServices.length > 0) {
+          // Set all preferences directly - don't use falsy checks as 0 is valid for price
+          if (prefs.ppfCategory) {
+            setPpfCategory(prefs.ppfCategory);
+          }
+          if (prefs.ppfVehicleType) {
+            setPpfVehicleType(prefs.ppfVehicleType);
+          }
+          if (prefs.ppfWarranty) {
+            setPpfWarranty(prefs.ppfWarranty);
+          }
+          // Set price directly - even if 0
+          if (typeof prefs.ppfPrice === 'number') {
+            setPpfPrice(prefs.ppfPrice);
+          }
+          if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) {
+            setLaborCost(prefs.laborCost.toString());
+          }
+          // Set other services if available
+          if (Array.isArray(prefs.otherServices) && prefs.otherServices.length > 0) {
             setSelectedOtherServices(prefs.otherServices);
           }
         }
@@ -188,6 +201,9 @@ export default function CustomerService() {
               setPpfCategory(ppfService.category || '');
               setPpfVehicleType(ppfService.vehicleType || '');
               setPpfWarranty(ppfService.warranty || '');
+              if (typeof ppfService.price === 'number') {
+                setPpfPrice(ppfService.price);
+              }
             }
             
             const otherServices = lastJob.serviceItems.filter((item: any) => !item.name.startsWith('PPF'));
@@ -195,13 +211,13 @@ export default function CustomerService() {
               setSelectedOtherServices(otherServices.map((item: any) => ({
                 name: item.name,
                 vehicleType: item.vehicleType || '',
-                price: item.price || 0,
+                price: typeof item.price === 'number' ? item.price : 0,
                 category: item.category,
                 warranty: item.warranty
               })));
             }
             
-            if (lastJob.laborCost) {
+            if (typeof lastJob.laborCost === 'number' && lastJob.laborCost > 0) {
               setLaborCost(lastJob.laborCost.toString());
             }
           }
@@ -218,16 +234,21 @@ export default function CustomerService() {
 
   useEffect(() => {
     if (ppfCategory && ppfVehicleType && ppfWarranty) {
-      const categoryData = PPF_CATEGORIES[ppfCategory];
-      if (categoryData && categoryData[ppfVehicleType] && categoryData[ppfVehicleType][ppfWarranty]) {
-        setPpfPrice(categoryData[ppfVehicleType][ppfWarranty]);
-      } else {
+      // Only recalculate price if we don't already have one from saved preferences
+      // This prevents overwriting saved prices with catalog values
+      if (ppfPrice === 0 || !isLoadingLastService) {
+        const categoryData = PPF_CATEGORIES[ppfCategory];
+        if (categoryData && categoryData[ppfVehicleType] && categoryData[ppfVehicleType][ppfWarranty]) {
+          setPpfPrice(categoryData[ppfVehicleType][ppfWarranty]);
+        }
+      }
+    } else if (!ppfCategory || !ppfVehicleType || !ppfWarranty) {
+      // Only clear price if selections are incomplete
+      if (ppfPrice > 0) {
         setPpfPrice(0);
       }
-    } else {
-      setPpfPrice(0);
     }
-  }, [ppfCategory, ppfVehicleType, ppfWarranty]);
+  }, [ppfCategory, ppfVehicleType, ppfWarranty, isLoadingLastService]);
 
   const handleAddVehicle = () => {
     if (!selectedCustomerId) {
