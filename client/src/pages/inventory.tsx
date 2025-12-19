@@ -117,6 +117,9 @@ export default function Inventory() {
             const item = inventory.find((inv: any) => inv.category === ppfItem.category);
             const displayItem = item || { name: ppfItem.name, category: ppfItem.category, quantity: 0, unit: DEFAULT_UNIT, minStock: MIN_STOCK, _id: null };
             
+            // Use category as display name for known PPF products
+            const displayName = ppfItem.category;
+            
             return (
               <Card 
                 key={displayItem.category} 
@@ -129,7 +132,7 @@ export default function Inventory() {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-base">{displayItem.name}</CardTitle>
+                      <CardTitle className="text-base">{displayName}</CardTitle>
                       <Badge className={cn("mt-1", CATEGORY_COLORS[displayItem.category])}>
                         {displayItem.category}
                       </Badge>
