@@ -212,7 +212,7 @@ export default function Appointments() {
               <CardContent className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-primary/10 rounded-xl">
+                    <div className="p-3 bg-gray-100 rounded-xl">
                       <Clock className="w-6 h-6 text-primary" />
                     </div>
                     <div>

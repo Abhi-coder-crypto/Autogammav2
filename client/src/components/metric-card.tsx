@@ -35,7 +35,7 @@ export function MetricCard({
             <p className="text-xs text-gray-500 mt-1">{description}</p>
           )}
         </div>
-        <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+        <div className="p-3 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
           <Icon className="w-6 h-6 text-primary" />
         </div>
       </div>

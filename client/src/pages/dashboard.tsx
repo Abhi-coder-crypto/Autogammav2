@@ -200,7 +200,7 @@ export default function Dashboard() {
           className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
           data-testid="card-sales-trends"
         >
-          <CardHeader className="pb-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader className="pb-4 border-b border-gray-200">
             <CardTitle className="flex items-center gap-3 text-base text-gray-900">
               <TrendingUp className="w-4 h-4 text-primary" />
               Sales Trends
@@ -225,7 +225,7 @@ export default function Dashboard() {
           className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
           data-testid="card-customer-status"
         >
-          <CardHeader className="pb-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader className="pb-4 border-b border-gray-200">
             <CardTitle className="flex items-center gap-3 text-base text-gray-900">
               <Activity className="w-4 h-4 text-primary" />
               Customer Status
@@ -261,7 +261,7 @@ export default function Dashboard() {
           className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
           data-testid="card-customer-growth"
         >
-          <CardHeader className="pb-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader className="pb-4 border-b border-gray-200">
             <CardTitle className="flex items-center gap-3 text-base text-gray-900">
               <Users className="w-4 h-4 text-primary" />
               Customer Growth
@@ -292,7 +292,7 @@ export default function Dashboard() {
           className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
           data-testid="card-inventory-categories"
         >
-          <CardHeader className="pb-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader className="pb-4 border-b border-gray-200">
             <CardTitle className="flex items-center gap-3 text-base text-gray-900">
               <Package className="w-4 h-4 text-primary" />
               Inventory by Category
@@ -319,7 +319,7 @@ export default function Dashboard() {
         className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
         data-testid="card-active-jobs"
       >
-        <CardHeader className="pb-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-transparent">
+        <CardHeader className="pb-4 border-b border-gray-200">
           <CardTitle className="flex items-center gap-3 text-base text-gray-900">
             <Clock className="w-4 h-4 text-primary" />
             Active Jobs
@@ -340,7 +340,7 @@ export default function Dashboard() {
                   </div>
                   <Badge
                     variant="outline"
-                    className="bg-primary/10 text-primary border-primary/30 text-xs"
+                    className="bg-white text-primary border-primary/50 text-xs"
                   >
                     {job.stage}
                   </Badge>

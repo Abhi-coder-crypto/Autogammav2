@@ -87,7 +87,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="p-4 border-t border-gray-200 space-y-4">
             {user && (
               <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
                   <span className="text-primary font-bold text-sm">
                     {user.name?.charAt(0) || 'A'}
                   </span>

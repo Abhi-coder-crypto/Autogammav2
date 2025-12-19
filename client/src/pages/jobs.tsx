@@ -181,7 +181,7 @@ export default function ServiceFunnel() {
               <CardContent className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="p-3 bg-primary/10 rounded-xl">
+                    <div className="p-3 bg-gray-100 rounded-xl">
                       <Car className="w-6 h-6 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
