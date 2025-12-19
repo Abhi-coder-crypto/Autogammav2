@@ -169,61 +169,17 @@ export default function CustomerService() {
       try {
         const prefs = await api.customers.getVehiclePreferences(selectedCustomerId, parseInt(selectedVehicleIndex, 10));
         if (prefs) {
-          // Set all preferences directly - don't use falsy checks as 0 is valid for price
-          if (prefs.ppfCategory) {
-            setPpfCategory(prefs.ppfCategory);
-          }
-          if (prefs.ppfVehicleType) {
-            setPpfVehicleType(prefs.ppfVehicleType);
-          }
-          if (prefs.ppfWarranty) {
-            setPpfWarranty(prefs.ppfWarranty);
-          }
-          // Set price directly - even if 0
-          if (typeof prefs.ppfPrice === 'number') {
-            setPpfPrice(prefs.ppfPrice);
-          }
-          if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) {
-            setLaborCost(prefs.laborCost.toString());
-          }
-          // Set other services if available
+          if (prefs.ppfCategory) setPpfCategory(prefs.ppfCategory);
+          if (prefs.ppfVehicleType) setPpfVehicleType(prefs.ppfVehicleType);
+          if (prefs.ppfWarranty) setPpfWarranty(prefs.ppfWarranty);
+          if (typeof prefs.ppfPrice === 'number') setPpfPrice(prefs.ppfPrice);
+          if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) setLaborCost(prefs.laborCost.toString());
           if (Array.isArray(prefs.otherServices) && prefs.otherServices.length > 0) {
             setSelectedOtherServices(prefs.otherServices);
           }
         }
       } catch (error) {
-        // No preferences found, try to get last job
-        try {
-          const lastJob = await api.customers.getLastService(selectedCustomerId, parseInt(selectedVehicleIndex, 10));
-          if (lastJob && lastJob.serviceItems && lastJob.serviceItems.length > 0) {
-            const ppfService = lastJob.serviceItems.find((item: any) => item.name.startsWith('PPF'));
-            if (ppfService) {
-              setPpfCategory(ppfService.category || '');
-              setPpfVehicleType(ppfService.vehicleType || '');
-              setPpfWarranty(ppfService.warranty || '');
-              if (typeof ppfService.price === 'number') {
-                setPpfPrice(ppfService.price);
-              }
-            }
-            
-            const otherServices = lastJob.serviceItems.filter((item: any) => !item.name.startsWith('PPF'));
-            if (otherServices.length > 0) {
-              setSelectedOtherServices(otherServices.map((item: any) => ({
-                name: item.name,
-                vehicleType: item.vehicleType || '',
-                price: typeof item.price === 'number' ? item.price : 0,
-                category: item.category,
-                warranty: item.warranty
-              })));
-            }
-            
-            if (typeof lastJob.laborCost === 'number' && lastJob.laborCost > 0) {
-              setLaborCost(lastJob.laborCost.toString());
-            }
-          }
-        } catch (err) {
-          // No service history either
-        }
+        // No preferences found
       } finally {
         setIsLoadingLastService(false);
       }
