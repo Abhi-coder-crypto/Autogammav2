@@ -1,19 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Package, AlertTriangle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Package, AlertTriangle, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const CATEGORIES = ['Elite', 'Garware Plus', 'Garware Premium', 'Garware Matt'];
-const UNITS = ['meter', 'feet', 'piece', 'kg', 'gram', 'liter', 'ml', 'roll', 'box', 'set'];
+const PPF_ITEMS = [
+  { name: 'Elite', category: 'Elite' },
+  { name: 'Garware Plus', category: 'Garware Plus' },
+  { name: 'Garware Premium', category: 'Garware Premium' },
+  { name: 'Garware Matt', category: 'Garware Matt' }
+];
+
+const MIN_STOCK = 5;
+const DEFAULT_UNIT = 'meter';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Elite': 'bg-blue-500/20 text-blue-400',
@@ -23,10 +29,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function Inventory() {
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [adjustType, setAdjustType] = useState<'in' | 'out'>('in');
+  const [adjustAmount, setAdjustAmount] = useState('1');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -35,281 +41,202 @@ export default function Inventory() {
     queryFn: api.inventory.list,
   });
 
-  const { data: lowStock = [] } = useQuery({
-    queryKey: ['inventory', 'low-stock'],
-    queryFn: api.inventory.lowStock,
-  });
-
-  const createItemMutation = useMutation({
-    mutationFn: api.inventory.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      setDialogOpen(false);
-      toast({ title: 'Item added successfully' });
-    },
-    onError: () => {
-      toast({ title: 'Failed to add item', variant: 'destructive' });
-    }
-  });
-
   const adjustMutation = useMutation({
     mutationFn: ({ id, quantity }: { id: string; quantity: number }) => api.inventory.adjust(id, quantity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       setAdjustDialogOpen(false);
-      toast({ title: 'Stock adjusted' });
+      setAdjustAmount('1');
+      toast({ title: `Stock adjusted successfully` });
+    },
+    onError: () => {
+      toast({ title: 'Failed to adjust stock', variant: 'destructive' });
     }
   });
-
-  const handleCreateItem = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    
-    createItemMutation.mutate({
-      name: formData.get('name') as string,
-      category: formData.get('category') as string,
-      quantity: parseInt(formData.get('quantity') as string, 10),
-      unit: formData.get('unit') as string,
-      minStock: parseInt(formData.get('minStock') as string, 10)
-    });
-  };
 
   const handleAdjust = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedItem) return;
     
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    const type = formData.get('type') as string;
-    const amount = parseInt(formData.get('amount') as string, 10);
+    const amount = parseInt(adjustAmount, 10);
+    if (amount <= 0) {
+      toast({ title: 'Please enter a valid quantity', variant: 'destructive' });
+      return;
+    }
     
     adjustMutation.mutate({
       id: selectedItem._id,
-      quantity: type === 'in' ? amount : -amount
+      quantity: adjustType === 'in' ? amount : -amount
     });
   };
 
-  const filteredInventory = categoryFilter === 'all' 
-    ? inventory 
-    : inventory.filter((item: any) => item.category === categoryFilter);
-
-  const isLowStock = (item: any) => item.quantity <= item.minStock;
+  const isLowStock = (item: any) => item.quantity <= MIN_STOCK;
+  
+  const lowStockItems = inventory.filter(isLowStock);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Inventory</h1>
-          <p className="text-muted-foreground mt-1">Track PPF, ceramic products, and tools</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight">PPF Inventory</h1>
+          <p className="text-muted-foreground mt-1">Manage stock for PPF products</p>
         </div>
-        
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" data-testid="button-new-item">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add Inventory Item</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateItem} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input name="name" required placeholder="Item name" data-testid="input-item-name" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Category *</Label>
-                  <Select name="category" required>
-                    <SelectTrigger data-testid="select-category">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Unit (measurement type) *</Label>
-                  <Select name="unit" required>
-                    <SelectTrigger data-testid="select-unit">
-                      <SelectValue placeholder="Select unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {UNITS.map(unit => (
-                        <SelectItem key={unit} value={unit}>{unit}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Quantity *</Label>
-                  <Input name="quantity" type="number" step="1" min="0" required placeholder="0" data-testid="input-quantity" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Min Stock *</Label>
-                  <Input name="minStock" type="number" step="1" min="0" required placeholder="0" data-testid="input-min-stock" />
-                </div>
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-primary"
-                disabled={createItemMutation.isPending}
-                data-testid="button-submit-item"
-              >
-                {createItemMutation.isPending ? 'Adding...' : 'Add Item'}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
 
-      {lowStock.length > 0 && (
+      {lowStockItems.length > 0 && (
         <Card className="bg-red-500/5 border-red-500/20">
           <CardContent className="p-4 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-red-400" />
-            <span className="text-red-400 font-medium">{lowStock.length} items are running low on stock!</span>
+            <span className="text-red-400 font-medium">{lowStockItems.length} product{lowStockItems.length !== 1 ? 's' : ''} below minimum stock level of {MIN_STOCK}!</span>
           </CardContent>
         </Card>
       )}
 
-      <div className="flex gap-2 flex-wrap">
-        <Button
-          variant={categoryFilter === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setCategoryFilter('all')}
-          data-testid="filter-all"
-        >
-          All
-        </Button>
-        {CATEGORIES.map(cat => (
-          <Button
-            key={cat}
-            variant={categoryFilter === cat ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setCategoryFilter(cat)}
-            data-testid={`filter-${cat.toLowerCase()}`}
-          >
-            {cat}
-          </Button>
-        ))}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {isLoading ? (
           <div className="col-span-full text-center py-8 text-muted-foreground">Loading inventory...</div>
-        ) : filteredInventory.length === 0 ? (
-          <div className="col-span-full text-center py-8 text-muted-foreground">
-            No items in inventory. Add your first item!
-          </div>
         ) : (
-          filteredInventory.map((item: any) => (
-            <Card 
-              key={item._id} 
-              className={cn(
-                "bg-card border-border",
-                isLowStock(item) && "border-red-500/30"
-              )}
-              data-testid={`inventory-card-${item._id}`}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-base">{item.name}</CardTitle>
-                    <Badge className={cn("mt-1", CATEGORY_COLORS[item.category])}>
-                      {item.category}
-                    </Badge>
-                  </div>
-                  <div className="p-2 bg-accent rounded-lg">
-                    <Package className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-baseline justify-between">
-                  <span className={cn(
-                    "text-3xl font-display font-bold",
-                    isLowStock(item) && "text-red-400"
-                  )}>
-                    {item.quantity}
-                  </span>
-                  <span className="text-sm text-muted-foreground">{item.unit}</span>
-                </div>
-                
-                {isLowStock(item) && (
-                  <p className="text-xs text-red-400 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    Below minimum ({item.minStock} {item.unit})
-                  </p>
+          PPF_ITEMS.map((ppfItem) => {
+            const item = inventory.find((inv: any) => inv.category === ppfItem.category);
+            const displayItem = item || { name: ppfItem.name, category: ppfItem.category, quantity: 0, unit: DEFAULT_UNIT, minStock: MIN_STOCK, _id: null };
+            
+            return (
+              <Card 
+                key={displayItem.category} 
+                className={cn(
+                  "bg-card border-border",
+                  item && isLowStock(item) && "border-red-500/30"
                 )}
+                data-testid={`inventory-card-${displayItem.category}`}
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-base">{displayItem.name}</CardTitle>
+                      <Badge className={cn("mt-1", CATEGORY_COLORS[displayItem.category])}>
+                        {displayItem.category}
+                      </Badge>
+                    </div>
+                    <div className="p-2 bg-accent rounded-lg">
+                      <Package className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline justify-between">
+                    <span className={cn(
+                      "text-3xl font-display font-bold",
+                      item && isLowStock(item) && "text-red-400"
+                    )}>
+                      {displayItem.quantity}
+                    </span>
+                    <span className="text-sm text-muted-foreground">{displayItem.unit}</span>
+                  </div>
+                  
+                  {item && isLowStock(item) && (
+                    <p className="text-xs text-red-400 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Below minimum ({MIN_STOCK} {displayItem.unit})
+                    </p>
+                  )}
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => {
-                      setSelectedItem({ ...item, adjustType: 'in' });
-                      setAdjustDialogOpen(true);
-                    }}
-                    data-testid={`button-stock-in-${item._id}`}
-                  >
-                    <ArrowUp className="w-3 h-3 mr-1 text-green-500" />
-                    In
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => {
-                      setSelectedItem({ ...item, adjustType: 'out' });
-                      setAdjustDialogOpen(true);
-                    }}
-                    data-testid={`button-stock-out-${item._id}`}
-                  >
-                    <ArrowDown className="w-3 h-3 mr-1 text-red-500" />
-                    Out
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                  {!item && (
+                    <p className="text-xs text-muted-foreground">
+                      No stock data yet
+                    </p>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedItem(displayItem);
+                        setAdjustType('in');
+                        setAdjustAmount('1');
+                        setAdjustDialogOpen(true);
+                      }}
+                      data-testid={`button-stock-in-${displayItem.category}`}
+                    >
+                      <ArrowUp className="w-3 h-3 mr-1 text-green-500" />
+                      Stock In
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedItem(displayItem);
+                        setAdjustType('out');
+                        setAdjustAmount('1');
+                        setAdjustDialogOpen(true);
+                      }}
+                      data-testid={`button-stock-out-${displayItem.category}`}
+                      disabled={displayItem.quantity === 0}
+                    >
+                      <ArrowDown className="w-3 h-3 mr-1 text-red-500" />
+                      Stock Out
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
 
       <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Adjust Stock: {selectedItem?.name}</DialogTitle>
+            <DialogTitle>
+              {adjustType === 'in' ? 'Stock In' : 'Stock Out'}: {selectedItem?.name}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAdjust} className="space-y-4">
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select name="type" defaultValue={selectedItem?.adjustType || 'in'}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in">Stock In</SelectItem>
-                  <SelectItem value="out">Stock Out</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={adjustType === 'in' ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setAdjustType('in')}
+                >
+                  <ArrowUp className="w-3 h-3 mr-1" />
+                  Stock In
+                </Button>
+                <Button
+                  type="button"
+                  variant={adjustType === 'out' ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setAdjustType('out')}
+                >
+                  <ArrowDown className="w-3 h-3 mr-1" />
+                  Stock Out
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Amount ({selectedItem?.unit})</Label>
-              <Input name="amount" type="number" step="1" min="1" required placeholder="0" />
+              <Label>Quantity ({selectedItem?.unit})</Label>
+              <Input 
+                type="number" 
+                step="1" 
+                min="1" 
+                required 
+                placeholder="0"
+                value={adjustAmount}
+                onChange={(e) => setAdjustAmount(e.target.value)}
+                data-testid="input-adjust-amount"
+              />
             </div>
             <Button 
               type="submit" 
               className="w-full bg-primary"
               disabled={adjustMutation.isPending}
+              data-testid="button-update-stock"
             >
               {adjustMutation.isPending ? 'Updating...' : 'Update Stock'}
             </Button>
