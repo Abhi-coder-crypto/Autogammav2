@@ -193,12 +193,18 @@ export default function CustomerService() {
   }, [selectedCustomerId, selectedVehicleIndex]);
 
   useEffect(() => {
+    // Only recalculate price if warranty was manually changed (not from preferences loading)
     if (ppfCategory && ppfVehicleType && ppfWarranty) {
       const categoryData = PPF_CATEGORIES[ppfCategory];
       if (categoryData && categoryData[ppfVehicleType] && categoryData[ppfVehicleType][ppfWarranty]) {
-        setPpfPrice(categoryData[ppfVehicleType][ppfWarranty]);
+        const calculatedPrice = categoryData[ppfVehicleType][ppfWarranty];
+        // Update price if it differs from calculated value or if price is 0
+        if (ppfPrice === 0 || ppfPrice === calculatedPrice) {
+          setPpfPrice(calculatedPrice);
+        }
       }
-    } else {
+    } else if (!ppfWarranty) {
+      // Only reset to 0 if warranty is explicitly cleared
       setPpfPrice(0);
     }
   }, [ppfCategory, ppfVehicleType, ppfWarranty]);

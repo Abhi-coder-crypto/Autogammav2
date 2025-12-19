@@ -11,7 +11,6 @@ export default function CustomerDetails() {
   const [match, params] = useRoute("/customer-details/:id");
   const customerId = params?.id;
   const { toast } = useToast();
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
@@ -25,7 +24,6 @@ export default function CustomerDetails() {
 
   const customer = customers.find((c: any) => c._id === customerId);
   const jobHistory = jobs.filter((job: any) => job.customerId === customerId);
-  const selectedJob = selectedJobId ? jobHistory.find((j: any) => j._id === selectedJobId) : null;
 
   if (!customer) {
     return (
@@ -127,34 +125,6 @@ export default function CustomerDetails() {
                 </div>
               )}
 
-              {/* Service History */}
-              {jobHistory.length > 0 && (
-                <div>
-                  <p className="font-semibold text-sm mb-1">History ({jobHistory.length})</p>
-                  <div className="p-2 bg-accent/10 rounded border text-xs space-y-1 max-h-20 overflow-y-auto">
-                    {jobHistory.slice(0, 3).map((job: any) => (
-                      <button
-                        key={job._id}
-                        onClick={() => setSelectedJobId(selectedJobId === job._id ? null : job._id)}
-                        className={`w-full pb-1 text-left hover:bg-accent/20 rounded p-1 transition ${
-                          selectedJobId === job._id ? 'bg-accent/30 border-l-2 border-primary' : ''
-                        }`}
-                        data-testid={`button-history-${job._id}`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="truncate font-medium text-xs">{job.vehicleName}</span>
-                          <span className="text-xs bg-background px-1 py-0.5 rounded whitespace-nowrap">{job.stage}</span>
-                        </div>
-                        {job.createdAt && (
-                          <p className="text-muted-foreground text-xs">
-                            {new Date(job.createdAt).toLocaleDateString('en-IN')}
-                          </p>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -168,18 +138,15 @@ export default function CustomerDetails() {
         </CardContent>
       </Card>
 
-      {/* Service History Details - Show only selected */}
-      {selectedJobId && jobHistory.length > 0 && (
+      {/* Service History - Show all below */}
+      {jobHistory.length > 0 && (
         <div className="space-y-3">
-          <h2 className="font-semibold text-lg">Service History Details</h2>
+          <h2 className="font-semibold text-lg">Service History ({jobHistory.length})</h2>
           <div className="grid gap-3">
-            {jobHistory
-              .filter((job: any) => job._id === selectedJobId)
-              .map((job: any) => (
+            {jobHistory.map((job: any) => (
               <Card
                 key={job._id}
-                onClick={() => setSelectedJobId(null)}
-                className={`cursor-pointer border-2 border-primary bg-primary/5 transition hover:bg-primary/10`}
+                className="border border-amber-200 dark:border-amber-800"
                 data-testid={`card-history-detail-${job._id}`}
               >
                 <CardContent className="p-4 space-y-3">
@@ -223,6 +190,7 @@ export default function CustomerDetails() {
                           <div key={idx} className="flex items-center justify-between text-xs bg-accent/10 p-2 rounded">
                             <span className="truncate">{item.description || item.name || 'Service'}</span>
                             {item.cost && <span className="font-medium whitespace-nowrap ml-2">₹{item.cost.toLocaleString('en-IN')}</span>}
+                            {item.price && <span className="font-medium whitespace-nowrap ml-2">₹{item.price.toLocaleString('en-IN')}</span>}
                           </div>
                         ))}
                       </div>
