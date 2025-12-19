@@ -442,7 +442,7 @@ export default function CustomerService() {
         <p className="text-muted-foreground mt-1">Create services for customers with full service selection</p>
       </div>
 
-      <Card className="bg-card border-border">
+      <Card className="card-modern">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />

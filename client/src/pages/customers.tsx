@@ -248,7 +248,7 @@ export default function Customers() {
       </div>
 
       {showServiceForm && (
-        <Card className="bg-card border-border">
+        <Card className="card-modern">
           <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
             <CardTitle>Add Customer Service</CardTitle>
             <Button 
@@ -475,7 +475,7 @@ export default function Customers() {
           customers.map((customer: any) => (
             <Card 
               key={customer._id} 
-              className="bg-card border-border hover:border-primary/30 transition-colors"
+              className="card-modern"
               data-testid={`customer-card-${customer._id}`}
             >
               <CardHeader className="pb-3">

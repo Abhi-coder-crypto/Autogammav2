@@ -197,7 +197,7 @@ export default function Appointments() {
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">Loading appointments...</div>
         ) : appointments.length === 0 ? (
-          <Card className="bg-card border-border">
+          <Card className="card-modern">
             <CardContent className="py-12 text-center text-muted-foreground">
               No appointments scheduled for this date.
             </CardContent>
@@ -206,7 +206,7 @@ export default function Appointments() {
           appointments.map((appt: any) => (
             <Card 
               key={appt._id} 
-              className="bg-card border-border"
+              className="card-modern"
               data-testid={`appointment-card-${appt._id}`}
             >
               <CardContent className="p-4">

@@ -127,7 +127,7 @@ export default function ServiceFunnel() {
       {/* Funnel Overview */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {JOB_STAGES.map(stage => (
-          <Card key={stage} className={cn("border", STAGE_BG_COLORS[stage])}>
+          <Card key={stage} className={cn("card-modern", STAGE_BG_COLORS[stage])}>
             <CardContent className="p-3">
               <div className="flex flex-col items-center gap-2 text-center">
                 <Badge className={cn(STAGE_BADGE_COLORS[stage], "text-xs")}>{stage}</Badge>
@@ -175,7 +175,7 @@ export default function ServiceFunnel() {
           filteredJobs.map((job: any) => (
             <Card 
               key={job._id} 
-              className="bg-card border-border hover:border-primary/30 transition-colors"
+              className="card-modern"
               data-testid={`service-item-${job._id}`}
             >
               <CardContent className="p-4">

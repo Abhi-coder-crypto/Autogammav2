@@ -209,10 +209,10 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border">
+        <Card className="card-modern">
           <CardHeader>
             <CardTitle className="text-foreground font-medium flex items-center gap-2">
-              <MessageCircle className="w-5 h-5 text-blue-500" />
+              <MessageCircle className="w-5 h-5 text-primary" />
               Customer Status Message Templates
             </CardTitle>
             <CardDescription>
@@ -235,7 +235,7 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border">
+        <Card className="card-modern">
           <CardHeader>
             <CardTitle className="text-foreground font-medium">Job Stage Templates</CardTitle>
             <CardDescription>
