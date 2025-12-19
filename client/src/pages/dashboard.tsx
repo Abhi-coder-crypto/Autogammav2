@@ -146,15 +146,15 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-slate-200">
         <div>
           <h1
-            className="font-display text-4xl font-bold tracking-tight text-foreground"
+            className="font-display text-5xl font-bold tracking-tight text-slate-900"
             data-testid="text-dashboard-title"
           >
             Dashboard
           </h1>
-          <p className="text-muted-foreground mt-2">Welcome back! Here's your garage performance</p>
+          <p className="text-slate-600 mt-3 font-medium">Welcome back! Here's your garage performance</p>
         </div>
       </div>
 
@@ -197,12 +197,12 @@ export default function Dashboard() {
       {/* Charts Row 1 */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card
-          className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
           data-testid="card-sales-trends"
         >
-          <CardHeader className="pb-4 border-b border-gray-200">
-            <CardTitle className="flex items-center gap-3 text-base text-gray-900">
-              <TrendingUp className="w-4 h-4 text-primary" />
+          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="flex items-center gap-3 text-base text-slate-900 font-semibold">
+              <TrendingUp className="w-5 h-5 text-primary" />
               Sales Trends
             </CardTitle>
           </CardHeader>
@@ -222,12 +222,12 @@ export default function Dashboard() {
         </Card>
 
         <Card
-          className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
           data-testid="card-customer-status"
         >
-          <CardHeader className="pb-4 border-b border-gray-200">
-            <CardTitle className="flex items-center gap-3 text-base text-gray-900">
-              <Activity className="w-4 h-4 text-primary" />
+          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="flex items-center gap-3 text-base text-slate-900 font-semibold">
+              <Activity className="w-5 h-5 text-primary" />
               Customer Status
             </CardTitle>
           </CardHeader>
@@ -258,12 +258,12 @@ export default function Dashboard() {
       {/* Charts Row 2 */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card
-          className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
           data-testid="card-customer-growth"
         >
-          <CardHeader className="pb-4 border-b border-gray-200">
-            <CardTitle className="flex items-center gap-3 text-base text-gray-900">
-              <Users className="w-4 h-4 text-primary" />
+          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="flex items-center gap-3 text-base text-slate-900 font-semibold">
+              <Users className="w-5 h-5 text-primary" />
               Customer Growth
             </CardTitle>
           </CardHeader>
@@ -289,12 +289,12 @@ export default function Dashboard() {
         </Card>
 
         <Card
-          className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
           data-testid="card-inventory-categories"
         >
-          <CardHeader className="pb-4 border-b border-gray-200">
-            <CardTitle className="flex items-center gap-3 text-base text-gray-900">
-              <Package className="w-4 h-4 text-primary" />
+          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="flex items-center gap-3 text-base text-slate-900 font-semibold">
+              <Package className="w-5 h-5 text-primary" />
               Inventory by Category
             </CardTitle>
           </CardHeader>
@@ -316,12 +316,12 @@ export default function Dashboard() {
 
       {/* Active Jobs Table */}
       <Card
-        className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
+        className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
         data-testid="card-active-jobs"
       >
-        <CardHeader className="pb-4 border-b border-gray-200">
-          <CardTitle className="flex items-center gap-3 text-base text-gray-900">
-            <Clock className="w-4 h-4 text-primary" />
+        <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardTitle className="flex items-center gap-3 text-base text-slate-900 font-semibold">
+            <Clock className="w-5 h-5 text-primary" />
             Active Jobs
           </CardTitle>
         </CardHeader>
@@ -331,16 +331,16 @@ export default function Dashboard() {
               {activeJobs.map((job: any) => (
                 <div
                   key={job.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200"
+                  className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-slate-50 to-white hover:from-slate-100 hover:to-slate-50 transition-all border border-slate-200 hover:border-slate-300"
                   data-testid={`job-row-${job.id}`}
                 >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900 text-sm">{job.serviceType}</p>
-                    <p className="text-xs text-gray-600">{job.customerName}</p>
+                    <p className="font-semibold text-slate-900 text-sm">{job.serviceType}</p>
+                    <p className="text-xs text-slate-600 mt-1">{job.customerName}</p>
                   </div>
                   <Badge
                     variant="outline"
-                    className="bg-white text-primary border-primary/50 text-xs"
+                    className="bg-white text-primary border-primary/50 text-xs font-semibold"
                   >
                     {job.stage}
                   </Badge>
@@ -348,8 +348,8 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>No active jobs</p>
+            <div className="text-center py-8 text-slate-500">
+              <p className="font-medium">No active jobs</p>
             </div>
           )}
         </CardContent>

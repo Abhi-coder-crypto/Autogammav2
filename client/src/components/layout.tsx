@@ -35,22 +35,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen w-64 bg-white border-r border-gray-200 transition-transform duration-300 shadow-sm",
+          "fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-slate-50 to-white border-r border-slate-200 transition-transform duration-300 shadow-sm",
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
         <div className="h-full flex flex-col">
           {/* Logo Section */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold shadow-md">
                 AG
               </div>
               <div>
-                <h1 className="font-display text-lg font-bold text-gray-900">
+                <h1 className="font-display text-lg font-bold text-slate-900">
                   AutoGarage
                 </h1>
-                <p className="text-xs text-gray-500">CRM System</p>
+                <p className="text-xs text-slate-600 font-medium">CRM System</p>
               </div>
             </div>
           </div>
@@ -71,8 +71,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 cursor-pointer text-sm font-medium",
                       isActive
-                        ? "bg-primary text-white shadow-md"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-primary to-primary/90 text-white shadow-md"
+                        : "text-slate-700 hover:bg-slate-100"
                     )}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
@@ -84,24 +84,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* User Profile Section */}
-          <div className="p-4 border-t border-gray-200 space-y-4">
+          <div className="p-4 border-t border-slate-200 space-y-4 bg-gradient-to-t from-slate-50 to-transparent">
             {user && (
-              <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+              <div className="flex items-center gap-3 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg p-3 border border-slate-200">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-primary font-bold text-sm">
                     {user.name?.charAt(0) || 'A'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 text-sm truncate">{user.name}</p>
-                  <p className="text-gray-500 text-xs truncate">{user.email}</p>
+                  <p className="font-semibold text-slate-900 text-sm truncate">{user.name}</p>
+                  <p className="text-slate-600 text-xs truncate">{user.email}</p>
                 </div>
               </div>
             )}
             <Button 
               variant="outline" 
               size="sm" 
-              className="w-full justify-start gap-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="w-full justify-start gap-2 border-slate-300 text-slate-700 hover:bg-slate-100"
               onClick={logout}
               data-testid="button-logout"
             >
