@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Package, AlertTriangle, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,8 +19,9 @@ const PPF_ITEMS = [
   { name: 'Garware Matt', category: 'Garware Matt' }
 ];
 
+const UNITS = ['sheet', 'sheets', 'roll', 'rolls', 'meter', 'meters', 'piece', 'pieces', 'kg', 'liter'];
 const MIN_STOCK = 5;
-const DEFAULT_UNIT = 'meter';
+const DEFAULT_UNIT = 'sheets';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Elite': 'bg-blue-500/20 text-blue-400',
@@ -33,6 +35,7 @@ export default function Inventory() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [adjustType, setAdjustType] = useState<'in' | 'out'>('in');
   const [adjustAmount, setAdjustAmount] = useState('1');
+  const [adjustUnit, setAdjustUnit] = useState(DEFAULT_UNIT);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -47,6 +50,7 @@ export default function Inventory() {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       setAdjustDialogOpen(false);
       setAdjustAmount('1');
+      setAdjustUnit(DEFAULT_UNIT);
       toast({ title: `Stock adjusted successfully` });
     },
     onError: () => {
@@ -64,10 +68,23 @@ export default function Inventory() {
       return;
     }
     
-    adjustMutation.mutate({
-      id: selectedItem._id,
-      quantity: adjustType === 'in' ? amount : -amount
-    });
+    // Update the item with the new unit before adjusting
+    if (selectedItem._id && selectedItem.unit !== adjustUnit) {
+      // Update unit on the server
+      api.inventory.update(selectedItem._id, { unit: adjustUnit }).then(() => {
+        adjustMutation.mutate({
+          id: selectedItem._id,
+          quantity: adjustType === 'in' ? amount : -amount
+        });
+      }).catch(() => {
+        toast({ title: 'Failed to update unit', variant: 'destructive' });
+      });
+    } else {
+      adjustMutation.mutate({
+        id: selectedItem._id,
+        quantity: adjustType === 'in' ? amount : -amount
+      });
+    }
   };
 
   const isLowStock = (item: any) => item.quantity <= MIN_STOCK;
@@ -155,6 +172,7 @@ export default function Inventory() {
                         setSelectedItem(displayItem);
                         setAdjustType('in');
                         setAdjustAmount('1');
+                        setAdjustUnit(displayItem.unit || DEFAULT_UNIT);
                         setAdjustDialogOpen(true);
                       }}
                       data-testid={`button-stock-in-${displayItem.category}`}
@@ -170,6 +188,7 @@ export default function Inventory() {
                         setSelectedItem(displayItem);
                         setAdjustType('out');
                         setAdjustAmount('1');
+                        setAdjustUnit(displayItem.unit || DEFAULT_UNIT);
                         setAdjustDialogOpen(true);
                       }}
                       data-testid={`button-stock-out-${displayItem.category}`}
@@ -219,8 +238,23 @@ export default function Inventory() {
                 </Button>
               </div>
             </div>
+
             <div className="space-y-2">
-              <Label>Quantity ({selectedItem?.unit})</Label>
+              <Label>Unit</Label>
+              <Select value={adjustUnit} onValueChange={setAdjustUnit}>
+                <SelectTrigger data-testid="select-adjust-unit">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNITS.map((unit) => (
+                    <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Quantity ({adjustUnit})</Label>
               <Input 
                 type="number" 
                 step="1" 
@@ -232,6 +266,7 @@ export default function Inventory() {
                 data-testid="input-adjust-amount"
               />
             </div>
+
             <Button 
               type="submit" 
               className="w-full bg-primary"
