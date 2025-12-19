@@ -213,7 +213,8 @@ export async function registerRoutes(
       }
       res.status(201).json(job);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create job" });
+      console.error("Job creation error:", error);
+      res.status(500).json({ message: "Failed to create job", error: (error as any)?.message });
     }
   });
 

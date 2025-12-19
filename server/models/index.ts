@@ -42,9 +42,11 @@ export interface ICustomer extends Document {
 }
 
 export interface IServiceItem {
-  description: string;
-  cost: number;
-  type: 'part' | 'labor';
+  name: string;
+  price: number;
+  category?: string;
+  vehicleType?: string;
+  warranty?: string;
 }
 
 export interface IPayment {
@@ -180,9 +182,11 @@ const CustomerSchema = new Schema<ICustomer>({
 });
 
 const ServiceItemSchema = new Schema<IServiceItem>({
-  description: { type: String, required: true },
-  cost: { type: Number, required: true },
-  type: { type: String, enum: ['part', 'labor'], required: true }
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  category: { type: String },
+  vehicleType: { type: String },
+  warranty: { type: String }
 });
 
 const PaymentSchema = new Schema<IPayment>({
