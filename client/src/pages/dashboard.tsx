@@ -200,9 +200,9 @@ export default function Dashboard() {
           className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
           data-testid="card-sales-trends"
         >
-          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-transparent">
             <CardTitle className="flex items-center gap-3 text-base text-slate-900 font-semibold">
-              <TrendingUp className="w-5 h-5 text-primary" />
+              <TrendingUp className="w-5 h-5 text-blue-600" />
               Sales Trends
             </CardTitle>
           </CardHeader>
@@ -213,9 +213,9 @@ export default function Dashboard() {
                 <XAxis dataKey="day" stroke="rgba(0,0,0,0.6)" />
                 <YAxis stroke="rgba(0,0,0,0.6)" />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid rgba(220,38,38,0.3)' }}
+                  contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid rgba(59,130,246,0.3)' }}
                 />
-                <Bar dataKey="sales" fill="#dc2626" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="sales" fill="#3B82F6" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -258,12 +258,12 @@ export default function Dashboard() {
       {/* Charts Row 2 */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card
-          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-green-600/50 transition-all"
           data-testid="card-customer-growth"
         >
-          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-green-50 to-transparent">
             <CardTitle className="flex items-center gap-3 text-base text-slate-900 font-semibold">
-              <Users className="w-5 h-5 text-primary" />
+              <Users className="w-5 h-5 text-green-600" />
               Customer Growth
             </CardTitle>
           </CardHeader>
@@ -274,14 +274,14 @@ export default function Dashboard() {
                 <XAxis dataKey="month" stroke="rgba(0,0,0,0.6)" />
                 <YAxis stroke="rgba(0,0,0,0.6)" />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid rgba(220,38,38,0.3)' }}
+                  contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid rgba(34,197,94,0.3)' }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="customers" 
-                  stroke="#dc2626" 
+                  stroke="#22C55E" 
                   strokeWidth={2}
-                  dot={{ fill: '#dc2626', r: 4 }}
+                  dot={{ fill: '#22C55E', r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -289,12 +289,12 @@ export default function Dashboard() {
         </Card>
 
         <Card
-          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-orange-500/50 transition-all"
           data-testid="card-inventory-categories"
         >
-          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-orange-50 to-transparent">
             <CardTitle className="flex items-center gap-3 text-base text-slate-900 font-semibold">
-              <Package className="w-5 h-5 text-primary" />
+              <Package className="w-5 h-5 text-orange-600" />
               Inventory by Category
             </CardTitle>
           </CardHeader>
@@ -305,9 +305,9 @@ export default function Dashboard() {
                 <XAxis type="number" stroke="rgba(0,0,0,0.6)" />
                 <YAxis dataKey="name" type="category" stroke="rgba(0,0,0,0.6)" width={100} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid rgba(220,38,38,0.3)' }}
+                  contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid rgba(249,115,22,0.3)' }}
                 />
-                <Bar dataKey="products" fill="#dc2626" radius={[0, 8, 8, 0]} />
+                <Bar dataKey="products" fill="#F97316" radius={[0, 8, 8, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
