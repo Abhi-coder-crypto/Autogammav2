@@ -183,7 +183,7 @@ export default function Technicians() {
                         className={cn(
                           jobCount > 2 && 'border-orange-300 text-orange-700 bg-orange-50',
                           jobCount > 0 && jobCount <= 2 && 'border-yellow-300 text-yellow-700 bg-yellow-50',
-                          jobCount === 0 && 'border-green-300 text-green-700 bg-green-50'
+                          jobCount === 0 && 'border-gray-300 text-slate-700 bg-gray-50'
                         )}
                       >
                         {jobCount}

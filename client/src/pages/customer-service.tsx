@@ -905,7 +905,7 @@ export default function CustomerService() {
                   </div>
                 )}
 
-                <div className="border-2 border-gradient-to-r from-green-200 to-emerald-200 rounded-xl p-5 bg-gradient-to-br from-green-50 via-emerald-50 to-slate-50 space-y-3">
+                <div className="border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-gray-50 via-gray-50 to-slate-50 space-y-3">
                   <h4 className="font-bold text-base text-slate-900">Cost Summary</h4>
                   
                   {ppfPrice > 0 && (
@@ -932,7 +932,7 @@ export default function CustomerService() {
                   {discountPct > 0 && (
                     <div className="flex justify-between text-sm">
                       <span>Discount ({discountPct}%):</span>
-                      <span className="text-green-600">-₹{discountAmount.toLocaleString('en-IN')}</span>
+                      <span className="text-slate-600">-₹{discountAmount.toLocaleString('en-IN')}</span>
                     </div>
                   )}
                   
@@ -968,7 +968,7 @@ export default function CustomerService() {
               </Button>
               <Button
                 type="submit"
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg"
+                className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg"
                 disabled={createJobMutation.isPending || !selectedCustomerId || !selectedVehicleIndex || (ppfPrice <= 0 && selectedOtherServices.length === 0 && !parsedLaborCost)}
                 data-testid="button-create-service"
               >

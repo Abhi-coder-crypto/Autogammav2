@@ -26,7 +26,7 @@ const STAGE_COLORS: Record<string, string> = {
   'New Lead': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   'Inspection Done': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   'Work In Progress': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  'Ready for Delivery': 'bg-green-500/20 text-green-400 border-green-500/30',
+  'Ready for Delivery': 'bg-gray-500/20 text-green-400 border-green-500/30',
   'Completed': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
   'Cancelled': 'bg-red-500/20 text-red-400 border-red-500/30'
 };
@@ -35,7 +35,7 @@ const STAGE_BG_COLORS: Record<string, string> = {
   'New Lead': 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',
   'Inspection Done': 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800',
   'Work In Progress': 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800',
-  'Ready for Delivery': 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800',
+  'Ready for Delivery': 'bg-gray-50 dark:bg-green-950/30 border-gray-200 dark:border-green-800',
   'Completed': 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800',
   'Cancelled': 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
 };
@@ -44,7 +44,7 @@ const STAGE_BADGE_COLORS: Record<string, string> = {
   'New Lead': 'bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800',
   'Inspection Done': 'bg-yellow-100 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
   'Work In Progress': 'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800',
-  'Ready for Delivery': 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800',
+  'Ready for Delivery': 'bg-gray-100 dark:bg-green-950/50 text-slate-600 dark:text-green-400 border-gray-200 dark:border-green-800',
   'Completed': 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
   'Cancelled': 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
 };
@@ -193,7 +193,7 @@ export default function ServiceFunnel() {
                         </span>
                         {job.technicianName && (
                           <span className="flex items-center gap-1.5 font-medium">
-                            <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                            <span className="inline-block w-1.5 h-1.5 bg-gray-500 rounded-full"></span>
                             Assigned: {job.technicianName}
                           </span>
                         )}
@@ -241,7 +241,7 @@ export default function ServiceFunnel() {
                     <Badge 
                       variant="outline" 
                       className={cn(
-                        job.paymentStatus === 'Paid' && 'border-green-500/30 text-green-500',
+                        job.paymentStatus === 'Paid' && 'border-green-500/30 text-slate-600',
                         job.paymentStatus === 'Partially Paid' && 'border-yellow-500/30 text-yellow-500',
                         job.paymentStatus === 'Pending' && 'border-red-500/30 text-red-500'
                       )}
@@ -251,7 +251,7 @@ export default function ServiceFunnel() {
                   </div>
                   <div>
                     {hasInvoice(job._id) && (
-                      <Badge className="bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
+                      <Badge className="bg-gray-100 dark:bg-green-950/50 text-slate-600 dark:text-green-400 border-gray-200 dark:border-green-800">
                         Invoice Created
                       </Badge>
                     )}

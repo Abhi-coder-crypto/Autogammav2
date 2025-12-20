@@ -67,7 +67,7 @@ export default function Invoices() {
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
       case "Paid":
-        return "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400";
+        return "bg-gray-100 dark:bg-green-950/50 text-slate-600 dark:text-green-400";
       case "Partially Paid":
         return "bg-yellow-100 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-400";
       default:
@@ -154,18 +154,18 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
       </div>
 
       <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-        <Card className="bg-gradient-to-br from-green-50 to-white border-green-200 shadow-sm" data-testid="card-total-revenue">
+        <Card className="bg-gradient-to-br from-green-50 to-white border-gray-200 shadow-sm" data-testid="card-total-revenue">
           <CardContent className="p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-green-700 font-semibold uppercase tracking-wider">Total Revenue</p>
-                <p className="text-3xl font-bold mt-3 text-green-900 flex items-center gap-1">
+                <p className="text-sm text-slate-600 font-semibold uppercase tracking-wider">Total Revenue</p>
+                <p className="text-3xl font-bold mt-3 text-slate-700 flex items-center gap-1">
                   <IndianRupee className="w-6 h-6" />
                   {totalRevenue.toLocaleString("en-IN")}
                 </p>
               </div>
-              <div className="p-4 bg-green-100 rounded-lg">
-                <IndianRupee className="w-6 h-6 text-green-600" />
+              <div className="p-4 bg-gray-100 rounded-lg">
+                <IndianRupee className="w-6 h-6 text-slate-600" />
               </div>
             </div>
           </CardContent>
@@ -308,7 +308,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                       {invoice.paymentStatus !== "Paid" && (
                         <Button
                           size="sm"
-                          className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg transition-all"
+                          className="bg-gradient-to-r from-slate-600 to-slate-700 text-white hover:shadow-lg transition-all"
                           onClick={() => markPaidMutation.mutate(invoice._id)}
                           disabled={markPaidMutation.isPending}
                           data-testid={`button-mark-paid-${invoice._id}`}
@@ -418,7 +418,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                         <tr key={index} className="border-t">
                           <td className="p-3">
                             {item.description}
-                            <Badge variant="outline" className={`ml-2 text-xs ${item.type === 'service' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                            <Badge variant="outline" className={`ml-2 text-xs ${item.type === 'service' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-slate-600 border-gray-200'}`}>
                               {item.type === 'service' ? 'Service' : 'Material'}
                             </Badge>
                           </td>
@@ -476,7 +476,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                     </div>
                   )}
                   {selectedInvoice.discount > 0 && (
-                    <div className="flex justify-between text-green-600">
+                    <div className="flex justify-between text-slate-600">
                       <span>Discount:</span>
                       <span className="flex items-center">
                         -<IndianRupee className="w-3 h-3" />
@@ -492,7 +492,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                       {selectedInvoice.totalAmount.toLocaleString("en-IN")}
                     </span>
                   </div>
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-slate-600">
                     <span>Paid:</span>
                     <span className="flex items-center">
                       <IndianRupee className="w-3 h-3" />
@@ -515,7 +515,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                 </Badge>
                 {selectedInvoice.paymentStatus !== "Paid" && (
                   <Button
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-slate-600 hover:bg-green-700"
                     onClick={() => markPaidMutation.mutate(selectedInvoice._id)}
                     disabled={markPaidMutation.isPending}
                     data-testid="button-mark-paid-dialog"
