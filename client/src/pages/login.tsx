@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Lock, Mail } from 'lucide-react';
+import garageBg from '@assets/garage-bg.png';
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -55,15 +56,15 @@ export default function Login() {
     <div 
       className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
       style={{
-        backgroundImage: 'url(/garage-bg.png)',
+        backgroundImage: `url(${garageBg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
       }}
     >
       {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/60 backdrop-blur-sm z-0" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-0" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-black/40 backdrop-blur-sm z-0" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-0" />
 
       {/* Login Dialog */}
       <div className="relative z-10 w-full max-w-md">
