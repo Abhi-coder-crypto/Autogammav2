@@ -63,7 +63,7 @@ export default function Login() {
       }}
     >
       {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-black/40 backdrop-blur-sm z-0" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-black/40 z-0" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-0" />
 
       {/* Login Dialog */}
