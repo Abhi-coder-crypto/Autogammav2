@@ -343,13 +343,7 @@ export default function CustomerRegistration() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="pb-6 border-b border-slate-200">
-          <h1
-            className="text-2xl font-semibold text-slate-900"
-            data-testid="text-registration-title"
-          >
-            Register Customer
-          </h1>
-          <p className="text-sm text-slate-600 mt-2">Step {step} of 2 - Fill in customer details and select services</p>
+          <p className="text-sm text-slate-600">Step {step} of 2 - Fill in customer details and select services</p>
           
           {/* Progress Bar */}
           <div className="mt-6 flex gap-2">

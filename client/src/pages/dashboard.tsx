@@ -153,13 +153,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-slate-200">
         <div>
-          <h1
-            className="text-2xl font-semibold text-slate-900"
-            data-testid="text-dashboard-title"
-          >
-            Dashboard
-          </h1>
-          <p className="text-sm text-slate-600 mt-2">Welcome back! Here's your garage performance</p>
+          <p className="text-sm text-slate-600">Welcome back! Here's your garage performance</p>
         </div>
         {user && (
           <div className="flex items-center gap-3 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg p-3 border border-slate-200">

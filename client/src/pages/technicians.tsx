@@ -75,8 +75,7 @@ export default function Technicians() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Technicians</h1>
-          <p className="text-sm text-slate-600 mt-2">Manage your workshop team</p>
+          <p className="text-sm text-slate-600">Manage your workshop team</p>
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

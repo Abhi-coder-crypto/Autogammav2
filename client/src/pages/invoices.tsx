@@ -148,10 +148,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-slate-200">
-        <h1 className="text-2xl font-semibold text-slate-900" data-testid="text-invoices-title">
-          Invoices & Tracking
-        </h1>
-        <p className="text-sm text-slate-600 mt-2">
+        <p className="text-sm text-slate-600">
           Manage invoices, track payments, and view billing records
         </p>
       </div>
