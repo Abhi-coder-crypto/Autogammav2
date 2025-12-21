@@ -33,7 +33,7 @@ interface Notification {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, logout } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -73,75 +73,72 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        data-testid="button-menu-toggle"
-      >
-        {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
-
+      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen w-64 bg-card border-r border-border transition-transform duration-300 flex flex-col",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          "fixed left-0 top-0 z-40 h-screen bg-card border-r border-border transition-all duration-300 ease-in-out flex flex-col",
+          sidebarOpen ? "w-64" : "w-20"
         )}
       >
-          {/* Logo Section */}
-          <div className="p-6 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+        {/* Toggle Button */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          {sidebarOpen && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
                 AG
               </div>
-              <div>
-                <h1 className="font-bold text-base text-foreground">
-                  AutoGarage
-                </h1>
-                <p className="text-xs text-muted-foreground font-medium">CRM System</p>
-              </div>
             </div>
-          </div>
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1.5 hover:bg-secondary rounded-md transition-colors"
+            data-testid="button-sidebar-toggle"
+            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            {sidebarOpen ? (
+              <Menu className="w-5 h-5 text-foreground" />
+            ) : (
+              <Menu className="w-5 h-5 text-foreground" />
+            )}
+          </button>
+        </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-1">
-              {menuItems.map((item) => {
-                const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href + '/'));
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+        {/* Navigation */}
+        <nav className="flex-1 p-2 overflow-y-auto">
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href + '/'));
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  <div
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 cursor-pointer text-sm font-medium rounded-md transition-colors whitespace-nowrap",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-primary"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent"
+                    )}
+                    title={!sidebarOpen ? item.label : undefined}
                   >
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 cursor-pointer text-sm font-medium rounded-md transition-colors",
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-primary"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent"
-                      )}
-                    >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
-                      <span>{item.label}</span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {sidebarOpen && <span>{item.label}</span>}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       </aside>
 
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
       {/* Header */}
-      <header className="md:ml-64 bg-card border-b border-border sticky top-0 z-30">
+      <header className={cn(
+        "bg-card border-b border-border sticky top-0 z-30 transition-all duration-300 ease-in-out",
+        sidebarOpen ? "ml-64" : "ml-20"
+      )}>
         <div className="px-4 md:px-8 py-4 flex items-center justify-end gap-4">
           {/* Notification Button */}
           <DropdownMenu>
@@ -217,8 +214,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className="md:ml-64 min-h-screen bg-background">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <main className={cn(
+        "min-h-screen bg-background transition-all duration-300 ease-in-out",
+        sidebarOpen ? "ml-64" : "ml-20"
+      )}>
+        <div className="p-4 md:p-8 max-w-full mx-auto">
           {children}
         </div>
       </main>
