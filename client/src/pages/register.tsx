@@ -357,22 +357,22 @@ export default function CustomerRegistration() {
 
   return (
     <div className="p-4">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-8">
         {/* Step 1: Customer Information */}
         {step === 1 && (
           <Card
-            className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm"
+            className="bg-gradient-to-br from-white to-slate-50 border-2 border-red-300 shadow-sm"
             data-testid="card-customer-info"
           >
-            <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardHeader className="pb-6 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
               <CardTitle className="flex items-center gap-3 text-lg text-slate-900 font-semibold">
                 <User className="w-5 h-5 text-primary" />
                 Customer Information
               </CardTitle>
               <p className="text-sm text-slate-600 mt-2">Provide your personal details and service preferences</p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-6 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Full Name *</Label>
                   <Input
@@ -701,10 +701,10 @@ export default function CustomerRegistration() {
         {/* Step 2: Vehicle Details */}
         {step === 2 && (
           <Card
-            className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm"
+            className="bg-gradient-to-br from-white to-slate-50 border-2 border-red-300 shadow-sm"
             data-testid="card-vehicle-info"
           >
-            <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardHeader className="pb-6 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
               <CardTitle className="flex items-center gap-3 text-lg text-slate-900 font-semibold">
                 <Car className="w-5 h-5 text-primary" />
                 Vehicle Details
@@ -713,8 +713,8 @@ export default function CustomerRegistration() {
                 Please provide your vehicle information
               </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-6 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Vehicle Make *</Label>
                   <Input
