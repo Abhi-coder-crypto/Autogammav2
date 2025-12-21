@@ -373,7 +373,7 @@ export default function CustomerRegistration() {
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Full Name *</Label>
                   <Input
                     value={customerData.name}
@@ -382,10 +382,11 @@ export default function CustomerRegistration() {
                     }
                     placeholder="Enter your full name"
                     data-testid="input-full-name"
+                    className="border-slate-300"
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Mobile Number *</Label>
                   <Input
                     value={customerData.phone}
@@ -398,12 +399,12 @@ export default function CustomerRegistration() {
                     }}
                     placeholder="10-digit mobile number"
                     data-testid="input-mobile"
-                    className={errors.phone ? "border-red-500" : ""}
+                    className={errors.phone ? "border-red-500" : "border-slate-300"}
                   />
                   {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Email Address</Label>
                   <Input
                     type="email"
@@ -417,12 +418,12 @@ export default function CustomerRegistration() {
                     }}
                     placeholder="your@email.com (optional)"
                     data-testid="input-email"
-                    className={errors.email ? "border-red-500" : ""}
+                    className={errors.email ? "border-red-500" : "border-slate-300"}
                   />
                   {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>How did you hear about us?</Label>
                   <Select
                     value={customerData.referralSource}
@@ -433,7 +434,7 @@ export default function CustomerRegistration() {
                       })
                     }
                   >
-                    <SelectTrigger data-testid="select-referral">
+                    <SelectTrigger className="border-slate-300" data-testid="select-referral">
                       <SelectValue placeholder="Select referral source" />
                     </SelectTrigger>
                     <SelectContent>
@@ -446,7 +447,7 @@ export default function CustomerRegistration() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Customer Status</Label>
                   <Select
                     value={customerData.status}
@@ -457,7 +458,7 @@ export default function CustomerRegistration() {
                       })
                     }
                   >
-                    <SelectTrigger data-testid="select-status">
+                    <SelectTrigger className="border-slate-300" data-testid="select-status">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -489,7 +490,7 @@ export default function CustomerRegistration() {
                           })
                         }
                       >
-                        <SelectTrigger data-testid="select-ppf-category">
+                        <SelectTrigger className="border-slate-300" data-testid="select-ppf-category">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -516,7 +517,7 @@ export default function CustomerRegistration() {
                             })
                           }
                         >
-                          <SelectTrigger data-testid="select-ppf-vehicle">
+                          <SelectTrigger className="border-slate-300" data-testid="select-ppf-vehicle">
                             <SelectValue placeholder="Select vehicle type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -545,7 +546,7 @@ export default function CustomerRegistration() {
                             });
                           }}
                         >
-                          <SelectTrigger data-testid="select-ppf-warranty">
+                          <SelectTrigger className="border-slate-300" data-testid="select-ppf-warranty">
                             <SelectValue placeholder="Select warranty" />
                           </SelectTrigger>
                           <SelectContent>
@@ -566,7 +567,7 @@ export default function CustomerRegistration() {
                     <div>
                       <Label>Service</Label>
                       <Select value={customerData.tempServiceName} onValueChange={(value) => setCustomerData({...customerData, tempServiceName: value, tempServiceVehicleType: ""})}>
-                        <SelectTrigger data-testid="select-service-name">
+                        <SelectTrigger className="border-slate-300" data-testid="select-service-name">
                           <SelectValue placeholder="Select service" />
                         </SelectTrigger>
                         <SelectContent className="max-h-80 overflow-y-auto">
@@ -583,7 +584,7 @@ export default function CustomerRegistration() {
                       <div>
                         <Label>Vehicle Type</Label>
                         <Select value={customerData.tempServiceVehicleType} onValueChange={(value) => setCustomerData({...customerData, tempServiceVehicleType: value})}>
-                          <SelectTrigger data-testid="select-service-vehicle">
+                          <SelectTrigger className="border-slate-300" data-testid="select-service-vehicle">
                             <SelectValue placeholder="Select vehicle type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -612,7 +613,7 @@ export default function CustomerRegistration() {
                     {customerData.selectedOtherServices.length > 0 && (
                       <div className="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200">
                         <Label className="font-semibold text-slate-900">Selected Services</Label>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {customerData.selectedOtherServices.map((svc, idx) => (
                             <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
                               <span className="text-sm font-medium text-slate-900">{svc.name} - ₹{svc.price.toLocaleString('en-IN')}</span>
@@ -625,7 +626,7 @@ export default function CustomerRegistration() {
                   </div>
                 </div>
 
-                <div className="md:col-span-2 space-y-2">
+                <div className="md:col-span-2 space-y-3">
                   <Label>Address</Label>
                   <Input
                     value={customerData.address}
@@ -640,7 +641,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>City</Label>
                   <Input
                     value={customerData.city}
@@ -652,7 +653,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>District</Label>
                   <Input
                     value={customerData.district}
@@ -667,7 +668,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>State</Label>
                   <Input
                     value={customerData.state}
@@ -715,7 +716,7 @@ export default function CustomerRegistration() {
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Vehicle Make *</Label>
                   <Input
                     value={vehicleData.make}
@@ -727,7 +728,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Vehicle Model *</Label>
                   <Input
                     value={vehicleData.model}
@@ -739,14 +740,14 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Vehicle Type</Label>
                   <div className="px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-900" data-testid="display-vehicle-type">
                     {vehicleData.vehicleType || 'Not selected'}
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Year of Manufacture</Label>
                   <Input
                     value={vehicleData.year}
@@ -758,7 +759,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Vehicle Number *</Label>
                   <Input
                     value={vehicleData.plateNumber}
@@ -773,7 +774,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Chassis Number</Label>
                   <Input
                     value={vehicleData.chassisNumber}
@@ -788,7 +789,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Color</Label>
                   <Input
                     value={vehicleData.color}
@@ -800,7 +801,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="md:col-span-2 space-y-2">
+                <div className="md:col-span-2 space-y-3">
                   <Label>Vehicle Image</Label>
                   <Input
                     type="file"
