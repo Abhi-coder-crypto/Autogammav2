@@ -31,15 +31,21 @@ export default function RegisteredCustomers() {
     const states = new Set<string>();
 
     customers.forEach((customer: any) => {
-      if (customer.city) cities.add(customer.city);
-      if (customer.district) districts.add(customer.district);
-      if (customer.state) states.add(customer.state);
+      // Add city/district/state if they exist
+      if (customer.city?.trim()) cities.add(customer.city.trim());
+      if (customer.district?.trim()) districts.add(customer.district.trim());
+      if (customer.state?.trim()) states.add(customer.state.trim());
     });
 
+    // Remove empty string if any
+    cities.delete("");
+    districts.delete("");
+    states.delete("");
+
     return {
-      cities: Array.from(cities).sort(),
-      districts: Array.from(districts).sort(),
-      states: Array.from(states).sort(),
+      cities: Array.from(cities).filter(Boolean).sort(),
+      districts: Array.from(districts).filter(Boolean).sort(),
+      states: Array.from(states).filter(Boolean).sort(),
     };
   }, [customers]);
 
@@ -65,14 +71,20 @@ export default function RegisteredCustomers() {
     }
 
     // Apply location filters (only if customer has these fields)
-    if (selectedCity !== "all" && customer.city && customer.city !== selectedCity) {
-      return false;
+    if (selectedCity !== "all" && customer.city?.trim()) {
+      if (customer.city.trim() !== selectedCity.trim()) {
+        return false;
+      }
     }
-    if (selectedDistrict !== "all" && customer.district && customer.district !== selectedDistrict) {
-      return false;
+    if (selectedDistrict !== "all" && customer.district?.trim()) {
+      if (customer.district.trim() !== selectedDistrict.trim()) {
+        return false;
+      }
     }
-    if (selectedState !== "all" && customer.state && customer.state !== selectedState) {
-      return false;
+    if (selectedState !== "all" && customer.state?.trim()) {
+      if (customer.state.trim() !== selectedState.trim()) {
+        return false;
+      }
     }
 
     // Apply status filter

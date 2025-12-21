@@ -35,6 +35,9 @@ export interface ICustomer extends Document {
   phone: string;
   email?: string;
   address?: string;
+  city?: string;
+  district?: string;
+  state?: string;
   customerId: string;
   status: CustomerStatus;
   service?: string;
@@ -177,6 +180,9 @@ const CustomerSchema = new Schema<ICustomer>({
   phone: { type: String, required: true },
   email: { type: String },
   address: { type: String },
+  city: { type: String },
+  district: { type: String },
+  state: { type: String },
   customerId: { type: String, unique: true, required: true },
   status: { type: String, enum: ['Inquired', 'Working', 'Waiting', 'Completed'], default: 'Inquired' },
   service: { type: String },
