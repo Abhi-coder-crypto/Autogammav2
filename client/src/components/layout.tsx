@@ -73,16 +73,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sidebar Toggle Button - Outside Sidebar */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed left-4 top-4 z-50 p-1.5 hover:bg-secondary rounded-md transition-colors border border-border bg-card"
-        data-testid="button-sidebar-toggle"
-        title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-      >
-        <Menu className="w-5 h-5 text-foreground" />
-      </button>
-
       {/* Sidebar */}
       <aside
         className={cn(
@@ -90,15 +80,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
           sidebarOpen ? "w-64" : "w-20"
         )}
       >
-        {/* Logo Section - Only visible when expanded */}
-        {sidebarOpen && (
-          <div className="flex items-center gap-2 p-4 border-b border-border">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
-              AG
+        {/* Header with Toggle Button */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          {sidebarOpen && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                AG
+              </div>
+              <span className="text-sm font-semibold text-foreground">AutoGarage</span>
             </div>
-            <span className="text-sm font-semibold text-foreground">AutoGarage</span>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1.5 hover:bg-secondary rounded-md transition-colors"
+            data-testid="button-sidebar-toggle"
+            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            <Menu className="w-5 h-5 text-foreground" />
+          </button>
+        </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-2 overflow-y-auto">
