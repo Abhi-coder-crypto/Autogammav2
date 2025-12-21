@@ -205,8 +205,8 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
           <CardContent className="p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-emerald-700 font-semibold uppercase tracking-wider">Paid Invoices</p>
-                <p className="text-3xl font-bold mt-3 text-emerald-900">
+                <p className="text-sm text-slate-600 font-semibold uppercase tracking-wider">Paid Invoices</p>
+                <p className="text-3xl font-bold mt-3 text-slate-700">
                   {paidInvoices}
                 </p>
               </div>
