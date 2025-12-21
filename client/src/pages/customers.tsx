@@ -231,14 +231,9 @@ export default function Customers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Customers & Services</h1>
-          <p className="text-muted-foreground mt-1">Manage customer records, vehicles, and services</p>
-        </div>
-        
+      <div className="flex items-center justify-between gap-4">
         <Button 
-          className="bg-primary hover:bg-primary/90" 
+          className="bg-primary hover:bg-primary/90 ml-auto" 
           data-testid="button-add-service"
           onClick={() => setShowServiceForm(!showServiceForm)}
         >
