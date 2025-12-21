@@ -85,7 +85,7 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@autogarage.com"
-                    className="pl-12 h-11 text-base border border-slate-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600/20 focus:ring-offset-0 transition-all bg-white"
+                    className="pl-12 h-11 text-base border border-red-200 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600/20 focus:ring-offset-0 transition-all bg-white"
                     data-testid="input-email"
                     autoComplete="email"
                   />
@@ -102,7 +102,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="pl-12 h-11 text-base border border-slate-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600/20 focus:ring-offset-0 transition-all bg-white"
+                    className="pl-12 h-11 text-base border border-red-200 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600/20 focus:ring-offset-0 transition-all bg-white"
                     data-testid="input-password"
                     autoComplete="current-password"
                   />
