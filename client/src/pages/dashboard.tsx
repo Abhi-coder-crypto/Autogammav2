@@ -153,7 +153,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-slate-200">
         <div>
-          <p className="text-sm font-medium text-slate-600">Welcome back! Here's your garage performance</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-1">Dashboard</h1>
+          <p className="text-sm font-medium text-slate-600">Welcome back, {user?.name || 'Admin'}!</p>
         </div>
         {user && (
           <div className="flex items-center gap-3 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg p-3 border border-slate-200">
@@ -208,7 +209,7 @@ export default function Dashboard() {
       {/* Charts Row 1 */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card
-          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border-2 border-red-600 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-red-700 transition-all"
           data-testid="card-sales-trends"
         >
           <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-transparent">
@@ -233,7 +234,7 @@ export default function Dashboard() {
         </Card>
 
         <Card
-          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border-2 border-red-600 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-red-700 transition-all"
           data-testid="card-customer-status"
         >
           <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
@@ -269,7 +270,7 @@ export default function Dashboard() {
       {/* Charts Row 2 */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card
-          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-green-600/50 transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border-2 border-red-600 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-red-700 transition-all"
           data-testid="card-customer-growth"
         >
           <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-green-50 to-transparent">
@@ -300,7 +301,7 @@ export default function Dashboard() {
         </Card>
 
         <Card
-          className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-orange-500/50 transition-all"
+          className="bg-gradient-to-br from-white to-slate-50 border-2 border-red-600 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-red-700 transition-all"
           data-testid="card-inventory-categories"
         >
           <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-orange-50 to-transparent">
@@ -327,7 +328,7 @@ export default function Dashboard() {
 
       {/* Active Jobs Table */}
       <Card
-        className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/50 transition-all"
+        className="bg-gradient-to-br from-white to-slate-50 border-2 border-red-600 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-red-700 transition-all"
         data-testid="card-active-jobs"
       >
         <CardHeader className="pb-4 border-b border-slate-200 bg-gradient-to-r from-primary/5 to-transparent">
