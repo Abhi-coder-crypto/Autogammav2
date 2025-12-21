@@ -40,18 +40,6 @@ export default function RegisteredCustomers() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="pb-6 border-b border-slate-200">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-slate-600">Manage and view all your garage customers</p>
-          </div>
-          <div className="hidden md:flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl">
-            <Users className="w-8 h-8 text-primary" />
-          </div>
-        </div>
-      </div>
-
       {/* Search & Filter Section */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
