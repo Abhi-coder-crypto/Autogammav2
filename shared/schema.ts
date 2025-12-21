@@ -32,7 +32,11 @@ export const customerSchema = z.object({
   phone: z.string().min(1),
   email: z.string().email().optional(),
   address: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  state: z.string().optional(),
   status: z.enum(['Inquired', 'Working', 'Waiting', 'Completed']).default('Inquired'),
+  createdAt: z.date().optional(),
   vehicles: z.array(vehicleSchema).default([])
 });
 

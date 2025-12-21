@@ -3,65 +3,252 @@ import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Search, Mail, MapPin, Car, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Mail, MapPin, Car, Users, Filter } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export default function RegisteredCustomers() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterVehicles, setFilterVehicles] = useState("all");
+  const [selectedCity, setSelectedCity] = useState("all");
+  const [selectedDistrict, setSelectedDistrict] = useState("all");
+  const [selectedState, setSelectedState] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [dateRange, setDateRange] = useState("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["customers"],
     queryFn: () => api.customers.list(),
   });
 
+  // Extract unique values for filters
+  const filterOptions = useMemo(() => {
+    const cities = new Set<string>();
+    const districts = new Set<string>();
+    const states = new Set<string>();
+
+    customers.forEach((customer: any) => {
+      if (customer.city) cities.add(customer.city);
+      if (customer.district) districts.add(customer.district);
+      if (customer.state) states.add(customer.state);
+    });
+
+    return {
+      cities: Array.from(cities).sort(),
+      districts: Array.from(districts).sort(),
+      states: Array.from(states).sort(),
+    };
+  }, [customers]);
+
   const filteredCustomers = customers.filter((customer: any) => {
-    // Apply vehicle filter
-    if (filterVehicles === "with-vehicles" && (!customer.vehicles || customer.vehicles.length === 0)) {
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const nameMatch = customer.name?.toLowerCase().includes(query);
+      const emailMatch = customer.email?.toLowerCase().includes(query);
+      const phoneMatch = customer.phone?.includes(query);
+      const referenceMatch = customer.customerId?.toLowerCase().includes(query);
+      const vehicleMatch = customer.vehicles?.some((v: any) => 
+        v.make?.toLowerCase().includes(query) ||
+        v.model?.toLowerCase().includes(query) ||
+        v.plateNumber?.toLowerCase().includes(query) ||
+        v.vin?.toLowerCase().includes(query)
+      );
+      const chassisMatch = customer.vehicles?.some((v: any) => 
+        v.vin?.toLowerCase().includes(query)
+      );
+
+      if (!nameMatch && !emailMatch && !phoneMatch && !referenceMatch && !vehicleMatch && !chassisMatch) {
+        return false;
+      }
+    }
+
+    // Apply location filters
+    if (selectedCity !== "all" && customer.city !== selectedCity) {
       return false;
     }
-    if (filterVehicles === "without-vehicles" && customer.vehicles && customer.vehicles.length > 0) {
+    if (selectedDistrict !== "all" && customer.district !== selectedDistrict) {
+      return false;
+    }
+    if (selectedState !== "all" && customer.state !== selectedState) {
       return false;
     }
 
-    // Apply search filter
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    const nameMatch = customer.name?.toLowerCase().includes(query);
-    const phoneMatch = customer.phone?.includes(query);
-    const vehicleMatch = customer.vehicles?.some((v: any) => 
-      v.make?.toLowerCase().includes(query) ||
-      v.model?.toLowerCase().includes(query) ||
-      v.plateNumber?.toLowerCase().includes(query)
-    );
-    return nameMatch || phoneMatch || vehicleMatch;
+    // Apply status filter
+    if (selectedStatus !== "all" && customer.status !== selectedStatus) {
+      return false;
+    }
+
+    // Apply date range filter
+    if (fromDate || toDate) {
+      const customerDate = customer.createdAt ? new Date(customer.createdAt) : null;
+      if (customerDate) {
+        if (fromDate) {
+          const from = new Date(fromDate);
+          if (customerDate < from) return false;
+        }
+        if (toDate) {
+          const to = new Date(toDate);
+          if (customerDate > to) return false;
+        }
+      }
+    }
+
+    return true;
   });
 
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setSelectedCity("all");
+    setSelectedDistrict("all");
+    setSelectedState("all");
+    setSelectedStatus("all");
+    setDateRange("all");
+    setFromDate("");
+    setToDate("");
+  };
+
   return (
-    <div className="space-y-8">
-      {/* Search & Filter Section */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          
+    <div className="space-y-6">
+      {/* Filters Header */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Filter className="w-5 h-5 text-slate-900" />
+          <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
+        </div>
+        <p className="text-sm text-slate-600">Filter customers by various criteria</p>
+      </div>
+
+      {/* Comprehensive Search & Filter Section */}
+      <div className="space-y-4">
+        {/* Search Box */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
           <Input
-            placeholder="Search by name, phone, or vehicle..."
+            placeholder="Search by name, mobile, email, reference code, vehicle number, or chassis number..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 h-11 bg-white border border-slate-200 rounded-lg focus:border-primary/50 shadow-sm"
-            data-testid="input-search-customer"
+            className="pl-10 h-11 bg-white border border-slate-200 rounded-lg focus:border-primary/50 shadow-sm"
+            data-testid="input-search-comprehensive"
           />
         </div>
-        <Select value={filterVehicles} onValueChange={setFilterVehicles}>
-          <SelectTrigger className="w-full md:w-48 h-11 bg-white border border-slate-200 shadow-sm" data-testid="select-filter-vehicles">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Customers</SelectItem>
-            <SelectItem value="with-vehicles">With Vehicles</SelectItem>
-            <SelectItem value="without-vehicles">Without Vehicles</SelectItem>
-          </SelectContent>
-        </Select>
+
+        {/* Filter Dropdowns */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-city">
+              <SelectValue placeholder="All Cities" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Cities</SelectItem>
+              {filterOptions.cities.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+            <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-district">
+              <SelectValue placeholder="All Districts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Districts</SelectItem>
+              {filterOptions.districts.map((district) => (
+                <SelectItem key={district} value={district}>
+                  {district}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedState} onValueChange={setSelectedState}>
+            <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-state">
+              <SelectValue placeholder="All States" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All States</SelectItem>
+              {filterOptions.states.map((state) => (
+                <SelectItem key={state} value={state}>
+                  {state}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-status">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Inquired">Inquired</SelectItem>
+              <SelectItem value="Working">Working</SelectItem>
+              <SelectItem value="Waiting">Waiting</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Sort & Date Filters */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-900">Sort & Date Filters</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-date-range">
+                <SelectValue placeholder="Date Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Dates</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="pl-10 h-11 w-full bg-white border border-slate-200 rounded-lg focus:border-primary/50 shadow-sm"
+                placeholder="From Date"
+                data-testid="input-from-date"
+              />
+            </div>
+
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="pl-10 h-11 w-full bg-white border border-slate-200 rounded-lg focus:border-primary/50 shadow-sm"
+                placeholder="To Date"
+                data-testid="input-to-date"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Clear Filters Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleClearFilters}
+          className="text-slate-700 hover:text-slate-900"
+          data-testid="button-clear-filters"
+        >
+          Clear All Filters
+        </Button>
       </div>
 
       {/* Results */}
