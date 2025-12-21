@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Mail, MapPin, Car, Users, Filter } from "lucide-react";
+import { Search, Mail, MapPin, Car, Users, Filter, Grid3X3, List, Trash2, ExternalLink, Check } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useMemo } from "react";
 
@@ -17,6 +17,7 @@ export default function RegisteredCustomers() {
   const [dateRange, setDateRange] = useState("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [viewMode, setViewMode] = useState<"card" | "list">("card");
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["customers"],
@@ -271,6 +272,38 @@ export default function RegisteredCustomers() {
         </Button>
       </div>
 
+      {/* View Toggle and Results Header */}
+      {!isLoading && filteredCustomers.length > 0 && (
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Registered Customers</h2>
+            <p className="text-sm text-slate-600">{filteredCustomers.length} customers • {filteredCustomers.reduce((sum, c: any) => sum + (c.vehicles?.length || 0), 0)} vehicles</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "card" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("card")}
+              className="flex items-center gap-2"
+              data-testid="button-view-card"
+            >
+              <Grid3X3 className="w-4 h-4" />
+              Card
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="flex items-center gap-2"
+              data-testid="button-view-list"
+            >
+              <List className="w-4 h-4" />
+              List
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Results */}
       {isLoading ? (
         <div className="text-center py-12">
@@ -287,8 +320,119 @@ export default function RegisteredCustomers() {
           <p className="text-slate-900 font-semibold mb-1">No customers found</p>
           <p className="text-slate-600 text-sm">Try adjusting your search or filters</p>
         </div>
+      ) : viewMode === "card" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCustomers.map((customer: any) => {
+            const primaryVehicle = customer.vehicles?.[0];
+            return (
+              <Card
+                key={customer._id}
+                className="border border-orange-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                data-testid={`customer-card-${customer._id}`}
+              >
+                {/* Card Image Section */}
+                <div className="relative w-full h-48 bg-slate-200 overflow-hidden">
+                  {primaryVehicle?.image ? (
+                    <img
+                      src={primaryVehicle.image}
+                      alt={customer.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+                      <Car className="w-12 h-12 text-slate-400" />
+                    </div>
+                  )}
+                </div>
+
+                <CardContent className="p-5 space-y-4">
+                  {/* Header with name and vehicles count */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-slate-900 group-hover:text-primary transition-colors truncate">
+                        {customer.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 font-mono mt-1">CUST-{customer.customerId}</p>
+                    </div>
+                    {customer.vehicles && customer.vehicles.length > 0 && (
+                      <div className="flex items-center gap-1 px-2 py-1 bg-red-50 rounded-lg flex-shrink-0">
+                        <Car className="w-3 h-3 text-red-500" />
+                        <span className="text-xs font-semibold text-red-600">{customer.vehicles.length}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Verified Badge */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 px-2.5 py-1 bg-green-50 rounded-full">
+                      <Check className="w-3 h-3 text-green-600" />
+                      <span className="text-xs font-semibold text-green-600">Verified</span>
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="space-y-2">
+                    {customer.email && (
+                      <div className="flex items-center gap-2 text-sm text-slate-700">
+                        <Mail className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                        <span className="truncate">{customer.email}</span>
+                      </div>
+                    )}
+                    {customer.phone && (
+                      <div className="flex items-center gap-2 text-sm text-slate-700">
+                        <Car className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                        <span>{customer.phone}</span>
+                      </div>
+                    )}
+                    {customer.address && (
+                      <div className="flex items-start gap-2 text-sm text-slate-700">
+                        <MapPin className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-1">{customer.address}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Registered By Info */}
+                  <div className="pt-3 border-t border-slate-200">
+                    <p className="text-xs text-slate-600">
+                      <span className="font-semibold">Registered by:</span> {customer.registeredBy || "Admin"}
+                    </p>
+                    {customer.createdAt && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        {new Date(customer.createdAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-2">
+                    <Link href={`/customer-details/${customer._id}`} className="flex-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full flex items-center justify-center gap-2 text-slate-700"
+                        data-testid={`button-view-details-${customer._id}`}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View Details
+                      </Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      data-testid={`button-delete-${customer._id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="space-y-4">
           {filteredCustomers.map((customer: any) => (
             <Link key={customer._id} href={`/customer-details/${customer._id}`}>
               <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer group" data-testid={`customer-card-${customer._id}`}>
