@@ -41,12 +41,12 @@ const STAGE_BG_COLORS: Record<string, string> = {
 };
 
 const STAGE_BADGE_COLORS: Record<string, string> = {
-  'New Lead': 'bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800',
-  'Inspection Done': 'bg-yellow-100 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
-  'Work In Progress': 'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800',
-  'Ready for Delivery': 'bg-gray-100 dark:bg-green-950/50 text-slate-600 dark:text-green-400 border-gray-200 dark:border-green-800',
-  'Completed': 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
-  'Cancelled': 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
+  'New Lead': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Inspection Done': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  'Work In Progress': 'bg-orange-100 text-orange-700 border-orange-200',
+  'Ready for Delivery': 'bg-gray-100 text-slate-600 border-gray-200',
+  'Completed': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  'Cancelled': 'bg-red-100 text-red-700 border-red-200'
 };
 
 export default function ServiceFunnel() {
