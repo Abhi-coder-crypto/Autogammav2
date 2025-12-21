@@ -447,10 +447,10 @@ export default function CustomerService() {
           </CardTitle>
           <p className="text-sm text-slate-600 mt-2">Select a customer, vehicle, and services to create a new job</p>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-4">
+        <CardContent className="pt-8 pb-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
                 <div className="space-y-2">
                   <Label>Select Customer *</Label>
                   <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
@@ -773,7 +773,7 @@ export default function CustomerService() {
                 </Card>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="space-y-2">
                   <Label>Discount %</Label>
                   <Input
