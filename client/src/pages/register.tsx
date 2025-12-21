@@ -373,7 +373,7 @@ export default function CustomerRegistration() {
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Full Name *</Label>
                   <Input
                     value={customerData.name}
@@ -386,7 +386,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Mobile Number *</Label>
                   <Input
                     value={customerData.phone}
@@ -404,7 +404,7 @@ export default function CustomerRegistration() {
                   {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Email Address</Label>
                   <Input
                     type="email"
@@ -423,7 +423,7 @@ export default function CustomerRegistration() {
                   {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>How did you hear about us?</Label>
                   <Select
                     value={customerData.referralSource}
@@ -447,7 +447,7 @@ export default function CustomerRegistration() {
                   </Select>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Customer Status</Label>
                   <Select
                     value={customerData.status}
@@ -474,7 +474,7 @@ export default function CustomerRegistration() {
                 {/* PPF & Services in 2 Columns */}
                 <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* PPF Selection - Left Column */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <h3 className="font-medium text-sm">PPF Services</h3>
                     <div>
                       <Label>Category</Label>
@@ -562,7 +562,7 @@ export default function CustomerRegistration() {
                   </div>
 
                   {/* Other Services Selection - Right Column */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <h3 className="font-medium text-sm">Other Services (Multiple)</h3>
                     <div>
                       <Label>Service</Label>
@@ -611,9 +611,9 @@ export default function CustomerRegistration() {
                     )}
 
                     {customerData.selectedOtherServices.length > 0 && (
-                      <div className="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                      <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
                         <Label className="font-semibold text-slate-900">Selected Services</Label>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           {customerData.selectedOtherServices.map((svc, idx) => (
                             <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
                               <span className="text-sm font-medium text-slate-900">{svc.name} - ₹{svc.price.toLocaleString('en-IN')}</span>
@@ -626,7 +626,7 @@ export default function CustomerRegistration() {
                   </div>
                 </div>
 
-                <div className="md:col-span-2 space-y-3">
+                <div className="md:col-span-2 space-y-4">
                   <Label>Address</Label>
                   <Input
                     value={customerData.address}
@@ -641,7 +641,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>City</Label>
                   <Input
                     value={customerData.city}
@@ -653,7 +653,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>District</Label>
                   <Input
                     value={customerData.district}
@@ -668,7 +668,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>State</Label>
                   <Input
                     value={customerData.state}
@@ -716,7 +716,7 @@ export default function CustomerRegistration() {
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Vehicle Make *</Label>
                   <Input
                     value={vehicleData.make}
@@ -728,7 +728,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Vehicle Model *</Label>
                   <Input
                     value={vehicleData.model}
@@ -740,14 +740,14 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Vehicle Type</Label>
-                  <div className="px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-900" data-testid="display-vehicle-type">
+                  <div className="px-4 py-3 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-900" data-testid="display-vehicle-type">
                     {vehicleData.vehicleType || 'Not selected'}
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Year of Manufacture</Label>
                   <Input
                     value={vehicleData.year}
@@ -759,7 +759,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Vehicle Number *</Label>
                   <Input
                     value={vehicleData.plateNumber}
@@ -774,7 +774,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Chassis Number</Label>
                   <Input
                     value={vehicleData.chassisNumber}
@@ -789,7 +789,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Label>Color</Label>
                   <Input
                     value={vehicleData.color}
@@ -801,7 +801,7 @@ export default function CustomerRegistration() {
                   />
                 </div>
 
-                <div className="md:col-span-2 space-y-3">
+                <div className="md:col-span-2 space-y-4">
                   <Label>Vehicle Image</Label>
                   <Input
                     type="file"
