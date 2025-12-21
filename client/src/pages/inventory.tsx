@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Package, AlertTriangle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Package, AlertTriangle, ArrowUp, ArrowDown, Search, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PPF_ITEMS = [
@@ -36,6 +36,9 @@ export default function Inventory() {
   const [adjustType, setAdjustType] = useState<'in' | 'out'>('in');
   const [adjustAmount, setAdjustAmount] = useState('1');
   const [adjustUnit, setAdjustUnit] = useState(DEFAULT_UNIT);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'quantity'>('name');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -115,14 +118,84 @@ export default function Inventory() {
 
   const isLowStock = (item: any) => item.quantity <= MIN_STOCK;
   
-  const lowStockItems = inventory.filter(isLowStock);
+  // Filter and sort items
+  const filteredAndSortedItems = useMemo(() => {
+    let items = PPF_ITEMS.map((ppfItem) => {
+      const item = inventory.find((inv: any) => inv.category === ppfItem.category);
+      return item || { name: ppfItem.name, category: ppfItem.category, quantity: 0, unit: DEFAULT_UNIT, minStock: MIN_STOCK, _id: null };
+    });
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      items = items.filter((item) => 
+        item.category.toLowerCase().includes(query) || 
+        item.name.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply category filter
+    if (filterCategory !== 'all') {
+      items = items.filter((item) => item.category === filterCategory);
+    }
+
+    // Apply sorting
+    if (sortBy === 'quantity') {
+      items.sort((a, b) => b.quantity - a.quantity);
+    } else {
+      items.sort((a, b) => a.category.localeCompare(b.category));
+    }
+
+    return items;
+  }, [inventory, searchQuery, filterCategory, sortBy]);
+
+  const lowStockItems = filteredAndSortedItems.filter(isLowStock);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="space-y-4">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">PPF Inventory</h1>
           <p className="text-muted-foreground mt-1">Manage stock for PPF products</p>
+        </div>
+        
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          {/* Search Bar */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search by product name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+              data-testid="input-search-inventory"
+            />
+          </div>
+
+          {/* Sort Button */}
+          <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'name' | 'quantity')}>
+            <SelectTrigger className="w-40" data-testid="select-sort">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Sort by Name</SelectItem>
+              <SelectItem value="quantity">Sort by Quantity</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Filter Button */}
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-40" data-testid="select-filter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="Elite">Elite</SelectItem>
+              <SelectItem value="Garware Plus">Garware Plus</SelectItem>
+              <SelectItem value="Garware Premium">Garware Premium</SelectItem>
+              <SelectItem value="Garware Matt">Garware Matt</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -138,20 +211,18 @@ export default function Inventory() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {isLoading ? (
           <div className="col-span-full text-center py-8 text-muted-foreground">Loading inventory...</div>
+        ) : filteredAndSortedItems.length === 0 ? (
+          <div className="col-span-full text-center py-8 text-muted-foreground">No products match your search or filters</div>
         ) : (
-          PPF_ITEMS.map((ppfItem) => {
-            const item = inventory.find((inv: any) => inv.category === ppfItem.category);
-            const displayItem = item || { name: ppfItem.name, category: ppfItem.category, quantity: 0, unit: DEFAULT_UNIT, minStock: MIN_STOCK, _id: null };
-            
-            // Use category as display name for known PPF products
-            const displayName = ppfItem.category;
+          filteredAndSortedItems.map((displayItem) => {
+            const displayName = displayItem.category;
             
             return (
               <Card 
                 key={displayItem.category} 
                 className={cn(
                   "card-modern",
-                  item && isLowStock(item) && "border-gray-400 shadow-md"
+                  isLowStock(displayItem) && "border-gray-400 shadow-md"
                 )}
                 data-testid={`inventory-card-${displayItem.category}`}
               >
@@ -169,21 +240,21 @@ export default function Inventory() {
                   <div className="flex items-baseline justify-between">
                     <span className={cn(
                       "text-3xl font-display font-bold",
-                      item && isLowStock(item) && "text-gray-700"
+                      isLowStock(displayItem) && "text-gray-700"
                     )}>
                       {displayItem.quantity}
                     </span>
                     <span className="text-sm text-muted-foreground">{displayItem.unit}</span>
                   </div>
                   
-                  {item && isLowStock(item) && (
+                  {isLowStock(displayItem) && (
                     <p className="text-xs text-gray-600 flex items-center gap-1">
                       <AlertTriangle className="w-3 h-3" />
                       Below minimum ({MIN_STOCK} {displayItem.unit})
                     </p>
                   )}
 
-                  {!item && (
+                  {displayItem._id === null && (
                     <p className="text-xs text-muted-foreground">
                       No stock data yet
                     </p>
