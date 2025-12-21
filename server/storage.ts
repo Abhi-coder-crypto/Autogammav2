@@ -485,7 +485,7 @@ export class MongoStorage implements IStorage {
 
     const allMaterials = [...job.materials, ...newMaterials];
     const materialsTotal = allMaterials.reduce((sum, m) => sum + m.cost, 0);
-    const servicesTotal = job.serviceItems.reduce((sum, s) => sum + s.cost, 0);
+    const servicesTotal = job.serviceItems.reduce((sum, s) => sum + s.price, 0);
     const serviceCost = job.serviceCost || 0;
     const totalAmount = materialsTotal + servicesTotal + serviceCost;
 
