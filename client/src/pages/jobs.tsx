@@ -113,9 +113,28 @@ export default function ServiceFunnel() {
 
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
 
+  const PHASE_STAGE_MAPPING: Record<string, string[]> = {
+    'PHASE 1': ['New Lead'],
+    'PHASE 2': ['Inspection Done', 'Work In Progress'],
+    'PHASE 3': ['Ready for Delivery'],
+    'PHASE 4': ['Completed', 'Cancelled']
+  };
+
+  const PHASE_BORDERS: Record<string, string> = {
+    'PHASE 1': 'border-blue-500',
+    'PHASE 2': 'border-yellow-500',
+    'PHASE 3': 'border-green-500',
+    'PHASE 4': 'border-red-500'
+  };
+
+  const getPhaseTitle = (phase: string) => {
+    const stages = PHASE_STAGE_MAPPING[phase];
+    return stages[0] || phase;
+  };
+
   return (
     <div className="space-y-8">
-      {/* Funnel Overview */}
+      {/* Phase Summary Header */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {JOB_STAGES.map(stage => (
           <Card key={stage} className={cn("card-modern border-2 shadow-md hover:shadow-lg transition-all duration-300", STAGE_BG_COLORS[stage])}>
@@ -130,14 +149,14 @@ export default function ServiceFunnel() {
       </div>
 
       {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 bg-gradient-to-r from-slate-50 to-slate-100 p-6 rounded-xl border border-slate-200">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search by customer, vehicle, or plate..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 bg-white border-slate-300 rounded-lg shadow-sm"
+            className="pl-10 bg-white border-slate-300 rounded-lg shadow-sm"
             data-testid="input-search-jobs"
           />
         </div>
@@ -154,16 +173,39 @@ export default function ServiceFunnel() {
         </Select>
       </div>
 
-      {/* Service List */}
-      <div className="space-y-4">
-        {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading services...</div>
-        ) : filteredJobs.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {search || stageFilter !== 'all' ? 'No services match your filters' : 'No services yet. Create a new service from Customers Service page.'}
-          </div>
-        ) : (
-          filteredJobs.map((job: any) => (
+      {/* Vertical Phase Sections */}
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">Loading services...</div>
+      ) : (
+        Object.entries(PHASE_STAGE_MAPPING).map(([phase, stages]) => {
+          const phaseJobs = jobs.filter((job: any) => 
+            stages.includes(job.stage) && 
+            (search === '' || 
+              job.customerName.toLowerCase().includes(search.toLowerCase()) ||
+              job.vehicleName.toLowerCase().includes(search.toLowerCase()) ||
+              job.plateNumber.toLowerCase().includes(search.toLowerCase())) &&
+            (stageFilter === 'all' || job.stage === stageFilter)
+          );
+
+          return (
+            <div key={phase} className={cn("border-l-4 rounded-lg p-6 space-y-4 bg-white", PHASE_BORDERS[phase])}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">{phase}</span>
+                  <h3 className="text-xl font-bold text-slate-900">{getPhaseTitle(phase)}</h3>
+                </div>
+                <span className="inline-flex items-center justify-center w-8 h-8 text-sm font-bold text-slate-600 bg-slate-100 rounded-full">
+                  {phaseJobs.length}
+                </span>
+              </div>
+
+              {phaseJobs.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground text-sm">
+                  No services in this phase
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {phaseJobs.map((job: any) => (
             <Card 
               key={job._id} 
               className="card-modern border-slate-200 shadow-md hover:shadow-xl transition-all duration-300 hover:border-slate-300 bg-gradient-to-r from-white to-slate-50"
@@ -222,40 +264,44 @@ export default function ServiceFunnel() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4 mt-5 pt-5 border-t border-slate-200 text-sm flex-wrap">
-                  <div className="flex items-center gap-6 text-sm">
-                    <div>
-                      <span className="text-slate-500 font-medium">Service Cost: </span>
-                      <span className="font-bold">₹{job.totalAmount.toLocaleString('en-IN')}</span>
+                    <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-slate-200 text-sm flex-wrap">
+                      <div className="flex items-center gap-4 text-sm">
+                        <div>
+                          <span className="text-slate-500 font-medium">Service Cost: </span>
+                          <span className="font-bold">₹{job.totalAmount.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 font-medium">Final Amount: </span>
+                          <span className="font-bold">₹{job.paidAmount.toLocaleString('en-IN')}</span>
+                        </div>
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            job.paymentStatus === 'Paid' && 'border-green-500/30 text-slate-600',
+                            job.paymentStatus === 'Partially Paid' && 'border-yellow-500/30 text-yellow-500',
+                            job.paymentStatus === 'Pending' && 'border-red-500/30 text-red-500'
+                          )}
+                        >
+                          {job.paymentStatus}
+                        </Badge>
+                      </div>
+                      <div>
+                        {hasInvoice(job._id) && (
+                          <Badge className="bg-gray-100 dark:bg-green-950/50 text-slate-600 dark:text-green-400 border-gray-200 dark:border-green-800">
+                            Invoice Created
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 font-medium">Final Amount: </span>
-                      <span className="font-bold">₹{job.paidAmount.toLocaleString('en-IN')}</span>
-                    </div>
-                    <Badge 
-                      variant="outline" 
-                      className={cn(
-                        job.paymentStatus === 'Paid' && 'border-green-500/30 text-slate-600',
-                        job.paymentStatus === 'Partially Paid' && 'border-yellow-500/30 text-yellow-500',
-                        job.paymentStatus === 'Pending' && 'border-red-500/30 text-red-500'
-                      )}
-                    >
-                      {job.paymentStatus}
-                    </Badge>
-                  </div>
-                  <div>
-                    {hasInvoice(job._id) && (
-                      <Badge className="bg-gray-100 dark:bg-green-950/50 text-slate-600 dark:text-green-400 border-gray-200 dark:border-green-800">
-                        Invoice Created
-                      </Badge>
-                    )}
-                  </div>
+                  </CardContent>
+                </Card>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
