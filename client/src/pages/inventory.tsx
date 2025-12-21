@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Package, AlertTriangle, ArrowUp, ArrowDown, Search, Filter } from 'lucide-react';
+import { Package, AlertTriangle, ArrowUp, ArrowDown, Search, Filter, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PPF_ITEMS = [
@@ -154,9 +154,15 @@ export default function Inventory() {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">PPF Inventory</h1>
-          <p className="text-muted-foreground mt-1">Manage stock for PPF products</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight">PPF Inventory</h1>
+            <p className="text-muted-foreground mt-1">Manage stock for PPF products</p>
+          </div>
+          <Button className="bg-primary text-white hover:bg-primary/90" data-testid="button-add-inventory">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Inventory
+          </Button>
         </div>
         
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -221,8 +227,8 @@ export default function Inventory() {
               <Card 
                 key={displayItem.category} 
                 className={cn(
-                  "card-modern",
-                  isLowStock(displayItem) && "border-gray-400 shadow-md"
+                  "card-modern border border-red-300",
+                  isLowStock(displayItem) && "border-red-400 shadow-md"
                 )}
                 data-testid={`inventory-card-${displayItem.category}`}
               >
