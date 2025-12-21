@@ -547,7 +547,8 @@ export default function CustomerRegistration() {
                         <Select
                           value={customerData.ppfWarranty}
                           onValueChange={(value) => {
-                            const price = PPF_CATEGORIES[customerData.ppfCategory as keyof typeof PPF_CATEGORIES][customerData.ppfVehicleType as string][value as string] as number;
+                            const categoryData = PPF_CATEGORIES[customerData.ppfCategory as keyof typeof PPF_CATEGORIES] as Record<string, Record<string, number>>;
+                            const price = categoryData[customerData.ppfVehicleType][value] as number;
                             setCustomerData({
                               ...customerData,
                               ppfWarranty: value,
@@ -559,7 +560,7 @@ export default function CustomerRegistration() {
                             <SelectValue placeholder="Select warranty" />
                           </SelectTrigger>
                           <SelectContent>
-                            {Object.entries(PPF_CATEGORIES[customerData.ppfCategory as keyof typeof PPF_CATEGORIES][customerData.ppfVehicleType as string]).map(([warranty, price]) => (
+                            {Object.entries((PPF_CATEGORIES[customerData.ppfCategory as keyof typeof PPF_CATEGORIES] as Record<string, Record<string, number>>)[customerData.ppfVehicleType]).map(([warranty, price]) => (
                               <SelectItem key={warranty} value={warranty}>
                                 {warranty} - ₹{(price as number).toLocaleString('en-IN')}
                               </SelectItem>
@@ -606,7 +607,8 @@ export default function CustomerRegistration() {
                         </Select>
                         <Button type="button" size="sm" className="mt-2 w-full" onClick={() => {
                           if (customerData.tempServiceName && customerData.tempServiceVehicleType) {
-                            const price = OTHER_SERVICES[customerData.tempServiceName as keyof typeof OTHER_SERVICES][customerData.tempServiceVehicleType as string] as number;
+                            const serviceData = OTHER_SERVICES[customerData.tempServiceName as keyof typeof OTHER_SERVICES] as Record<string, number>;
+                            const price = serviceData[customerData.tempServiceVehicleType] as number;
                             setCustomerData({
                               ...customerData,
                               selectedOtherServices: [...customerData.selectedOtherServices, {name: customerData.tempServiceName, vehicleType: customerData.tempServiceVehicleType, price}],
