@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Wrench, Phone, Briefcase } from 'lucide-react';
+import { Plus, Wrench, Phone, Briefcase, Search, Filter, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -20,6 +20,9 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Technicians() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+  const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -71,13 +74,38 @@ export default function Technicians() {
     return found?.jobCount || 0;
   };
 
+  const filteredAndSortedTechnicians = technicians
+    .filter((tech: any) => {
+      const matchesSearch = searchQuery === '' || 
+        tech.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tech.specialty.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = filterStatus === 'all' || tech.status === filterStatus;
+      
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a: any, b: any) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'jobs':
+          return (getWorkloadForTechnician(b._id) || 0) - (getWorkloadForTechnician(a._id) || 0);
+        default:
+          return 0;
+      }
+    });
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-6 pb-6 border-b border-slate-200">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-3xl font-bold text-slate-900">Technicians</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-primary to-primary/90 text-white hover:shadow-lg transition-all" data-testid="button-new-technician">
-               
+              <Plus className="w-4 h-4 mr-2" />
               Add Technician
             </Button>
           </DialogTrigger>
@@ -111,6 +139,46 @@ export default function Technicians() {
         </Dialog>
       </div>
 
+      {/* Search, Filter, Sort Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center flex-wrap">
+        <div className="flex-1 min-w-64 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Input 
+            placeholder="Search by name or specialty..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+            data-testid="input-search-technicians"
+          />
+        </div>
+
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-48" data-testid="select-sort-technicians">
+            <ArrowUpDown className="w-4 h-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Sort by Name</SelectItem>
+            <SelectItem value="status">Sort by Status</SelectItem>
+            <SelectItem value="jobs">Sort by Active Jobs</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-48" data-testid="select-filter-technicians">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="Available">Available</SelectItem>
+            <SelectItem value="Busy">Busy</SelectItem>
+            <SelectItem value="Off">Off</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Technicians Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {isLoading ? (
           <div className="col-span-full text-center py-8 text-slate-500">Loading technicians...</div>
@@ -118,8 +186,12 @@ export default function Technicians() {
           <div className="col-span-full text-center py-8 text-slate-500">
             No technicians yet. Add your first technician!
           </div>
+        ) : filteredAndSortedTechnicians.length === 0 ? (
+          <div className="col-span-full text-center py-8 text-slate-500">
+            No technicians match your search or filter criteria.
+          </div>
         ) : (
-          technicians.map((tech: any) => {
+          filteredAndSortedTechnicians.map((tech: any) => {
             const jobCount = getWorkloadForTechnician(tech._id);
             return (
               <Card 
