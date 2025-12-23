@@ -515,7 +515,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                       <span className="text-gray-600">Service Cost:</span>
                       <span className="flex items-center">
                         <IndianRupee className="w-3 h-3" />
-                        {(selectedInvoice.items?.filter((i: any) => i.type === 'service')?.reduce((sum: number, i: any) => sum + i.total, 0) || 0).toLocaleString("en-IN")}
+                        {(selectedInvoice.items?.filter((i: any) => i.type === 'service' && i.description !== 'Labor Charge')?.reduce((sum: number, i: any) => sum + (i.total - (i.discount || 0)), 0) || 0).toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
@@ -525,18 +525,16 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
               <div className="flex justify-end mt-6">
                 <div className="w-72 space-y-2">
                   {selectedInvoice.items?.some((i: any) => i.description === 'Labor Charge') && (
-                    <>
-                      <div className="flex justify-between text-slate-700">
-                        <span>Labor Cost:</span>
-                        <span className="flex items-center font-medium">
-                          <IndianRupee className="w-3 h-3" />
-                          {(selectedInvoice.items?.find((i: any) => i.description === 'Labor Charge')?.total || 0).toLocaleString("en-IN")}
-                        </span>
-                      </div>
-                    </>
+                    <div className="flex justify-between text-slate-700">
+                      <span>Labor Cost:</span>
+                      <span className="flex items-center font-medium">
+                        <IndianRupee className="w-3 h-3" />
+                        {(selectedInvoice.items?.find((i: any) => i.description === 'Labor Charge')?.total || 0).toLocaleString("en-IN")}
+                      </span>
+                    </div>
                   )}
                   
-                  <div className="flex justify-between text-slate-700">
+                  <div className="flex justify-between font-semibold text-slate-700 border-t pt-2">
                     <span>Subtotal:</span>
                     <span className="flex items-center">
                       <IndianRupee className="w-3 h-3" />
