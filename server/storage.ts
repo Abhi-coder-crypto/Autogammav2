@@ -549,7 +549,21 @@ export class MongoStorage implements IStorage {
       serviceTotal += job.laborCost;
     }
 
-    // If no items found, return null
+    // If no items found but job has totalAmount, create a generic service item with that amount
+    if (items.length === 0 && job.totalAmount && job.totalAmount > 0) {
+      items.push({
+        description: 'Service & Parts',
+        quantity: 1,
+        unitPrice: job.totalAmount,
+        total: job.totalAmount,
+        type: 'service',
+        discount: 0,
+        discountPercentage: 0
+      });
+      serviceTotal = job.totalAmount;
+    }
+
+    // If still no items found, return null
     if (items.length === 0) {
       console.warn(`No service items found for job ${jobId}`);
       return null;
