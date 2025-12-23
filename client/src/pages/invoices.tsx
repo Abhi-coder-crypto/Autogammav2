@@ -473,38 +473,41 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedInvoice.items?.filter((i: any) => i.type === 'service' && i.description !== 'Labor Charge').map((item: any, index: number) => (
-                        <tr key={index} className="border-t">
-                          <td className="p-3">
-                            {item.description}
-                            <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
-                              Service
-                            </Badge>
-                          </td>
-                          <td className="text-right p-3">
-                            <IndianRupee className="w-3 h-3 inline" />
-                            {item.unitPrice.toLocaleString("en-IN")}
-                          </td>
-                          <td className="text-right p-3">
-                            <IndianRupee className="w-3 h-3 inline" />
-                            {item.total.toLocaleString("en-IN")}
-                          </td>
-                        </tr>
-                      ))}
-                      {selectedInvoice.items?.filter((i: any) => i.type === 'service' && i.description !== 'Labor Charge').some((i: any) => i.discount && i.discount > 0) && (
-                        selectedInvoice.items?.filter((i: any) => i.type === 'service' && i.description !== 'Labor Charge' && i.discount && i.discount > 0).map((item: any, index: number) => (
-                          <tr key={`discount-${index}`} className="border-t bg-gray-50">
-                            <td className="p-3 text-slate-600">
-                              <span>Discount ({item.description})</span>
+                      {selectedInvoice.items?.filter((i: any) => i.type === 'service' && i.description !== 'Labor Charge').flatMap((item: any, index: number) => {
+                        const rows: any = [
+                          <tr key={`service-${index}`} className="border-t">
+                            <td className="p-3">
+                              {item.description}
+                              <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                Service
+                              </Badge>
                             </td>
-                            <td></td>
-                            <td className="text-right p-3 text-slate-600">
-                              -<IndianRupee className="w-3 h-3 inline" />
-                              {item.discount.toLocaleString("en-IN")}
+                            <td className="text-right p-3">
+                              <IndianRupee className="w-3 h-3 inline" />
+                              {item.unitPrice.toLocaleString("en-IN")}
+                            </td>
+                            <td className="text-right p-3">
+                              <IndianRupee className="w-3 h-3 inline" />
+                              {item.total.toLocaleString("en-IN")}
                             </td>
                           </tr>
-                        ))
-                      )}
+                        ];
+                        if (item.discount && item.discount > 0) {
+                          rows.push(
+                            <tr key={`discount-${index}`} className="bg-gray-50">
+                              <td className="p-3 text-slate-600 text-sm">
+                                <span className="pl-8">Discount:</span>
+                              </td>
+                              <td></td>
+                              <td className="text-right p-3 text-slate-600 text-sm">
+                                -<IndianRupee className="w-3 h-3 inline" />
+                                {item.discount.toLocaleString("en-IN")}
+                              </td>
+                            </tr>
+                          );
+                        }
+                        return rows;
+                      })}
                     </tbody>
                   </table>
                 </div>

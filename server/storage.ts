@@ -517,7 +517,7 @@ export class MongoStorage implements IStorage {
 
     const items: any[] = [];
 
-    // Add service items (PPF service + labor cost) to invoice
+    // Add service items (PPF service + other services) to invoice (excluding labor)
     let serviceTotal = 0;
     if (job.serviceItems && job.serviceItems.length > 0) {
       for (const service of job.serviceItems) {
@@ -535,7 +535,7 @@ export class MongoStorage implements IStorage {
       }
     }
 
-    // Add labor cost if present
+    // Add labor cost if present (separate, will not receive discount)
     if (job.laborCost && job.laborCost > 0) {
       items.push({
         description: 'Labor Charge',
@@ -546,7 +546,6 @@ export class MongoStorage implements IStorage {
         discount: 0,
         discountPercentage: 0
       });
-      serviceTotal += job.laborCost;
     }
 
     // If no items found but job has totalAmount, create a generic service item with that amount
@@ -569,14 +568,19 @@ export class MongoStorage implements IStorage {
       return null;
     }
 
-    // Materials are tracked for inventory purposes only, not included in invoice pricing
-    // Invoice uses only: Service Items + Labor Cost + GST
+    // Distribute discount across service items only (not labor)
+    if (discount > 0 && serviceTotal > 0) {
+      const serviceItems = items.filter((i) => i.description !== 'Labor Charge');
+      const discountPerItem = discount / serviceItems.length;
+      serviceItems.forEach((item) => {
+        item.discount = discountPerItem;
+      });
+    }
 
-    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const discountAmount = Math.min(discount, subtotal);
-    const subtotalAfterDiscount = subtotal - discountAmount;
-    const tax = (subtotalAfterDiscount * taxRate) / 100;
-    const totalAmount = subtotalAfterDiscount + tax;
+    // Calculate totals: Services (with discount) + Labor + GST
+    const subtotal = items.reduce((sum, item) => sum + (item.total - (item.discount || 0)), 0);
+    const tax = (subtotal * taxRate) / 100;
+    const totalAmount = subtotal + tax;
 
     const invoiceCount = await Invoice.countDocuments();
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(invoiceCount + 1).padStart(5, '0')}`;
@@ -595,7 +599,7 @@ export class MongoStorage implements IStorage {
       subtotal,
       tax,
       taxRate,
-      discount: discountAmount,
+      discount,
       totalAmount,
       paidAmount: job.paidAmount,
       paymentStatus: job.paymentStatus,
