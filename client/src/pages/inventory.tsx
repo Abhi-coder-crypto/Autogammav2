@@ -302,20 +302,19 @@ export default function Inventory() {
                         <Plus className="w-4 h-4 mr-2" />
                         Stock
                       </Button>
-                      {displayItem.rolls && displayItem.rolls.length > 0 && (
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => setExpandedRolls(expandedRolls === displayItem._id ? '' : displayItem._id)}
-                          data-testid={`button-toggle-rolls-${displayItem.category}`}
-                        >
-                          {expandedRolls === displayItem._id ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
-                          )}
-                        </Button>
-                      )}
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setExpandedRolls(expandedRolls === displayItem._id ? '' : displayItem._id)}
+                        disabled={!displayItem.rolls || displayItem.rolls.length === 0}
+                        data-testid={`button-toggle-rolls-${displayItem.category}`}
+                      >
+                        {expandedRolls === displayItem._id ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
