@@ -436,11 +436,11 @@ export default function RegisteredCustomers() {
                 data-testid={`customer-card-${customer._id}`}
               >
                 <CardContent className="p-4">
-                  <div className="flex gap-4 items-start">
+                  <div className="flex gap-4 items-stretch min-h-[120px]">
                     {/* Left Side - Customer Info */}
-                    <div className="flex-1 space-y-3 flex flex-col justify-between">
+                    <div className="flex-1 space-y-3 flex flex-col justify-between min-w-0">
                       {/* Header with name */}
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-semibold text-base text-slate-900 group-hover:text-primary transition-colors truncate">
                           {customer.name}
                         </h3>
@@ -451,9 +451,9 @@ export default function RegisteredCustomers() {
                       </div>
 
                       {/* Contact Info */}
-                      <div className="space-y-1.5">
+                      <div className="space-y-1.5 min-w-0">
                         {customer.email && (
-                          <div className="flex items-center gap-2 text-xs text-slate-600">
+                          <div className="flex items-center gap-2 text-xs text-slate-600 min-w-0">
                             <Mail className="w-3 h-3 text-slate-500 flex-shrink-0" />
                             <span className="truncate">{customer.email}</span>
                           </div>
@@ -510,7 +510,7 @@ export default function RegisteredCustomers() {
                     </div>
 
                     {/* Right Side - Vehicle Image */}
-                    <div className="relative w-28 h-28 bg-slate-200 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="relative w-24 h-24 bg-slate-200 rounded-lg overflow-hidden flex-shrink-0">
                       {primaryVehicle?.image ? (
                         <img
                           src={primaryVehicle.image}
@@ -519,7 +519,7 @@ export default function RegisteredCustomers() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-                          <Car className="w-6 h-6 text-slate-400" />
+                          <Car className="w-5 h-5 text-slate-400" />
                         </div>
                       )}
                     </div>
@@ -585,11 +585,16 @@ export default function RegisteredCustomers() {
                         <Car className="w-4 h-4" />
                         Vehicles
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {customer.vehicles.slice(0, 2).map((vehicle: any, idx: number) => (
-                          <div key={idx} className="space-y-2">
+                          <div key={idx} className="flex gap-3 items-start">
+                            <div className="flex-1 min-w-0">
+                              <div className="px-2.5 py-1.5 bg-slate-100 rounded border border-slate-200 text-xs font-medium text-slate-900">
+                                {vehicle.make} {vehicle.model} {vehicle.year ? `(${vehicle.year})` : ''} - {vehicle.plateNumber}
+                              </div>
+                            </div>
                             {vehicle.image && (
-                              <div className="relative w-full h-32 bg-slate-200 rounded-lg overflow-hidden border border-slate-300">
+                              <div className="relative w-20 h-20 bg-slate-200 rounded-lg overflow-hidden flex-shrink-0">
                                 <img 
                                   src={vehicle.image} 
                                   alt={`${vehicle.make} ${vehicle.model}`}
@@ -598,9 +603,6 @@ export default function RegisteredCustomers() {
                                 />
                               </div>
                             )}
-                            <div className="px-2.5 py-1.5 bg-slate-100 rounded border border-slate-200 text-xs font-medium text-slate-900">
-                              {vehicle.make} {vehicle.model} {vehicle.year ? `(${vehicle.year})` : ''} - {vehicle.plateNumber}
-                            </div>
                           </div>
                         ))}
                         {customer.vehicles.length > 2 && (
