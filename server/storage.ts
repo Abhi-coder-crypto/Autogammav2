@@ -264,7 +264,8 @@ export class MongoStorage implements IStorage {
       meters: roll.meters,
       squareFeet: roll.squareFeet,
       remaining_meters: roll.meters,
-      remaining_sqft: roll.squareFeet
+      remaining_sqft: roll.squareFeet,
+      status: 'Available'
     };
     return Inventory.findByIdAndUpdate(inventoryId, { $push: { rolls: newRoll } }, { new: true });
   }
@@ -285,6 +286,10 @@ export class MongoStorage implements IStorage {
     roll.remaining_meters = Math.max(0, roll.remaining_meters - metersUsed);
     const sqftPerMeter = roll.squareFeet / roll.meters;
     roll.remaining_sqft = roll.remaining_meters * sqftPerMeter;
+    
+    if (roll.remaining_meters === 0) {
+      roll.status = 'Finished';
+    }
     
     await item.save();
     return item;

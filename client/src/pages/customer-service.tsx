@@ -326,6 +326,12 @@ export default function CustomerService() {
     setSelectedOtherServices(selectedOtherServices.filter((_, i) => i !== index));
   };
 
+  const getAvailableRolls = () => {
+    const item = inventory.find((inv: any) => inv._id === selectedItemId);
+    if (!item || !item.rolls) return [];
+    return item.rolls.filter((roll: any) => roll.status !== 'Finished' && roll.remaining_meters > 0);
+  };
+
   const handleAddItem = () => {
     if (!selectedItemId) {
       toast({ title: 'Please select a product', variant: 'destructive' });
@@ -345,6 +351,11 @@ export default function CustomerService() {
       const roll = item.rolls.find((r: any) => r._id === selectedRollId);
       if (!roll) {
         toast({ title: 'Roll not found', variant: 'destructive' });
+        return;
+      }
+
+      if (roll.status === 'Finished' || roll.remaining_meters <= 0) {
+        toast({ title: 'Selected roll is not available', variant: 'destructive' });
         return;
       }
 
