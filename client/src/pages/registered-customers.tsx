@@ -63,15 +63,21 @@ export default function RegisteredCustomers() {
     const files = e.target.files;
     if (!files) return;
 
-    const newImages: string[] = [...uploadedImages];
     const filesToProcess = Array.from(files).slice(0, 5 - uploadedImages.length);
+    const results: string[] = [];
+    let loadedCount = 0;
 
     filesToProcess.forEach(file => {
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          newImages.push(event.target.result as string);
-          setUploadedImages(newImages);
+          results.push(event.target.result as string);
+          loadedCount++;
+          
+          // Update state only after ALL files are loaded
+          if (loadedCount === filesToProcess.length) {
+            setUploadedImages([...uploadedImages, ...results]);
+          }
         }
       };
       reader.readAsDataURL(file);
