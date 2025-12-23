@@ -186,15 +186,9 @@ export default function Inventory() {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight">PPF Inventory</h1>
-            <p className="text-muted-foreground mt-1">Manage stock for PPF products</p>
-          </div>
-          <Button className="bg-primary text-white hover:bg-primary/90" data-testid="button-add-inventory">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Inventory
-          </Button>
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight">PPF Inventory</h1>
+          <p className="text-muted-foreground mt-1">Manage stock for PPF products</p>
         </div>
         
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
