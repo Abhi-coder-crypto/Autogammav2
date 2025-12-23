@@ -43,6 +43,7 @@ export interface ICustomer extends Document {
   service?: string;
   serviceCost?: number;
   vehicles: IVehicle[];
+  requiresGST?: boolean;
   createdAt: Date;
 }
 
@@ -190,6 +191,7 @@ const CustomerSchema = new Schema<ICustomer>({
   service: { type: String },
   serviceCost: { type: Number, default: 0 },
   vehicles: [VehicleSchema],
+  requiresGST: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

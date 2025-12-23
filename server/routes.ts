@@ -247,7 +247,8 @@ export async function registerRoutes(
       
       if (stage === 'Completed') {
         try {
-          await storage.generateInvoiceForJob(req.params.id, 18, discount);
+          const taxRate = customer?.requiresGST ? 18 : 0;
+          await storage.generateInvoiceForJob(req.params.id, taxRate, discount);
         } catch (invoiceError) {
           console.error("Invoice generation error:", invoiceError);
           return res.status(500).json({ 
