@@ -475,7 +475,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                     </thead>
                     <tbody>
                       {selectedInvoice.items?.filter((i: any) => i.type === 'service' && i.description !== 'Labor Charge').map((item: any, index: number) => {
-                        const discountedPrice = (item.total - (item.discount || 0));
+                        const discountedPrice = item.total;
                         return (
                           <tr key={`service-${index}`} className="border-t">
                             <td className="p-3">
@@ -515,7 +515,7 @@ Balance: Rs.${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocal
                       <span className="text-gray-600">Service Cost:</span>
                       <span className="flex items-center">
                         <IndianRupee className="w-3 h-3" />
-                        {(selectedInvoice.items?.filter((i: any) => i.type === 'service' && i.description !== 'Labor Charge')?.reduce((sum: number, i: any) => sum + (i.total - (i.discount || 0)), 0) || 0).toLocaleString("en-IN")}
+                        {(selectedInvoice.items?.filter((i: any) => i.type === 'service' && i.description !== 'Labor Charge')?.reduce((sum: number, i: any) => sum + i.total, 0) || 0).toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>

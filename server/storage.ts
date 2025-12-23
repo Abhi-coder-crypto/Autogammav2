@@ -521,17 +521,19 @@ export class MongoStorage implements IStorage {
     let serviceTotal = 0;
     if (job.serviceItems && job.serviceItems.length > 0) {
       for (const service of job.serviceItems) {
-        const servicePrice = (service as any).price || 0;
+        const originalPrice = (service as any).price || 0;
+        const serviceDiscount = (service as any).discount || 0;
+        const discountedPrice = originalPrice - serviceDiscount;
         items.push({
           description: (service as any).name || (service as any).description || 'Service',
           quantity: 1,
-          unitPrice: servicePrice,
-          total: servicePrice,
+          unitPrice: originalPrice,
+          total: discountedPrice,
           type: 'service',
-          discount: 0,
-          discountPercentage: 0
+          discount: serviceDiscount,
+          discountPercentage: (service as any).discountPercentage || 0
         });
-        serviceTotal += servicePrice;
+        serviceTotal += originalPrice;
       }
     }
 
@@ -568,17 +570,9 @@ export class MongoStorage implements IStorage {
       return null;
     }
 
-    // Distribute discount across service items only (not labor)
-    if (discount > 0 && serviceTotal > 0) {
-      const serviceItems = items.filter((i) => i.description !== 'Labor Charge');
-      const discountPerItem = discount / serviceItems.length;
-      serviceItems.forEach((item) => {
-        item.discount = discountPerItem;
-      });
-    }
-
-    // Calculate totals: Services (with discount) + Labor + GST
-    const subtotal = items.reduce((sum, item) => sum + (item.total - (item.discount || 0)), 0);
+    // Calculate totals: Services (with individual discounts) + Labor + GST
+    // Subtotal uses the total field which is already the discounted price
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const tax = (subtotal * taxRate) / 100;
     const totalAmount = subtotal + tax;
 
