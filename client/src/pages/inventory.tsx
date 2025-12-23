@@ -32,6 +32,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function Inventory() {
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
+  const [rollDialogOpen, setRollDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [adjustType, setAdjustType] = useState<'in' | 'out'>('in');
   const [adjustAmount, setAdjustAmount] = useState('1');
@@ -39,6 +40,9 @@ export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'quantity'>('name');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [rollName, setRollName] = useState('');
+  const [rollMeters, setRollMeters] = useState('');
+  const [rollSqft, setRollSqft] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -72,6 +76,32 @@ export default function Inventory() {
     },
     onError: () => {
       toast({ title: 'Failed to create inventory item', variant: 'destructive' });
+    }
+  });
+
+  const addRollMutation = useMutation({
+    mutationFn: (data: { id: string; roll: any }) => api.inventory.addRoll(data.id, data.roll),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      setRollDialogOpen(false);
+      setRollName('');
+      setRollMeters('');
+      setRollSqft('');
+      toast({ title: 'Roll added successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to add roll', variant: 'destructive' });
+    }
+  });
+
+  const deleteRollMutation = useMutation({
+    mutationFn: ({ id, rollId }: { id: string; rollId: string }) => api.inventory.deleteRoll(id, rollId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast({ title: 'Roll deleted successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to delete roll', variant: 'destructive' });
     }
   });
 
@@ -266,6 +296,31 @@ export default function Inventory() {
                     </p>
                   )}
 
+                  {displayItem.rolls && displayItem.rolls.length > 0 && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <p className="text-xs font-semibold text-muted-foreground">Rolls ({displayItem.rolls.length})</p>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {displayItem.rolls.map((roll: any) => (
+                          <div key={roll._id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-2 rounded text-xs">
+                            <div>
+                              <p className="font-medium">{roll.name}</p>
+                              <p className="text-muted-foreground">{roll.remaining_meters}m / {roll.remaining_sqft.toFixed(1)} sqft</p>
+                            </div>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => deleteRollMutation.mutate({ id: displayItem._id, rollId: roll._id })}
+                              data-testid={`button-delete-roll-${roll._id}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-2 flex-wrap">
                     <Button
                       variant="outline"
@@ -300,6 +355,17 @@ export default function Inventory() {
                        
                       Stock Out
                     </Button>
+                    <Button
+                      size="icon"
+                      variant="default"
+                      onClick={() => {
+                        setSelectedItem(displayItem);
+                        setRollDialogOpen(true);
+                      }}
+                      data-testid={`button-add-roll-${displayItem.category}`}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -307,6 +373,69 @@ export default function Inventory() {
           })
         )}
       </div>
+
+      <Dialog open={rollDialogOpen} onOpenChange={setRollDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add Roll: {selectedItem?.name}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (!rollName || !rollMeters || !rollSqft) {
+              toast({ title: 'Fill all fields', variant: 'destructive' });
+              return;
+            }
+            addRollMutation.mutate({
+              id: selectedItem._id,
+              roll: {
+                name: rollName,
+                meters: parseFloat(rollMeters),
+                squareFeet: parseFloat(rollSqft)
+              }
+            });
+          }} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Roll Name</Label>
+              <Input 
+                placeholder="e.g., Roll 1" 
+                value={rollName}
+                onChange={(e) => setRollName(e.target.value)}
+                data-testid="input-roll-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Meters</Label>
+              <Input 
+                type="number" 
+                step="0.1" 
+                placeholder="0" 
+                value={rollMeters}
+                onChange={(e) => setRollMeters(e.target.value)}
+                data-testid="input-roll-meters"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Square Feet</Label>
+              <Input 
+                type="number" 
+                step="0.1" 
+                placeholder="0" 
+                value={rollSqft}
+                onChange={(e) => setRollSqft(e.target.value)}
+                data-testid="input-roll-sqft"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full bg-primary"
+              disabled={addRollMutation.isPending}
+              data-testid="button-save-roll"
+            >
+              {addRollMutation.isPending ? 'Adding...' : 'Add Roll'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
         <DialogContent className="max-w-sm">

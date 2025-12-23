@@ -35,9 +35,10 @@ export default function CustomerService() {
   const [ppfDiscount, setPpfDiscount] = useState<string>('');
   const [laborCost, setLaborCost] = useState<string>('');
   const [includeGst, setIncludeGst] = useState(true);
-  const [selectedItems, setSelectedItems] = useState<{ inventoryId: string; quantity: number; name: string; unit: string }[]>([]);
+  const [selectedItems, setSelectedItems] = useState<{ inventoryId: string; rollId?: string; metersUsed?: number; name: string; unit: string; quantity?: number }[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>('');
-  const [itemQuantity, setItemQuantity] = useState<string>('1');
+  const [selectedRollId, setSelectedRollId] = useState<string>('');
+  const [metersUsed, setMetersUsed] = useState<string>('1');
 
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [newVehicleMake, setNewVehicleMake] = useState('');
@@ -114,7 +115,13 @@ export default function CustomerService() {
       if (selectedItems.length > 0) {
         for (const item of selectedItems) {
           try {
-            await api.inventory.adjust(item.inventoryId, -item.quantity);
+            if (item.rollId && item.metersUsed) {
+              // Deduct from roll
+              await api.inventory.deductRoll(item.inventoryId, item.rollId, item.metersUsed);
+            } else if (item.quantity) {
+              // Deduct from regular inventory
+              await api.inventory.adjust(item.inventoryId, -item.quantity);
+            }
           } catch (error: any) {
             console.error(`Failed to reduce inventory for ${item.name}:`, error);
           }
@@ -321,36 +328,57 @@ export default function CustomerService() {
 
   const handleAddItem = () => {
     if (!selectedItemId) {
-      toast({ title: 'Please select an item', variant: 'destructive' });
+      toast({ title: 'Please select a product', variant: 'destructive' });
       return;
     }
     
     const item = inventory.find((inv: any) => inv._id === selectedItemId);
     if (!item) return;
 
-    const qty = parseInt(itemQuantity, 10);
-    
-    if (isNaN(qty) || qty <= 0) {
-      toast({ title: 'Please enter a valid quantity greater than 0', variant: 'destructive' });
-      return;
-    }
-    
-    if (qty > item.quantity) {
-      toast({ title: `Only ${item.quantity} ${item.unit} available in stock`, variant: 'destructive' });
-      return;
-    }
-
-    const existingIndex = selectedItems.findIndex(i => i.inventoryId === selectedItemId);
-    if (existingIndex >= 0) {
-      const newItems = [...selectedItems];
-      const newQty = newItems[existingIndex].quantity + qty;
-      if (newQty > item.quantity) {
-        toast({ title: `Total would exceed available stock (${item.quantity} ${item.unit})`, variant: 'destructive' });
+    // If item has rolls, user must select one
+    if (item.rolls && item.rolls.length > 0) {
+      if (!selectedRollId) {
+        toast({ title: 'Please select a roll', variant: 'destructive' });
         return;
       }
-      newItems[existingIndex].quantity = newQty;
-      setSelectedItems(newItems);
+      
+      const roll = item.rolls.find((r: any) => r._id === selectedRollId);
+      if (!roll) {
+        toast({ title: 'Roll not found', variant: 'destructive' });
+        return;
+      }
+
+      const meters = parseFloat(metersUsed);
+      if (isNaN(meters) || meters <= 0) {
+        toast({ title: 'Please enter valid meters', variant: 'destructive' });
+        return;
+      }
+
+      if (meters > roll.remaining_meters) {
+        toast({ title: `Only ${roll.remaining_meters}m available in this roll`, variant: 'destructive' });
+        return;
+      }
+
+      setSelectedItems([...selectedItems, {
+        inventoryId: selectedItemId,
+        rollId: selectedRollId,
+        metersUsed: meters,
+        name: `${item.name} - ${roll.name}`,
+        unit: 'meters'
+      }]);
     } else {
+      // Regular item without rolls - use quantity
+      const qty = parseInt(metersUsed, 10);
+      if (isNaN(qty) || qty <= 0) {
+        toast({ title: 'Please enter a valid quantity', variant: 'destructive' });
+        return;
+      }
+      
+      if (qty > item.quantity) {
+        toast({ title: `Only ${item.quantity} ${item.unit} available`, variant: 'destructive' });
+        return;
+      }
+
       setSelectedItems([...selectedItems, {
         inventoryId: selectedItemId,
         quantity: qty,
@@ -360,7 +388,8 @@ export default function CustomerService() {
     }
 
     setSelectedItemId('');
-    setItemQuantity('1');
+    setSelectedRollId('');
+    setMetersUsed('1');
   };
 
   const handleRemoveItem = (index: number) => {
@@ -921,15 +950,42 @@ export default function CustomerService() {
                         })}
                       </SelectContent>
                     </Select>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={itemQuantity}
-                      onChange={(e) => setItemQuantity(e.target.value)}
-                      className="w-20"
-                      placeholder="Qty"
-                      data-testid="input-item-quantity"
-                    />
+                    {selectedItemId && inventory.find((i: any) => i._id === selectedItemId)?.rolls?.length > 0 ? (
+                      <>
+                        <Select value={selectedRollId} onValueChange={setSelectedRollId}>
+                          <SelectTrigger className="w-32" data-testid="select-roll">
+                            <SelectValue placeholder="Select roll" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {inventory.find((i: any) => i._id === selectedItemId)?.rolls?.map((roll: any) => (
+                              <SelectItem key={roll._id} value={roll._id}>
+                                {roll.name} ({roll.remaining_meters}m)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          min="0.1"
+                          step="0.1"
+                          value={metersUsed}
+                          onChange={(e) => setMetersUsed(e.target.value)}
+                          className="w-20"
+                          placeholder="Meters"
+                          data-testid="input-meters-used"
+                        />
+                      </>
+                    ) : (
+                      <Input
+                        type="number"
+                        min="1"
+                        value={metersUsed}
+                        onChange={(e) => setMetersUsed(e.target.value)}
+                        className="w-20"
+                        placeholder="Qty"
+                        data-testid="input-item-quantity"
+                      />
+                    )}
                     <Button type="button" onClick={handleAddItem} variant="outline" size="icon" data-testid="button-add-item">
                       <Plus className="w-4 h-4" />
                     </Button>

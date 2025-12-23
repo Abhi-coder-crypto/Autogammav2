@@ -391,6 +391,37 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/inventory/:id/rolls", async (req, res) => {
+    try {
+      const item = await storage.addRoll(req.params.id, req.body);
+      if (!item) return res.status(404).json({ message: "Item not found" });
+      res.status(201).json(item);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add roll" });
+    }
+  });
+
+  app.delete("/api/inventory/:id/rolls/:rollId", async (req, res) => {
+    try {
+      const item = await storage.deleteRoll(req.params.id, req.params.rollId);
+      if (!item) return res.status(404).json({ message: "Item not found" });
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete roll" });
+    }
+  });
+
+  app.patch("/api/inventory/:id/rolls/:rollId/deduct", async (req, res) => {
+    try {
+      const { metersUsed } = req.body;
+      const item = await storage.deductRoll(req.params.id, req.params.rollId, metersUsed);
+      if (!item) return res.status(404).json({ message: "Item or roll not found" });
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to deduct from roll" });
+    }
+  });
+
   app.get("/api/appointments", async (req, res) => {
     try {
       const { date } = req.query;

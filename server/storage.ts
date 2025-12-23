@@ -35,6 +35,10 @@ export interface IStorage {
   adjustInventory(id: string, quantity: number): Promise<IInventoryItem | null>;
   getLowStockItems(): Promise<IInventoryItem[]>;
   
+  addRoll(inventoryId: string, roll: any): Promise<IInventoryItem | null>;
+  deleteRoll(inventoryId: string, rollId: string): Promise<IInventoryItem | null>;
+  deductRoll(inventoryId: string, rollId: string, metersUsed: number): Promise<IInventoryItem | null>;
+  
   getAppointments(): Promise<IAppointment[]>;
   getAppointmentsByDate(date: Date): Promise<IAppointment[]>;
   createAppointment(data: Partial<IAppointment>): Promise<IAppointment>;
@@ -250,6 +254,40 @@ export class MongoStorage implements IStorage {
     return Inventory.find({
       $expr: { $lte: ['$quantity', '$minStock'] }
     });
+  }
+
+  async addRoll(inventoryId: string, roll: any): Promise<IInventoryItem | null> {
+    if (!mongoose.Types.ObjectId.isValid(inventoryId)) return null;
+    const newRoll = {
+      _id: new mongoose.Types.ObjectId(),
+      name: roll.name,
+      meters: roll.meters,
+      squareFeet: roll.squareFeet,
+      remaining_meters: roll.meters,
+      remaining_sqft: roll.squareFeet
+    };
+    return Inventory.findByIdAndUpdate(inventoryId, { $push: { rolls: newRoll } }, { new: true });
+  }
+
+  async deleteRoll(inventoryId: string, rollId: string): Promise<IInventoryItem | null> {
+    if (!mongoose.Types.ObjectId.isValid(inventoryId)) return null;
+    return Inventory.findByIdAndUpdate(inventoryId, { $pull: { rolls: { _id: rollId } } }, { new: true });
+  }
+
+  async deductRoll(inventoryId: string, rollId: string, metersUsed: number): Promise<IInventoryItem | null> {
+    if (!mongoose.Types.ObjectId.isValid(inventoryId)) return null;
+    const item = await Inventory.findById(inventoryId);
+    if (!item) return null;
+    
+    const roll = item.rolls.find(r => r._id?.toString() === rollId);
+    if (!roll) return null;
+    
+    roll.remaining_meters = Math.max(0, roll.remaining_meters - metersUsed);
+    const sqftPerMeter = roll.squareFeet / roll.meters;
+    roll.remaining_sqft = roll.remaining_meters * sqftPerMeter;
+    
+    await item.save();
+    return item;
   }
 
   async getAppointments(): Promise<IAppointment[]> {

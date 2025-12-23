@@ -67,6 +67,9 @@ export const api = {
     create: (data: any) => request<any>('/inventory', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request<any>(`/inventory/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     adjust: (id: string, quantity: number) => request<any>(`/inventory/${id}/adjust`, { method: 'PATCH', body: JSON.stringify({ quantity }) }),
+    addRoll: (id: string, roll: any) => request<any>(`/inventory/${id}/rolls`, { method: 'POST', body: JSON.stringify(roll) }),
+    deleteRoll: (id: string, rollId: string) => request<any>(`/inventory/${id}/rolls/${rollId}`, { method: 'DELETE' }),
+    deductRoll: (id: string, rollId: string, metersUsed: number) => request<any>(`/inventory/${id}/rolls/${rollId}/deduct`, { method: 'PATCH', body: JSON.stringify({ metersUsed }) }),
   },
   
   appointments: {

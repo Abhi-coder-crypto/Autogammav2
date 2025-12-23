@@ -97,12 +97,22 @@ export interface ITechnician extends Document {
   createdAt: Date;
 }
 
+export interface IRoll {
+  _id?: mongoose.Types.ObjectId;
+  name: string;
+  meters: number;
+  squareFeet: number;
+  remaining_meters: number;
+  remaining_sqft: number;
+}
+
 export interface IInventoryItem extends Document {
   name: string;
   category: InventoryCategory;
   quantity: number;
   unit: string;
   minStock: number;
+  rolls: IRoll[];
   createdAt: Date;
 }
 
@@ -257,12 +267,21 @@ const TechnicianSchema = new Schema<ITechnician>({
   createdAt: { type: Date, default: Date.now }
 });
 
+const RollSchema = new Schema<IRoll>({
+  name: { type: String, required: true },
+  meters: { type: Number, required: true, default: 0 },
+  squareFeet: { type: Number, required: true, default: 0 },
+  remaining_meters: { type: Number, required: true, default: 0 },
+  remaining_sqft: { type: Number, required: true, default: 0 }
+});
+
 const InventorySchema = new Schema<IInventoryItem>({
   name: { type: String, required: true },
   category: { type: String, enum: ['Elite', 'Garware Plus', 'Garware Premium', 'Garware Matt'], required: true },
   quantity: { type: Number, required: true, default: 0 },
   unit: { type: String, required: true },
   minStock: { type: Number, required: true, default: 0 },
+  rolls: [RollSchema],
   createdAt: { type: Date, default: Date.now }
 });
 
