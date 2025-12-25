@@ -24,24 +24,30 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const FUNNEL_STAGES = [
-  { key: "Inquired", label: "Inquired", color: "blue" },
-  { key: "Working", label: "Working", color: "orange" },
-  { key: "Waiting", label: "Waiting", color: "yellow" },
+  { key: "New Lead", label: "New Lead", color: "blue" },
+  { key: "Inspection Done", label: "Inspection Done", color: "cyan" },
+  { key: "Work In Progress", label: "Work In Progress", color: "orange" },
+  { key: "Ready for Delivery", label: "Ready for Delivery", color: "yellow" },
   { key: "Completed", label: "Completed", color: "green" },
+  { key: "Cancelled", label: "Cancelled", color: "red" },
 ];
 
 const PHASE_COLORS: Record<string, string> = {
-  Inquired: "bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300",
-  Working: "bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300",
-  Waiting: "bg-yellow-100 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-300",
-  Completed: "bg-gray-100 dark:bg-gray-950/50 text-black dark:text-black",
+  "New Lead": "bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300",
+  "Inspection Done": "bg-cyan-100 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300",
+  "Work In Progress": "bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300",
+  "Ready for Delivery": "bg-yellow-100 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-300",
+  "Completed": "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300",
+  "Cancelled": "bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300",
 };
 
 const STAGE_BG_COLORS: Record<string, string> = {
-  Inquired: "bg-blue-50 dark:bg-blue-950/20",
-  Working: "bg-orange-50 dark:bg-orange-950/20",
-  Waiting: "bg-yellow-50 dark:bg-yellow-950/20",
-  Completed: "bg-gray-50 dark:bg-gray-950/20",
+  "New Lead": "bg-blue-50 dark:bg-blue-950/20",
+  "Inspection Done": "bg-cyan-50 dark:bg-cyan-950/20",
+  "Work In Progress": "bg-orange-50 dark:bg-orange-950/20",
+  "Ready for Delivery": "bg-yellow-50 dark:bg-yellow-950/20",
+  "Completed": "bg-green-50 dark:bg-green-950/20",
+  "Cancelled": "bg-red-50 dark:bg-red-950/20",
 };
 
 export default function CustomerFunnel() {
@@ -92,13 +98,13 @@ export default function CustomerFunnel() {
     },
   });
 
-  const getCustomersByStatus = (status: string) => {
-    return filteredCustomers.filter((customer: any) => (customer.status || 'Inquired') === status);
+  const getJobsByStage = (stage: string) => {
+    return jobs.filter((job: any) => job.stage === stage);
   };
 
   const stageCounts = FUNNEL_STAGES.reduce(
     (acc, stage) => {
-      acc[stage.key] = getCustomersByStatus(stage.key).length;
+      acc[stage.key] = getJobsByStage(stage.key).length;
       return acc;
     },
     {} as Record<string, number>,
@@ -106,10 +112,31 @@ export default function CustomerFunnel() {
 
   return (
     <div className="space-y-8">
+      {/* Summary Cards - All 6 Stages */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {FUNNEL_STAGES.map((stage) => (
+          <Card key={stage.key} className={cn("border-2", "hover:shadow-md transition-all", 
+            stage.key === "New Lead" ? "border-blue-300" :
+            stage.key === "Inspection Done" ? "border-cyan-300" :
+            stage.key === "Work In Progress" ? "border-orange-300" :
+            stage.key === "Ready for Delivery" ? "border-yellow-300" :
+            stage.key === "Completed" ? "border-green-300" :
+            "border-red-300"
+          )}>
+            <CardContent className="p-3">
+              <div className="text-center space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-600 line-clamp-2">{stage.label}</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stageCounts[stage.key]}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <div className="pb-6 border-b border-slate-200">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <p className="text-sm font-medium text-slate-600">Track customer journey through different stages</p>
+            <p className="text-sm font-medium text-slate-600">Track service jobs through different stages</p>
           </div>
           <div className="relative w-full md:w-80">
             
@@ -133,107 +160,89 @@ export default function CustomerFunnel() {
             <div key={stage.key} className={cn("rounded-lg border p-4 bg-gradient-to-br", STAGE_BG_COLORS[stage.key], "border-slate-200")}>
               <div className="flex items-center gap-3 mb-4">
                 <Badge className={cn(PHASE_COLORS[stage.key], "px-3 py-1 text-sm font-semibold")}>{stage.label}</Badge>
-                <span className="text-sm text-slate-600 font-medium">({stageCounts[stage.key]}) customers</span>
+                <span className="text-sm text-slate-600 font-medium">({stageCounts[stage.key]}) jobs</span>
               </div>
 
-              {getCustomersByStatus(stage.key).length === 0 ? (
-                <p className="text-sm text-slate-500">No customers</p>
+              {getJobsByStage(stage.key).length === 0 ? (
+                <p className="text-sm text-slate-500">No services in this phase</p>
               ) : (
                 <div className="flex flex-wrap gap-3">
-                  {getCustomersByStatus(stage.key).map((customer: any) => (
+                  {getJobsByStage(stage.key).map((job: any) => {
+                    const customer = customers.find((c: any) => c._id === job.customerId);
+                    return (
                     <Card
-                      key={customer._id}
-                      className="bg-white border-slate-200 flex-shrink-0 w-48 hover:shadow-md transition-shadow hover-elevate"
-                      data-testid={`funnel-customer-${customer._id}`}
+                      key={job._id}
+                      className="bg-white border-slate-200 flex-shrink-0 w-52 hover:shadow-md transition-shadow hover-elevate"
+                      data-testid={`funnel-job-${job._id}`}
                     >
                       <CardContent className="p-3 space-y-2">
                         {/* Header */}
                         <div className="flex items-start justify-between gap-1 pb-2 border-b border-slate-100">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm text-slate-900 truncate">{customer.name}</h4>
-                            <p className="text-xs text-slate-600 flex items-center gap-0.5 mt-1">
-                              <Phone className="w-3 h-3" />
-                              <span className="truncate">{customer.phone}</span>
+                            <h4 className="font-semibold text-xs text-slate-900 truncate">{customer?.name || 'Unknown'}</h4>
+                            <p className="text-[10px] text-slate-600 flex items-center gap-0.5 mt-1">
+                              <Phone className="w-2.5 h-2.5" />
+                              <span className="truncate">{customer?.phone || 'N/A'}</span>
                             </p>
                           </div>
-                          <Badge className={cn(PHASE_COLORS[stage.key], "text-xs flex-shrink-0 font-semibold")}>
-                            {stage.label}
-                          </Badge>
                         </div>
 
-                        {/* Address */}
-                        {customer.address && (
-                          <p className="text-xs text-slate-600 flex items-start gap-0.5 line-clamp-1">
-                            <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                            <span className="truncate">{customer.address}</span>
-                          </p>
+                        {/* Vehicle Info */}
+                        {job.vehicleName && (
+                          <div className="bg-slate-50 rounded p-1.5 border border-slate-200">
+                            <p className="text-[10px] font-semibold text-slate-900 truncate">{job.vehicleName}</p>
+                            {job.plateNumber && (
+                              <p className="text-[9px] text-slate-600 truncate">{job.plateNumber}</p>
+                            )}
+                          </div>
                         )}
 
-                        {/* Vehicle */}
-                        {customer.vehicles && customer.vehicles.length > 0 && (
-                          <p className="text-xs text-slate-600 flex items-center gap-0.5">
-                            <Car className="w-3 h-3" />
-                            <span className="truncate">
-                              {customer.vehicles[0].make} {customer.vehicles[0].model}
-                            </span>
-                          </p>
+                        {/* Cost */}
+                        {job.totalAmount > 0 && (
+                          <div className="flex items-center justify-between py-1 px-2 bg-slate-50 rounded border border-slate-200">
+                            <span className="text-[10px] font-medium text-slate-600">Cost:</span>
+                            <span className="text-xs font-bold text-slate-900">₹{job.totalAmount.toLocaleString('en-IN')}</span>
+                          </div>
                         )}
 
-                        {/* Status Selector */}
-                        <Select
-                          value={customer.status || 'Inquired'}
-                          onValueChange={(value) => {
-                            updateStatusMutation.mutate({
-                              id: customer._id,
-                              status: value,
-                            });
-                          }}
-                        >
-                          <SelectTrigger className="h-8 text-xs border-slate-200 bg-white" data-testid={`select-status-${customer._id}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {FUNNEL_STAGES.map((s) => (
-                              <SelectItem key={s.key} value={s.key} className="text-xs">
-                                {s.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {/* Payment Status */}
+                        {job.paymentStatus && (
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-5 w-full justify-center">
+                            {job.paymentStatus}
+                          </Badge>
+                        )}
 
                         {/* Action Buttons */}
-                        <div className="flex gap-1.5 pt-2 border-t border-slate-100">
+                        <div className="flex gap-1 pt-1.5 border-t border-slate-100">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs flex-1 px-1.5 border-slate-200 text-slate-700"
+                            className="h-6 text-[10px] flex-1 px-1 border-slate-200 text-slate-700"
                             onClick={() => {
                               setSelectedCustomer(customer);
                               setDetailsOpen(true);
                             }}
-                            data-testid={`button-view-${customer._id}`}
+                            data-testid={`button-view-${job._id}`}
                           >
                             <Eye className="w-3 h-3" />
                           </Button>
-                          {getCustomerJobHistory(customer._id).length > 0 && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 text-xs flex-1 px-1.5 border-slate-200 text-slate-700"
-                              onClick={() => {
-                                setHistoryCustomer(customer);
-                                setHistoryOpen(true);
-                              }}
-                              data-testid={`button-history-${customer._id}`}
-                            >
-                              <History className="w-3 h-3" />
-                            </Button>
-                          )}
-                          <Link href={`/customer-service?customerId=${customer._id}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[10px] flex-1 px-1 border-slate-200 text-slate-700"
+                            onClick={() => {
+                              setHistoryCustomer(customer);
+                              setHistoryOpen(true);
+                            }}
+                            data-testid={`button-history-${job._id}`}
+                          >
+                            <History className="w-3 h-3" />
+                          </Button>
+                          <Link href={`/customer-service?customerId=${customer?._id}`}>
                             <Button
                               size="sm"
-                              className="h-7 text-xs flex-1 px-1.5 bg-gradient-to-r from-primary to-primary/90 text-white hover:shadow-lg transition-all"
-                              data-testid={`button-create-service-${customer._id}`}
+                              className="h-6 text-[10px] flex-1 px-1 bg-gradient-to-r from-primary to-primary/90 text-white hover:shadow-lg transition-all"
+                              data-testid={`button-create-service-${job._id}`}
                             >
                               <Wrench className="w-3 h-3" />
                             </Button>
@@ -241,7 +250,8 @@ export default function CustomerFunnel() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
