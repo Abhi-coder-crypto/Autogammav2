@@ -575,7 +575,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Missing required fields" });
       }
       const inquiry = {
-        _id: new (require('mongodb')).ObjectId(),
+        _id: new (require('mongoose')).Types.ObjectId(),
         name,
         phone,
         email: email || '',
