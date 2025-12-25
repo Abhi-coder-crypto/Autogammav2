@@ -80,6 +80,11 @@ app.use((req, res, next) => {
   }
 
   const port = parseInt(process.env.PORT || "5000", 10);
+  if (process.env.VERCEL) {
+    // Vercel handles the server start, we just export the app
+    return app;
+  }
+  
   httpServer.listen(
     {
       port,
@@ -91,3 +96,5 @@ app.use((req, res, next) => {
     },
   );
 })();
+
+export default app;
