@@ -625,15 +625,15 @@ export default function PriceInquiries() {
                         </div>
                         <div className="text-center">
                           <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Diff</p>
-                          <p className={`text-sm font-bold ${priceDifference <= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {priceDifference <= 0 ? '' : '+'}₹{priceDifference.toLocaleString()}
+                          <p className="text-sm font-bold text-foreground">
+                            <span className="font-bold">{priceDifference <= 0 ? '-' : '+'}</span>₹<span className="font-bold">{Math.abs(priceDifference).toLocaleString()}</span>
                           </p>
                         </div>
                       </div>
 
                       <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
                         <span>{inquiry.createdAt ? format(new Date(inquiry.createdAt), 'MMM dd, yyyy') : 'N/A'}</span>
-                        <span className={priceDifference <= 0 ? 'text-red-600' : 'text-green-600'}>{priceDifference <= 0 ? '-' : '+'}{percentageDifference}%</span>
+                        <span className="text-foreground font-bold">{priceDifference <= 0 ? '-' : '+'}{percentageDifference}%</span>
                       </div>
                     </div>
                   </CardContent>
@@ -675,8 +675,8 @@ export default function PriceInquiries() {
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground">Diff</p>
-                        <p className={`font-bold ${priceDifference <= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {priceDifference <= 0 ? '' : '+'}₹{priceDifference.toLocaleString()} ({priceDifference <= 0 ? '-' : '+'}{percentageDifference}%)
+                        <p className="font-bold text-foreground">
+                          <span className="font-bold">{priceDifference <= 0 ? '-' : '+'}</span>₹<span className="font-bold">{Math.abs(priceDifference).toLocaleString()}</span> (<span className="font-bold">{priceDifference <= 0 ? '-' : '+'}{percentageDifference}%</span>)
                         </p>
                       </div>
                       <Button
