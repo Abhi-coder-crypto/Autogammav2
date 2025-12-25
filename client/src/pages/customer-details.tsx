@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Phone, MapPin, Car, Mail, DollarSign, Wrench, ArrowLeft, Calendar, User, X } from "lucide-react";
+import { Phone, MapPin, Car, Mail, DollarSign, Wrench, ArrowLeft, Calendar, User, X, Plus, Package } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 export default function CustomerDetails() {
   const [match, params] = useRoute("/customer-details/:id");
@@ -43,84 +44,156 @@ export default function CustomerDetails() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between">
         <Link href="/registered-customers">
-          <Button variant="outline" size="sm" data-testid="button-back">
-            Back
+          <Button variant="ghost" size="sm" className="hover:bg-slate-100" data-testid="button-back">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Customers
           </Button>
         </Link>
       </div>
 
-      {/* Customer Info - Compact Layout */}
-      <Card className="border border-amber-200 dark:border-amber-800" data-testid={`customer-details-${customerId}`}>
-        <CardContent className="p-4 space-y-3">
-          {/* Header */}
-          <div>
-            <h1 className="font-bold text-2xl">{customer.name}</h1>
-          </div>
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Left Column - Contact & Service */}
-            <div className="space-y-3">
-              {/* Contact Information */}
+      {/* Customer Info Card */}
+      <Card className="border-none shadow-md overflow-hidden bg-white" data-testid={`customer-details-${customerId}`}>
+        <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-600" />
+        <CardContent className="p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center border-2 border-blue-100">
+                <User className="w-8 h-8 text-blue-600" />
+              </div>
               <div>
-                <p className="font-semibold text-sm mb-1">Contact</p>
-                <div className="space-y-1 text-xs">
-                  <p>{customer.phone}</p>
-                  {customer.email && <p className="truncate">{customer.email}</p>}
-                  {customer.address && <p className="line-clamp-2 text-xs">{customer.address}</p>}
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{customer.name}</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                    Active Customer
+                  </Badge>
                 </div>
               </div>
-
-              {/* Service Information */}
-              {customer.service && (
-                <div>
-                  <p className="font-semibold text-sm mb-1">Service</p>
-                  <div className="p-2 bg-gray-50 rounded border border-gray-200 text-xs space-y-1">
-                    <p className="line-clamp-2">{customer.service}</p>
-                    {customer.serviceCost && (
-                      <div className="font-semibold">
-                        ₹{customer.serviceCost.toLocaleString('en-IN')}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
-
-            {/* Right Column - Vehicles & History */}
-            <div className="space-y-3">
-              {/* Vehicles */}
-              {customer.vehicles && customer.vehicles.length > 0 && (
-                <div>
-                  <p className="font-semibold text-sm mb-1">Vehicles</p>
-                  <div className="space-y-1">
-                    {customer.vehicles.slice(0, 2).map((vehicle: any, i: number) => (
-                      <div key={i} className="p-2 bg-gray-50 rounded border border-gray-200 text-xs">
-                        <div className="font-medium">
-                          <span className="truncate">{vehicle.make} {vehicle.model}</span>
-                        </div>
-                        {vehicle.plateNumber && (
-                          <span className="text-xs bg-background px-1.5 py-0.5 rounded mt-1 inline-block">{vehicle.plateNumber}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            </div>
+            
+            <Link href={`/customer-service?customerId=${customer._id}`}>
+              <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm" data-testid={`button-create-service-${customer._id}`}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Service
+              </Button>
+            </Link>
           </div>
 
-          {/* Action Button */}
-          <Link href={`/customer-service?customerId=${customer._id}`} className="block">
-            <Button className="w-full bg-blue-500 hover:bg-blue-600 text-sm h-9" data-testid={`button-create-service-${customer._id}`}>
-              Create Service
-            </Button>
-          </Link>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contact Details */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                Contact Details
+              </h3>
+              <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 p-1.5 bg-white rounded-md shadow-sm">
+                    <Phone className="w-3.5 h-3.5 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-0.5">Phone Number</p>
+                    <p className="text-sm font-medium text-slate-900">{customer.phone}</p>
+                  </div>
+                </div>
+                {customer.email && (
+                  <div className="flex items-start gap-3 pt-3 border-t border-slate-200/60">
+                    <div className="mt-1 p-1.5 bg-white rounded-md shadow-sm">
+                      <Mail className="w-3.5 h-3.5 text-slate-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-0.5">Email Address</p>
+                      <p className="text-sm font-medium text-slate-900 break-all">{customer.email}</p>
+                    </div>
+                  </div>
+                )}
+                {customer.address && (
+                  <div className="flex items-start gap-3 pt-3 border-t border-slate-200/60">
+                    <div className="mt-1 p-1.5 bg-white rounded-md shadow-sm">
+                      <MapPin className="w-3.5 h-3.5 text-slate-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-0.5">Address</p>
+                      <p className="text-sm font-medium text-slate-900 leading-relaxed">{customer.address}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Vehicle Fleet */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                <Car className="w-4 h-4" />
+                Vehicles
+              </h3>
+              <div className="space-y-3">
+                {customer.vehicles && customer.vehicles.length > 0 ? (
+                  customer.vehicles.map((vehicle: any, i: number) => (
+                    <div key={i} className="group bg-slate-50 hover:bg-blue-50/50 rounded-xl p-4 border border-slate-100 hover:border-blue-200 transition-all">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <Car className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">{vehicle.make} {vehicle.model}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              {vehicle.plateNumber && (
+                                <Badge variant="secondary" className="bg-white text-[10px] py-0 px-1.5 font-mono border-slate-200 uppercase">
+                                  {vehicle.plateNumber}
+                                </Badge>
+                              )}
+                              {vehicle.year && <span className="text-[10px] text-slate-400 font-medium">{vehicle.year}</span>}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-slate-50 rounded-xl p-8 border border-dashed border-slate-200 text-center">
+                    <p className="text-sm text-slate-400">No vehicles registered</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Current Service Plan */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                <Wrench className="w-4 h-4" />
+                Service Interest
+              </h3>
+              {customer.service ? (
+                <div className="bg-indigo-50/50 rounded-xl p-5 border border-indigo-100 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 p-1.5 bg-white rounded-md shadow-sm">
+                      <Package className="w-3.5 h-3.5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">Selected Services</p>
+                      <p className="text-sm font-medium text-slate-900 leading-snug">{customer.service}</p>
+                    </div>
+                  </div>
+                  
+                  {customer.serviceCost && (
+                    <div className="pt-4 border-t border-indigo-200/60 flex items-center justify-between">
+                      <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Estimated Cost</span>
+                      <span className="text-xl font-bold text-indigo-700">₹{customer.serviceCost.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-slate-50 rounded-xl p-8 border border-dashed border-slate-200 text-center">
+                  <p className="text-sm text-slate-400">No active service plan</p>
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 

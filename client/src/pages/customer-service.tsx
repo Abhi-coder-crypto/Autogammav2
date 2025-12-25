@@ -527,7 +527,7 @@ export default function CustomerService() {
                     <SelectTrigger data-testid="select-customer">
                       <SelectValue placeholder="Choose a customer" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                       {customers.length === 0 ? (
                         <div className="p-2 text-sm text-muted-foreground text-center">No customers found</div>
                       ) : (
@@ -571,7 +571,7 @@ export default function CustomerService() {
                             <span>Choose a vehicle</span>
                           )}
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                           {selectedCustomer.vehicles.map((vehicle: any, index: number) => (
                             <SelectItem key={index} value={index.toString()}>
                               <div className="flex items-center gap-2">

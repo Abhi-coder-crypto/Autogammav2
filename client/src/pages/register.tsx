@@ -768,7 +768,7 @@ export default function CustomerRegistration() {
                     <SelectTrigger className="border-slate-300" data-testid="select-vehicle-make">
                       <SelectValue placeholder="Select vehicle make" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                       {VEHICLE_MAKES.map((make) => (
                         <SelectItem key={make} value={make}>
                           {make}
@@ -850,7 +850,7 @@ export default function CustomerRegistration() {
                     <SelectTrigger className="border-slate-300" data-testid="select-vehicle-color">
                       <SelectValue placeholder="Select color" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                       {VEHICLE_COLORS.map((color) => (
                         <SelectItem key={color} value={color}>
                           {color}
