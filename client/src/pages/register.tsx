@@ -441,6 +441,7 @@ export default function CustomerRegistration() {
                       if (errors.phone) setErrors({ ...errors, phone: undefined });
                     }}
                     placeholder="10-digit mobile number"
+                    maxLength={10}
                     data-testid="input-mobile"
                     className={errors.phone ? "border-red-500" : "border-slate-300"}
                   />
