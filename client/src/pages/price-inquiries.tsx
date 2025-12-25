@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,27 +14,202 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Phone, Mail, DollarSign } from 'lucide-react';
+import { Trash2, Phone, Mail, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 
-const SERVICES = [
+const PPF_CATEGORIES = {
+  Elite: {
+    'Small Cars': {
+      'TPU 5 Years Gloss': 55000,
+      'TPU 5 Years Matt': 60000,
+      'TPU 7 Years Gloss': 80000,
+      'TPU 10 Years Gloss': 95000,
+    },
+    'Hatchback / Small Sedan': {
+      'TPU 5 Years Gloss': 60000,
+      'TPU 5 Years Matt': 70000,
+      'TPU 7 Years Gloss': 85000,
+      'TPU 10 Years Gloss': 105000,
+    },
+    'Mid-size Sedan / Compact SUV / MUV': {
+      'TPU 5 Years Gloss': 70000,
+      'TPU 5 Years Matt': 75000,
+      'TPU 7 Years Gloss': 90000,
+      'TPU 10 Years Gloss': 112000,
+    },
+    'SUV / MPV': {
+      'TPU 5 Years Gloss': 80000,
+      'TPU 5 Years Matt': 85000,
+      'TPU 7 Years Gloss': 95000,
+      'TPU 10 Years Gloss': 120000,
+    },
+  },
+  'Garware Plus': {
+    'Small Cars': { 'TPU 5 Years Gloss': 62000 },
+    'Hatchback / Small Sedan': { 'TPU 5 Years Gloss': 65000 },
+    'Mid-size Sedan / Compact SUV / MUV': { 'TPU 5 Years Gloss': 70000 },
+    'SUV / MPV': { 'TPU 5 Years Gloss': 85000 },
+  },
+  'Garware Premium': {
+    'Small Cars': { 'TPU 8 Years Gloss': 80000 },
+    'Hatchback / Small Sedan': { 'TPU 8 Years Gloss': 85000 },
+    'Mid-size Sedan / Compact SUV / MUV': { 'TPU 8 Years Gloss': 90000 },
+    'SUV / MPV': { 'TPU 8 Years Gloss': 95000 },
+  },
+  'Garware Matt': {
+    'Small Cars': { 'TPU 5 Years Matt': 105000 },
+    'Hatchback / Small Sedan': { 'TPU 5 Years Matt': 110000 },
+    'Mid-size Sedan / Compact SUV / MUV': { 'TPU 5 Years Matt': 115000 },
+    'SUV / MPV': { 'TPU 5 Years Matt': 120000 },
+  },
+};
+
+const OTHER_SERVICES = {
+  'Foam Washing': {
+    'Small Cars': 400,
+    'Hatchback / Small Sedan': 500,
+    'Mid-size Sedan / Compact SUV / MUV': 600,
+    'SUV / MPV': 700,
+  },
+  'Premium Washing': {
+    'Small Cars': 600,
+    'Hatchback / Small Sedan': 700,
+    'Mid-size Sedan / Compact SUV / MUV': 800,
+    'SUV / MPV': 900,
+  },
+  'Interior Cleaning': {
+    'Small Cars': 2500,
+    'Hatchback / Small Sedan': 3000,
+    'Mid-size Sedan / Compact SUV / MUV': 3500,
+    'SUV / MPV': 4500,
+  },
+  'Interior Steam Cleaning': {
+    'Small Cars': 3500,
+    'Hatchback / Small Sedan': 4000,
+    'Mid-size Sedan / Compact SUV / MUV': 4500,
+    'SUV / MPV': 5500,
+  },
+  'Leather Treatment': {
+    'Small Cars': 5000,
+    'Hatchback / Small Sedan': 5500,
+    'Mid-size Sedan / Compact SUV / MUV': 6000,
+    'SUV / MPV': 7000,
+  },
+  'Detailing': {
+    'Small Cars': 5000,
+    'Hatchback / Small Sedan': 6500,
+    'Mid-size Sedan / Compact SUV / MUV': 7000,
+    'SUV / MPV': 9000,
+  },
+  'Paint Sealant Coating (Teflon)': {
+    'Small Cars': 6500,
+    'Hatchback / Small Sedan': 8500,
+    'Mid-size Sedan / Compact SUV / MUV': 9500,
+    'SUV / MPV': 11500,
+  },
+  'Ceramic Coating – 9H': {
+    'Small Cars': 11000,
+    'Hatchback / Small Sedan': 12500,
+    'Mid-size Sedan / Compact SUV / MUV': 15000,
+    'SUV / MPV': 18000,
+  },
+  'Ceramic Coating – MAFRA': {
+    'Small Cars': 12500,
+    'Hatchback / Small Sedan': 15000,
+    'Mid-size Sedan / Compact SUV / MUV': 18000,
+    'SUV / MPV': 21000,
+  },
+  'Ceramic Coating – MENZA PRO': {
+    'Small Cars': 15000,
+    'Hatchback / Small Sedan': 18000,
+    'Mid-size Sedan / Compact SUV / MUV': 21000,
+    'SUV / MPV': 24000,
+  },
+  'Ceramic Coating – KOCH CHEMIE': {
+    'Small Cars': 18000,
+    'Hatchback / Small Sedan': 22000,
+    'Mid-size Sedan / Compact SUV / MUV': 25000,
+    'SUV / MPV': 28000,
+  },
+  'Corrosion Treatment': {
+    'Small Cars': 3500,
+    'Hatchback / Small Sedan': 5000,
+    'Mid-size Sedan / Compact SUV / MUV': 6000,
+    'SUV / MPV': 7500,
+  },
+  'Windshield Coating': {
+    'Small Cars': 2500,
+    'Hatchback / Small Sedan': 3000,
+    'Mid-size Sedan / Compact SUV / MUV': 3500,
+    'SUV / MPV': 4000,
+  },
+  'Windshield Coating All Glasses': {
+    'Small Cars': 5000,
+    'Hatchback / Small Sedan': 5500,
+    'Mid-size Sedan / Compact SUV / MUV': 6000,
+    'SUV / MPV': 6500,
+  },
+  'Sun Control Film – Economy': {
+    'Small Cars': 5200,
+    'Hatchback / Small Sedan': 6000,
+    'Mid-size Sedan / Compact SUV / MUV': 6500,
+    'SUV / MPV': 8400,
+  },
+  'Sun Control Film – Standard': {
+    'Small Cars': 7500,
+    'Hatchback / Small Sedan': 8300,
+    'Mid-size Sedan / Compact SUV / MUV': 9500,
+    'SUV / MPV': 12500,
+  },
+  'Sun Control Film – Premium': {
+    'Small Cars': 11500,
+    'Hatchback / Small Sedan': 13000,
+    'Mid-size Sedan / Compact SUV / MUV': 15000,
+    'SUV / MPV': 18000,
+  },
+  'Sun Control Film – Ceramic': {
+    'Small Cars': 13500,
+    'Hatchback / Small Sedan': 15500,
+    'Mid-size Sedan / Compact SUV / MUV': 18000,
+    'SUV / MPV': 21000,
+  },
+};
+
+const CAR_TYPES = ['Small Cars', 'Hatchback / Small Sedan', 'Mid-size Sedan / Compact SUV / MUV', 'SUV / MPV'];
+
+const ALL_SERVICES = [
   'PPF - Elite',
   'PPF - Garware Plus',
   'PPF - Garware Premium',
   'PPF - Garware Matt',
-  'Foam Washing',
-  'Premium Washing',
-  'Interior Cleaning',
-  'Interior Steam Cleaning',
-  'Leather Treatment',
-  'Detailing',
-  'Ceramic Coating',
-  'Other',
+  ...Object.keys(OTHER_SERVICES),
 ];
+
+function getPriceForService(service: string, carType: string): number | null {
+  if (service.startsWith('PPF')) {
+    const ppfType = service.replace('PPF - ', '');
+    const ppfData = PPF_CATEGORIES[ppfType as keyof typeof PPF_CATEGORIES];
+    if (ppfData && ppfData[carType as keyof typeof ppfData]) {
+      const variants = ppfData[carType as keyof typeof ppfData];
+      const prices = Object.values(variants);
+      return prices.length > 0 ? (prices[0] as number) : null;
+    }
+  } else {
+    const serviceData = OTHER_SERVICES[service as keyof typeof OTHER_SERVICES];
+    if (serviceData && serviceData[carType as keyof typeof serviceData]) {
+      return serviceData[carType as keyof typeof serviceData];
+    }
+  }
+  return null;
+}
 
 export default function PriceInquiries() {
   const [showForm, setShowForm] = useState(false);
   const [selectedService, setSelectedService] = useState('');
+  const [selectedCarType, setSelectedCarType] = useState('');
+  const [autoPrice, setAutoPrice] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterService, setFilterService] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -49,6 +224,8 @@ export default function PriceInquiries() {
       queryClient.invalidateQueries({ queryKey: ['/api/price-inquiries'] });
       setShowForm(false);
       setSelectedService('');
+      setSelectedCarType('');
+      setAutoPrice(null);
       toast({ title: 'Price inquiry saved successfully' });
     },
     onError: () => {
@@ -67,13 +244,25 @@ export default function PriceInquiries() {
     }
   });
 
+  const handleServiceChange = (service: string) => {
+    setSelectedService(service);
+    setSelectedCarType('');
+    setAutoPrice(null);
+  };
+
+  const handleCarTypeChange = (carType: string) => {
+    setSelectedCarType(carType);
+    const price = getPriceForService(selectedService, carType);
+    setAutoPrice(price);
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    if (!selectedService) {
-      toast({ title: 'Please select a service', variant: 'destructive' });
+    if (!selectedService || !selectedCarType || autoPrice === null) {
+      toast({ title: 'Please select service and car type', variant: 'destructive' });
       return;
     }
 
@@ -81,8 +270,8 @@ export default function PriceInquiries() {
       name: formData.get('name'),
       phone: formData.get('phone'),
       email: formData.get('email') || '',
-      service: selectedService,
-      priceOffered: parseFloat(formData.get('priceOffered') as string),
+      service: `${selectedService} - ${selectedCarType}`,
+      priceOffered: autoPrice,
       priceStated: parseFloat(formData.get('priceStated') as string),
       notes: formData.get('notes') || ''
     });
@@ -90,8 +279,22 @@ export default function PriceInquiries() {
     form.reset();
   };
 
+  const filteredInquiries = useMemo(() => {
+    return inquiries.filter((inquiry: any) => {
+      const matchesSearch = 
+        inquiry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inquiry.phone.includes(searchQuery) ||
+        inquiry.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesFilter = !filterService || inquiry.service.includes(filterService);
+      
+      return matchesSearch && matchesFilter;
+    });
+  }, [inquiries, searchQuery, filterService]);
+
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
+      {/* Form Section */}
       <div>
         <h1 className="text-3xl font-bold mb-6">Inquiry</h1>
         
@@ -106,7 +309,8 @@ export default function PriceInquiries() {
         ) : (
           <Card className="mb-6">
             <CardContent className="pt-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Row 1: Name and Phone */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Customer Name</Label>
@@ -130,6 +334,7 @@ export default function PriceInquiries() {
                   </div>
                 </div>
                 
+                {/* Row 2: Email and Service */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="email">Email (optional)</Label>
@@ -142,13 +347,13 @@ export default function PriceInquiries() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="service">Service Inquired</Label>
-                    <Select value={selectedService} onValueChange={setSelectedService}>
+                    <Label htmlFor="service">Service Type</Label>
+                    <Select value={selectedService} onValueChange={handleServiceChange}>
                       <SelectTrigger id="service" data-testid="select-service">
                         <SelectValue placeholder="Select a service" />
                       </SelectTrigger>
                       <SelectContent>
-                        {SERVICES.map((service) => (
+                        {ALL_SERVICES.map((service) => (
                           <SelectItem key={service} value={service} data-testid={`option-service-${service}`}>
                             {service}
                           </SelectItem>
@@ -158,19 +363,41 @@ export default function PriceInquiries() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="priceOffered">Price Offered (₹)</Label>
-                    <Input
-                      id="priceOffered"
-                      name="priceOffered"
-                      type="number"
-                      min="0"
-                      placeholder="0"
-                      required
-                      data-testid="input-price-offered"
-                    />
+                {/* Row 3: Car Type and Auto Price */}
+                {selectedService && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="carType">Car Type</Label>
+                      <Select value={selectedCarType} onValueChange={handleCarTypeChange}>
+                        <SelectTrigger id="carType" data-testid="select-car-type">
+                          <SelectValue placeholder="Select car type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CAR_TYPES.map((carType) => (
+                            <SelectItem key={carType} value={carType} data-testid={`option-car-${carType}`}>
+                              {carType}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="priceOffered">Our Price (Auto) (₹)</Label>
+                      <Input
+                        id="priceOffered"
+                        name="priceOffered"
+                        type="number"
+                        value={autoPrice || 0}
+                        disabled
+                        data-testid="input-price-offered"
+                        className="bg-secondary"
+                      />
+                    </div>
                   </div>
+                )}
+
+                {/* Row 4: Customer Price and Notes */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="priceStated">Price Stated by Customer (₹)</Label>
                     <Input
@@ -183,19 +410,18 @@ export default function PriceInquiries() {
                       data-testid="input-price-stated"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="notes">Notes (optional)</Label>
+                    <Input
+                      id="notes"
+                      name="notes"
+                      placeholder="Any additional notes..."
+                      data-testid="input-notes"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="notes">Notes (optional)</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    placeholder="Any additional notes..."
-                    className="min-h-20"
-                    data-testid="textarea-notes"
-                  />
-                </div>
-
+                {/* Action Buttons */}
                 <div className="flex gap-3">
                   <Button
                     type="submit"
@@ -210,6 +436,8 @@ export default function PriceInquiries() {
                     onClick={() => {
                       setShowForm(false);
                       setSelectedService('');
+                      setSelectedCarType('');
+                      setAutoPrice(null);
                     }}
                     data-testid="button-cancel-inquiry"
                   >
@@ -222,17 +450,59 @@ export default function PriceInquiries() {
         )}
       </div>
 
+      {/* Search and Filter Section */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Inquiry List</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-secondary" />
+            <Input
+              placeholder="Search by name, phone, or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+              data-testid="input-search"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-3"
+                data-testid="button-clear-search"
+              >
+                <X className="w-4 h-4 text-secondary" />
+              </button>
+            )}
+          </div>
+          
+          <Select value={filterService} onValueChange={setFilterService}>
+            <SelectTrigger data-testid="select-filter">
+              <SelectValue placeholder="Filter by service" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Services</SelectItem>
+              {ALL_SERVICES.map((service) => (
+                <SelectItem key={service} value={service} data-testid={`filter-option-${service}`}>
+                  {service}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Inquiries List */}
       {isLoading ? (
         <div className="text-center py-12">Loading...</div>
-      ) : inquiries.length === 0 ? (
+      ) : filteredInquiries.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-secondary">
-            No price inquiries yet. Start by adding one!
+            {inquiries.length === 0 ? 'No inquiries yet. Start by adding one!' : 'No inquiries match your search or filter.'}
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {inquiries.map((inquiry: any) => {
+        <div className="space-y-4">
+          {filteredInquiries.map((inquiry: any) => {
             const priceDifference = inquiry.priceOffered - inquiry.priceStated;
             const percentageDifference = ((priceDifference / inquiry.priceOffered) * 100).toFixed(1);
 
@@ -244,7 +514,7 @@ export default function PriceInquiries() {
                       <CardTitle className="text-lg" data-testid={`text-name-${inquiry._id}`}>
                         {inquiry.name}
                       </CardTitle>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-secondary">
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-secondary">
                         <a href={`tel:${inquiry.phone}`} className="flex items-center gap-1 hover:text-primary" data-testid={`link-phone-${inquiry._id}`}>
                           <Phone className="w-4 h-4" />
                           {inquiry.phone}
