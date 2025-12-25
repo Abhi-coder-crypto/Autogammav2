@@ -29,7 +29,16 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   // Seed admin user on startup
-  await seedAdminUser();
+  try {
+    await seedAdminUser();
+  } catch (e) {
+    console.error("Seeding failed but continuing:", e);
+  }
+
+  // Add a health check endpoint for Vercel
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", environment: process.env.VERCEL ? "vercel" : "local" });
+  });
 
   // Login endpoint
   app.post("/api/auth/login", async (req, res) => {
