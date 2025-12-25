@@ -1,5 +1,5 @@
-import { Customer, Job, Technician, Inventory, Appointment, WhatsAppTemplate, Invoice } from './models';
-import type { ICustomer, IJob, ITechnician, IInventoryItem, IAppointment, IWhatsAppTemplate, IInvoice, JobStage } from './models';
+import { Customer, Job, Technician, Inventory, Appointment, WhatsAppTemplate, Invoice, PriceInquiry } from './models';
+import type { ICustomer, IJob, ITechnician, IInventoryItem, IAppointment, IWhatsAppTemplate, IInvoice, JobStage, IPriceInquiry } from './models';
 import mongoose from 'mongoose';
 
 export interface IStorage {
