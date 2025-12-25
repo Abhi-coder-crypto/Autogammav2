@@ -43,6 +43,7 @@ export interface IStorage {
   getAppointmentsByDate(date: Date): Promise<IAppointment[]>;
   createAppointment(data: Partial<IAppointment>): Promise<IAppointment>;
   updateAppointment(id: string, data: Partial<IAppointment>): Promise<IAppointment | null>;
+  deleteAppointment(id: string): Promise<void>;
   convertAppointmentToJob(appointmentId: string): Promise<IJob | null>;
   
   getWhatsAppTemplates(): Promise<IWhatsAppTemplate[]>;
@@ -301,7 +302,7 @@ export class MongoStorage implements IStorage {
   }
 
   async getAppointments(): Promise<IAppointment[]> {
-    return Appointment.find().sort({ date: 1, timeSlot: 1 });
+    return Appointment.find().sort({ date: 1, time: 1 });
   }
 
   async getAppointmentsByDate(date: Date): Promise<IAppointment[]> {
@@ -312,7 +313,7 @@ export class MongoStorage implements IStorage {
     
     return Appointment.find({
       date: { $gte: startOfDay, $lte: endOfDay }
-    }).sort({ timeSlot: 1 });
+    }).sort({ time: 1 });
   }
 
   async createAppointment(data: Partial<IAppointment>): Promise<IAppointment> {
@@ -325,6 +326,11 @@ export class MongoStorage implements IStorage {
     return Appointment.findByIdAndUpdate(id, data, { new: true });
   }
 
+  async deleteAppointment(id: string): Promise<void> {
+    if (!mongoose.Types.ObjectId.isValid(id)) return;
+    await Appointment.findByIdAndDelete(id);
+  }
+
   async convertAppointmentToJob(appointmentId: string): Promise<IJob | null> {
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) return null;
@@ -334,11 +340,12 @@ export class MongoStorage implements IStorage {
       const newCustomer = new Customer({
         name: appointment.customerName,
         phone: appointment.customerPhone,
+        email: appointment.customerEmail,
         vehicles: [{
           make: '',
           model: appointment.vehicleInfo,
           year: '',
-          plateNumber: appointment.plateNumber,
+          plateNumber: '',
           color: ''
         }]
       });
@@ -350,13 +357,13 @@ export class MongoStorage implements IStorage {
       vehicleIndex: 0,
       customerName: customer.name,
       vehicleName: appointment.vehicleInfo,
-      plateNumber: appointment.plateNumber,
+      plateNumber: '',
       stage: 'New Lead',
       notes: `${appointment.serviceType}${appointment.notes ? ' - ' + appointment.notes : ''}`
     });
 
     await Appointment.findByIdAndUpdate(appointmentId, {
-      status: 'Converted',
+      status: 'Done',
       jobId: job._id
     });
 

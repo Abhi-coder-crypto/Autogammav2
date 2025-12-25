@@ -454,6 +454,15 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/appointments/:id", async (req, res) => {
+    try {
+      await storage.deleteAppointment(req.params.id);
+      res.json({ message: "Appointment deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete appointment" });
+    }
+  });
+
   app.post("/api/appointments/:id/convert", async (req, res) => {
     try {
       const job = await storage.convertAppointmentToJob(req.params.id);

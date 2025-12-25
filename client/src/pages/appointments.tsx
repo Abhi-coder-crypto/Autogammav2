@@ -4,28 +4,14 @@ import { api } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Calendar, User, Phone, Mail, Car, Grid3X3, List, AlertCircle } from 'lucide-react';
+import { Search, Trash2, Grid3X3, List, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-
-const TIME_SLOTS = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '12:00', '12:30', '14:00', '14:30', '15:00', '15:30',
-  '16:00', '16:30', '17:00', '17:30', '18:00'
-];
-
-const STATUS_COLORS: Record<string, string> = {
-  'Scheduled': 'bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300',
-  'Confirmed': 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300',
-  'Cancelled': 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300',
-  'Converted': 'bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300'
-};
 
 const validatePhone = (phone: string): boolean => {
   const digitsOnly = phone.replace(/\D/g, '');
@@ -38,10 +24,14 @@ const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
+const STATUS_COLORS: Record<string, string> = {
+  'Scheduled': 'bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300',
+  'Done': 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-300',
+};
+
 export default function Appointments() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [searchQuery, setSearchQuery] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
@@ -56,12 +46,23 @@ export default function Appointments() {
     mutationFn: (data: any) => api.appointments.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      setDialogOpen(false);
+      setShowForm(false);
       setFormErrors({});
       toast({ title: 'Appointment booked successfully' });
     },
     onError: () => {
       toast({ title: 'Failed to book appointment', variant: 'destructive' });
+    }
+  });
+
+  const deleteAppointmentMutation = useMutation({
+    mutationFn: (id: string) => api.appointments.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      toast({ title: 'Appointment deleted' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to delete appointment', variant: 'destructive' });
     }
   });
 
@@ -73,7 +74,7 @@ export default function Appointments() {
     }
   });
 
-  const handleCreateAppointment = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -101,10 +102,11 @@ export default function Appointments() {
       vehicleInfo: formData.get('vehicleInfo') as string,
       serviceType: formData.get('serviceType') as string,
       date: formData.get('date') as string,
-      timeSlot: formData.get('timeSlot') as string,
+      time: formData.get('time') as string,
       notes: formData.get('notes') as string || undefined,
       status: 'Scheduled'
     });
+    
     form.reset();
   };
 
@@ -120,200 +122,214 @@ export default function Appointments() {
     });
   }, [appointments, searchQuery]);
 
-  const bookedSlots = filteredAppointments
-    .filter((a: any) => a.status !== 'Cancelled')
-    .map((a: any) => a.timeSlot);
-
-  const formatTime = (time: string) => {
-    if (!time) return '';
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Appointments</h1>
-          <p className="text-muted-foreground mt-1">Schedule and manage service appointments</p>
-        </div>
-        
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" data-testid="button-new-appointment">
-              <Plus className="w-4 h-4 mr-2" />
-              Book Appointment
+      {/* Header and View Controls */}
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Appointments</h1>
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "card" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("card")}
+              className="flex items-center gap-2"
+              data-testid="button-view-card"
+            >
+              <Grid3X3 className="w-4 h-4" />
+              Card
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Book New Appointment</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateAppointment} className="space-y-4">
-              {/* Customer Name */}
-              <div className="space-y-2">
-                <Label htmlFor="customerName">Customer Name *</Label>
-                <Input 
-                  id="customerName"
-                  name="customerName" 
-                  required 
-                  placeholder="Enter customer name"
-                  data-testid="input-appt-name"
-                />
-              </div>
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="flex items-center gap-2"
+              data-testid="button-view-list"
+            >
+              <List className="w-4 h-4" />
+              List
+            </Button>
+          </div>
+        </div>
 
-              {/* Phone */}
-              <div className="space-y-2">
-                <Label htmlFor="customerPhone">Phone Number *</Label>
-                <Input 
-                  id="customerPhone"
-                  name="customerPhone" 
-                  required 
-                  placeholder="10 digit phone number"
-                  maxLength={10}
-                  data-testid="input-appt-phone"
-                />
-                {formErrors.customerPhone && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {formErrors.customerPhone}
-                  </p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="customerEmail">Email (Optional)</Label>
-                <Input 
-                  id="customerEmail"
-                  name="customerEmail" 
-                  type="email"
-                  placeholder="customer@example.com"
-                  data-testid="input-appt-email"
-                />
-                {formErrors.customerEmail && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {formErrors.customerEmail}
-                  </p>
-                )}
-              </div>
-
-              {/* Vehicle Info */}
-              <div className="space-y-2">
-                <Label htmlFor="vehicleInfo">Vehicle Info *</Label>
-                <Input 
-                  id="vehicleInfo"
-                  name="vehicleInfo" 
-                  required 
-                  placeholder="e.g., Toyota Fortuner White"
-                  data-testid="input-appt-vehicle"
-                />
-              </div>
-
-              {/* Service Type */}
-              <div className="space-y-2">
-                <Label htmlFor="serviceType">Service Type *</Label>
-                <Input 
-                  id="serviceType"
-                  name="serviceType" 
-                  required 
-                  placeholder="e.g., PPF, Full Service, Detailing"
-                  data-testid="input-appt-service"
-                />
-              </div>
-
-              {/* Date and Time */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date *</Label>
-                  <Input 
-                    id="date"
-                    name="date" 
-                    type="date" 
-                    required 
-                    defaultValue={selectedDate}
-                    min={format(new Date(), 'yyyy-MM-dd')}
-                    data-testid="input-appt-date"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="timeSlot">Time *</Label>
-                  <Select name="timeSlot" required>
-                    <SelectTrigger id="timeSlot" data-testid="select-appt-time">
-                      <SelectValue placeholder="Select time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIME_SLOTS.map(slot => (
-                        <SelectItem key={slot} value={slot} disabled={bookedSlots.includes(slot)}>
-                          {formatTime(slot)} {bookedSlots.includes(slot) && '(Booked)'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes (Optional)</Label>
-                <Textarea 
-                  id="notes"
-                  name="notes" 
-                  placeholder="Any additional information..."
-                  className="resize-none"
-                  data-testid="input-appt-notes"
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-primary"
-                disabled={createAppointmentMutation.isPending}
-                data-testid="button-submit-appointment"
-              >
-                {createAppointmentMutation.isPending ? 'Booking...' : 'Book Appointment'}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Search and View Mode */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="relative flex-1 w-full sm:w-auto">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-3 w-4 h-4 text-secondary" />
           <Input
-            placeholder="Search by name, phone, or vehicle..."
+            placeholder="Search by name or phone number..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
-            data-testid="input-search-appointments"
+            data-testid="input-search"
           />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === "card" ? "default" : "outline"}
-            size="icon"
-            onClick={() => setViewMode("card")}
-            data-testid="button-view-card"
-          >
-            <Grid3X3 className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="icon"
-            onClick={() => setViewMode("list")}
-            data-testid="button-view-list"
-          >
-            <List className="w-4 h-4" />
-          </Button>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-3"
+              data-testid="button-clear-search"
+            >
+              <X className="w-4 h-4 text-secondary" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Appointments Display */}
+      {/* Form Section */}
+      <div className="space-y-6">
+        {!showForm ? (
+          <Button 
+            onClick={() => setShowForm(true)}
+            className="mb-6"
+            data-testid="button-add-appointment"
+          >
+            Book Appointment
+          </Button>
+        ) : (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Row 1: Name and Phone */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="customerName">Customer Name *</Label>
+                    <Input
+                      id="customerName"
+                      name="customerName"
+                      placeholder="John Doe"
+                      required
+                      data-testid="input-name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="customerPhone">Phone *</Label>
+                    <Input
+                      id="customerPhone"
+                      name="customerPhone"
+                      placeholder="9876543210"
+                      required
+                      maxLength={10}
+                      data-testid="input-phone"
+                      className={formErrors.customerPhone ? 'border-red-500' : ''}
+                    />
+                    {formErrors.customerPhone && (
+                      <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+                        <AlertCircle className="w-4 h-4" />
+                        {formErrors.customerPhone}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Row 2: Email */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="customerEmail">Email (Optional)</Label>
+                    <Input
+                      id="customerEmail"
+                      name="customerEmail"
+                      type="email"
+                      placeholder="john@example.com"
+                      data-testid="input-email"
+                      className={formErrors.customerEmail ? 'border-red-500' : ''}
+                    />
+                    {formErrors.customerEmail && (
+                      <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+                        <AlertCircle className="w-4 h-4" />
+                        {formErrors.customerEmail}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Row 3: Vehicle and Service Type */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="vehicleInfo">Vehicle Info *</Label>
+                    <Input
+                      id="vehicleInfo"
+                      name="vehicleInfo"
+                      placeholder="e.g., Toyota Fortuner White"
+                      required
+                      data-testid="input-vehicle"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="serviceType">Service Type *</Label>
+                    <Input
+                      id="serviceType"
+                      name="serviceType"
+                      placeholder="e.g., PPF, Full Service, Detailing"
+                      required
+                      data-testid="input-service"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 4: Date and Time */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="date">Date *</Label>
+                    <Input
+                      id="date"
+                      name="date"
+                      type="date"
+                      required
+                      min={format(new Date(), 'yyyy-MM-dd')}
+                      data-testid="input-date"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="time">Time *</Label>
+                    <Input
+                      id="time"
+                      name="time"
+                      type="time"
+                      required
+                      placeholder="HH:MM"
+                      data-testid="input-time"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <Label htmlFor="notes">Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    placeholder="Any additional information..."
+                    className="resize-none"
+                    data-testid="input-notes"
+                  />
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={createAppointmentMutation.isPending}
+                    data-testid="button-submit"
+                  >
+                    {createAppointmentMutation.isPending ? 'Booking...' : 'Book Appointment'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowForm(false)}
+                    data-testid="button-cancel"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Appointments List/Grid */}
       <div>
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">Loading appointments...</div>
@@ -327,79 +343,75 @@ export default function Appointments() {
           // Card View
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredAppointments.map((appt: any) => (
-              <Card 
+              <Card
                 key={appt._id}
-                className="hover-elevate overflow-hidden"
+                className="hover-elevate"
                 data-testid={`appointment-card-${appt._id}`}
               >
                 <CardContent className="p-4 space-y-3">
                   {/* Header */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm truncate">{appt.customerName}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">{format(new Date(appt.date), 'MMM dd, yyyy')}</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-sm">{appt.customerName}</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(appt.date), 'MMM dd, yyyy')} at {appt.time}
+                      </p>
                     </div>
                     <Badge className={cn("text-xs whitespace-nowrap", STATUS_COLORS[appt.status])}>
                       {appt.status}
                     </Badge>
                   </div>
 
-                  {/* Time */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span>{formatTime(appt.timeSlot)}</span>
-                  </div>
-
-                  {/* Phone */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span>{appt.customerPhone}</span>
-                  </div>
-
-                  {/* Email */}
-                  {appt.customerEmail && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      <span className="truncate text-xs">{appt.customerEmail}</span>
+                  {/* Details */}
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Phone:</span>
+                      <p className="font-medium">{appt.customerPhone}</p>
                     </div>
-                  )}
-
-                  {/* Vehicle */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Car className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{appt.vehicleInfo}</span>
-                  </div>
-
-                  {/* Service Type */}
-                  <div className="text-xs text-muted-foreground bg-muted rounded px-2 py-1">
-                    {appt.serviceType}
+                    {appt.customerEmail && (
+                      <div>
+                        <span className="text-muted-foreground">Email:</span>
+                        <p className="font-medium truncate text-xs">{appt.customerEmail}</p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-muted-foreground">Vehicle:</span>
+                      <p className="font-medium">{appt.vehicleInfo}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Service:</span>
+                      <p className="font-medium">{appt.serviceType}</p>
+                    </div>
+                    {appt.notes && (
+                      <div>
+                        <span className="text-muted-foreground">Notes:</span>
+                        <p className="text-xs">{appt.notes}</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}
-                  {appt.status !== 'Converted' && appt.status !== 'Cancelled' && (
-                    <div className="flex gap-2 pt-2 border-t">
-                      {appt.status === 'Scheduled' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 text-xs"
-                          onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Confirmed' })}
-                          data-testid={`button-confirm-${appt._id}`}
-                        >
-                          Confirm
-                        </Button>
-                      )}
+                  <div className="flex gap-2 pt-2 border-t">
+                    {appt.status === 'Scheduled' && (
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="flex-1 text-xs text-destructive hover:text-destructive"
-                        onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Cancelled' })}
-                        data-testid={`button-cancel-${appt._id}`}
+                        className="flex-1 text-xs"
+                        onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Done' })}
+                        data-testid={`button-done-${appt._id}`}
                       >
-                        Cancel
+                        Mark Done
                       </Button>
-                    </div>
-                  )}
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-xs text-destructive"
+                      onClick={() => deleteAppointmentMutation.mutate(appt._id)}
+                      data-testid={`button-delete-${appt._id}`}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -408,7 +420,7 @@ export default function Appointments() {
           // List View
           <div className="space-y-2">
             {filteredAppointments.map((appt: any) => (
-              <Card 
+              <Card
                 key={appt._id}
                 className="hover-elevate"
                 data-testid={`appointment-row-${appt._id}`}
@@ -423,50 +435,35 @@ export default function Appointments() {
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-3 h-3" />
-                          {format(new Date(appt.date), 'MMM dd, yyyy')} at {formatTime(appt.timeSlot)}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3 h-3" />
-                          {appt.customerPhone}
-                        </div>
-                        {appt.customerEmail && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-3 h-3" />
-                            {appt.customerEmail}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <Car className="w-3 h-3" />
-                          {appt.vehicleInfo} - {appt.serviceType}
-                        </div>
+                        <p>{format(new Date(appt.date), 'MMM dd, yyyy')} at {appt.time}</p>
+                        <p>Phone: {appt.customerPhone}</p>
+                        {appt.customerEmail && <p>Email: {appt.customerEmail}</p>}
+                        <p>Vehicle: {appt.vehicleInfo}</p>
+                        <p>Service: {appt.serviceType}</p>
+                        {appt.notes && <p>Notes: {appt.notes}</p>}
                       </div>
                     </div>
 
-                    {appt.status !== 'Converted' && appt.status !== 'Cancelled' && (
-                      <div className="flex gap-2">
-                        {appt.status === 'Scheduled' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Confirmed' })}
-                            data-testid={`button-confirm-${appt._id}`}
-                          >
-                            Confirm
-                          </Button>
-                        )}
+                    <div className="flex gap-2">
+                      {appt.status === 'Scheduled' && (
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Cancelled' })}
-                          data-testid={`button-cancel-${appt._id}`}
+                          onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Done' })}
+                          data-testid={`button-done-${appt._id}`}
                         >
-                          Cancel
+                          Mark Done
                         </Button>
-                      </div>
-                    )}
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive"
+                        onClick={() => deleteAppointmentMutation.mutate(appt._id)}
+                        data-testid={`button-delete-${appt._id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

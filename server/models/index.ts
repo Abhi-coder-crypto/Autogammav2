@@ -124,14 +124,13 @@ export interface IAppointment extends Document {
   customerId?: mongoose.Types.ObjectId;
   customerName: string;
   customerPhone: string;
+  customerEmail?: string;
   vehicleInfo: string;
-  plateNumber: string;
   serviceType: string;
   date: Date;
-  timeSlot: string;
+  time: string;
   notes?: string;
-  status: 'Scheduled' | 'Confirmed' | 'Cancelled' | 'Converted';
-  jobId?: mongoose.Types.ObjectId;
+  status: 'Scheduled' | 'Done';
   createdAt: Date;
 }
 
@@ -308,14 +307,13 @@ const AppointmentSchema = new Schema<IAppointment>({
   customerId: { type: Schema.Types.ObjectId, ref: 'Customer' },
   customerName: { type: String, required: true },
   customerPhone: { type: String, required: true },
+  customerEmail: { type: String },
   vehicleInfo: { type: String, required: true },
-  plateNumber: { type: String, required: true },
   serviceType: { type: String, required: true },
   date: { type: Date, required: true },
-  timeSlot: { type: String, required: true },
+  time: { type: String, required: true },
   notes: { type: String },
-  status: { type: String, enum: ['Scheduled', 'Confirmed', 'Cancelled', 'Converted'], default: 'Scheduled' },
-  jobId: { type: Schema.Types.ObjectId, ref: 'Job' },
+  status: { type: String, enum: ['Scheduled', 'Done'], default: 'Scheduled' },
   createdAt: { type: Date, default: Date.now }
 });
 

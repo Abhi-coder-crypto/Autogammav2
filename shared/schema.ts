@@ -100,9 +100,9 @@ export const appointmentSchema = z.object({
   vehicleInfo: z.string().min(1),
   serviceType: z.string().min(1),
   date: z.string(),
-  timeSlot: z.string().min(1),
+  time: z.string().min(1),
   notes: z.string().optional(),
-  status: z.enum(['Scheduled', 'Confirmed', 'Cancelled', 'Converted']).default('Scheduled')
+  status: z.enum(['Scheduled', 'Done']).default('Scheduled')
 });
 
 export const priceInquirySchema = z.object({

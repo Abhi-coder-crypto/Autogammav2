@@ -76,6 +76,7 @@ export const api = {
     list: (date?: string) => request<any[]>(`/appointments${date ? `?date=${date}` : ''}`),
     create: (data: any) => request<any>('/appointments', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => request<any>(`/appointments/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    delete: (id: string) => request<any>(`/appointments/${id}`, { method: 'DELETE' }),
     convert: (id: string) => request<any>(`/appointments/${id}/convert`, { method: 'POST' }),
   },
 
