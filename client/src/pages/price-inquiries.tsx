@@ -574,8 +574,8 @@ export default function PriceInquiries() {
         ) : viewMode === "card" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredInquiries.map((inquiry: any) => {
-              const priceDifference = inquiry.priceOffered - inquiry.priceStated;
-              const percentageDifference = inquiry.priceOffered > 0 ? ((priceDifference / inquiry.priceOffered) * 100).toFixed(1) : "0";
+              const priceDifference = inquiry.priceStated - inquiry.priceOffered;
+              const percentageDifference = inquiry.priceOffered > 0 ? ((Math.abs(priceDifference) / inquiry.priceOffered) * 100).toFixed(1) : "0";
 
               return (
                 <Card
@@ -625,15 +625,15 @@ export default function PriceInquiries() {
                         </div>
                         <div className="text-center">
                           <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Diff</p>
-                          <p className={`text-sm font-bold ${priceDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {priceDifference >= 0 ? '+' : ''}₹{priceDifference.toLocaleString()}
+                          <p className={`text-sm font-bold ${priceDifference <= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            {priceDifference <= 0 ? '' : '+'}₹{priceDifference.toLocaleString()}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
                         <span>{inquiry.createdAt ? format(new Date(inquiry.createdAt), 'MMM dd, yyyy') : 'N/A'}</span>
-                        <span className={priceDifference >= 0 ? 'text-green-600' : 'text-red-600'}>{percentageDifference}%</span>
+                        <span className={priceDifference <= 0 ? 'text-red-600' : 'text-green-600'}>{priceDifference <= 0 ? '-' : '+'}{percentageDifference}%</span>
                       </div>
                     </div>
                   </CardContent>
@@ -644,8 +644,8 @@ export default function PriceInquiries() {
         ) : (
           <div className="space-y-4">
             {filteredInquiries.map((inquiry: any) => {
-              const priceDifference = inquiry.priceOffered - inquiry.priceStated;
-              const percentageDifference = inquiry.priceOffered > 0 ? ((priceDifference / inquiry.priceOffered) * 100).toFixed(1) : "0";
+              const priceDifference = inquiry.priceStated - inquiry.priceOffered;
+              const percentageDifference = inquiry.priceOffered > 0 ? ((Math.abs(priceDifference) / inquiry.priceOffered) * 100).toFixed(1) : "0";
 
               return (
                 <Card key={inquiry._id} className="hover-elevate">
@@ -675,8 +675,8 @@ export default function PriceInquiries() {
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground">Diff</p>
-                        <p className={`font-bold ${priceDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {priceDifference >= 0 ? '+' : ''}₹{priceDifference.toLocaleString()} ({percentageDifference}%)
+                        <p className={`font-bold ${priceDifference <= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {priceDifference <= 0 ? '' : '+'}₹{priceDifference.toLocaleString()} ({priceDifference <= 0 ? '-' : '+'}{percentageDifference}%)
                         </p>
                       </div>
                       <Button
