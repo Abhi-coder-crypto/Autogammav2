@@ -28,16 +28,20 @@ export default function RegisteredCustomers() {
   const [customerToDelete, setCustomerToDelete] = useState<any>(null);
   const { toast } = useToast();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const { data: customersData, isLoading, refetch } = useQuery({
-    queryKey: ["customers", searchQuery, selectedCity, selectedDistrict, selectedState, selectedStatus, dateRange, fromDate, toDate],
+    queryKey: ["customers", searchQuery, selectedCity, selectedDistrict, selectedState, selectedStatus, dateRange, fromDate, toDate, currentPage],
     queryFn: () => api.customers.list({ 
       search: searchQuery,
-      page: 1,
-      limit: 100 // Large limit for now as we haven't implemented pagination UI
+      page: currentPage,
+      limit: itemsPerPage
     }),
   });
   const customers = customersData?.customers || [];
   const totalCustomers = customersData?.total || 0;
+  const totalPages = Math.ceil(totalCustomers / itemsPerPage);
 
   const uploadImagesMutation = useMutation({
     mutationFn: () => api.customers.addServiceImages(selectedCustomerForImages._id, uploadedImages),
@@ -692,6 +696,34 @@ export default function RegisteredCustomers() {
           </div>
         </DialogContent>
       </Dialog>
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Showing {customers.length} of {totalCustomers} customers
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            data-testid="button-pagination-prev"
+          >
+            Previous
+          </Button>
+          <div className="flex items-center px-2 text-sm font-medium">
+            Page {currentPage} of {totalPages || 1}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage >= totalPages}
+            data-testid="button-pagination-next"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

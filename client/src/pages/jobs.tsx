@@ -51,17 +51,21 @@ export default function ServiceFunnel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const { data: jobsData, isLoading } = useQuery({
-    queryKey: ['jobs', search, stageFilter],
+    queryKey: ['jobs', search, stageFilter, currentPage],
     queryFn: () => api.jobs.list({ 
       search, 
       stage: stageFilter === 'all' ? undefined : stageFilter,
-      page: 1,
-      limit: 100
+      page: currentPage,
+      limit: itemsPerPage
     }),
   });
   const jobs = jobsData?.jobs || [];
   const totalJobs = jobsData?.total || 0;
+  const totalPages = Math.ceil(totalJobs / itemsPerPage);
 
   const { data: customersData } = useQuery({
     queryKey: ['customers'],
@@ -298,6 +302,34 @@ export default function ServiceFunnel() {
           );
         })
       )}
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {jobs.length} of {totalJobs} jobs
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            data-testid="button-pagination-prev"
+          >
+            Previous
+          </Button>
+          <div className="flex items-center px-2 text-sm font-medium">
+            Page {currentPage} of {totalPages || 1}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage >= totalPages}
+            data-testid="button-pagination-next"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

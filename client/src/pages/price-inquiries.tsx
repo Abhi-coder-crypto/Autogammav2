@@ -233,12 +233,19 @@ export default function PriceInquiries() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const { data: inquiriesData, isLoading } = useQuery({
-    queryKey: ['/api/price-inquiries', searchQuery, filterService],
-    queryFn: () => api.priceInquiries.list({ page: 1, limit: 100 }),
+    queryKey: ['/api/price-inquiries', searchQuery, filterService, currentPage],
+    queryFn: () => api.priceInquiries.list({ 
+      page: currentPage, 
+      limit: itemsPerPage 
+    }),
   });
   const inquiries = inquiriesData?.inquiries || [];
   const totalInquiries = inquiriesData?.total || 0;
+  const totalPages = Math.ceil(totalInquiries / itemsPerPage);
 
   const createMutation = useMutation({
     mutationFn: api.priceInquiries.create,
@@ -761,6 +768,34 @@ export default function PriceInquiries() {
             })}
           </div>
         )}
+      </div>
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {inquiries.length} of {totalInquiries} inquiries
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            data-testid="button-pagination-prev"
+          >
+            Previous
+          </Button>
+          <div className="flex items-center px-2 text-sm font-medium">
+            Page {currentPage} of {totalPages || 1}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage >= totalPages}
+            data-testid="button-pagination-next"
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );
