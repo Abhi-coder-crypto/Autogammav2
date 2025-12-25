@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { sendStageUpdateMessage, sendCustomerStatusUpdate } from "./whatsapp";
 import { Customer, Admin } from "./models";
 import type { JobStage, CustomerStatus } from "./models";
+import mongoose from "mongoose";
 
 // Seed default admin user
 async function seedAdminUser() {
