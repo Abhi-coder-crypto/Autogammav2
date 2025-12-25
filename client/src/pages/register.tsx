@@ -202,8 +202,8 @@ const OTHER_SERVICES = {
 const validatePhone = (phone: string): boolean => {
   // Remove all non-digit characters
   const digitsOnly = phone.replace(/\D/g, '');
-  // Check if last 10 digits are present (handles +91, 0, spaces, dashes, etc.)
-  return digitsOnly.length >= 10;
+  // Check if exactly 10 digits
+  return digitsOnly.length === 10;
 };
 
 const validateEmail = (email: string): boolean => {

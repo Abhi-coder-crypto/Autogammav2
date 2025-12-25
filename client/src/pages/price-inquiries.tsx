@@ -14,8 +14,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Phone, Mail, Search, X } from 'lucide-react';
+import { Trash2, Phone, Mail, Search, X, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
+
+const validatePhone = (phone: string): boolean => {
+  const digitsOnly = phone.replace(/\D/g, '');
+  return digitsOnly.length === 10;
+};
+
+const validateEmail = (email: string): boolean => {
+  if (!email) return true;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
 const PPF_CATEGORIES = {
   Elite: {
@@ -210,6 +221,7 @@ export default function PriceInquiries() {
   const [autoPrice, setAutoPrice] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterService, setFilterService] = useState('');
+  const [errors, setErrors] = useState<{ phone?: string; email?: string }>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -260,16 +272,33 @@ export default function PriceInquiries() {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
+    const phone = formData.get('phone') as string;
+    const email = formData.get('email') as string;
+    const newErrors: { phone?: string; email?: string } = {};
+
+    if (!validatePhone(phone)) {
+      newErrors.phone = 'Phone number must be 10 digits';
+    }
+
+    if (email && !validateEmail(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     if (!selectedService || !selectedCarType || autoPrice === null) {
       toast({ title: 'Please select service and car type', variant: 'destructive' });
       return;
     }
 
+    setErrors({});
     createMutation.mutate({
       name: formData.get('name'),
-      phone: formData.get('phone'),
-      email: formData.get('email') || '',
+      phone: phone,
+      email: email || '',
       service: `${selectedService} - ${selectedCarType}`,
       priceOffered: autoPrice,
       priceStated: parseFloat(formData.get('priceStated') as string),
@@ -329,8 +358,16 @@ export default function PriceInquiries() {
                       name="phone"
                       placeholder="9876543210"
                       required
+                      maxLength={10}
                       data-testid="input-phone"
+                      className={errors.phone ? 'border-red-500' : ''}
                     />
+                    {errors.phone && (
+                      <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.phone}
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -344,7 +381,14 @@ export default function PriceInquiries() {
                       type="email"
                       placeholder="john@example.com"
                       data-testid="input-email"
+                      className={errors.email ? 'border-red-500' : ''}
                     />
+                    {errors.email && (
+                      <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.email}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="service">Service Type</Label>
