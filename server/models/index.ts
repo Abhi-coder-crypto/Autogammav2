@@ -139,6 +139,17 @@ export interface IWhatsAppTemplate extends Document {
   isActive: boolean;
 }
 
+export interface IPriceInquiry extends Document {
+  name: string;
+  phone: string;
+  email?: string;
+  service: string;
+  priceOffered: number;
+  priceStated: number;
+  notes?: string;
+  createdAt: Date;
+}
+
 export interface IInvoiceItem {
   description: string;
   quantity: number;
@@ -315,6 +326,17 @@ const WhatsAppTemplateSchema = new Schema<IWhatsAppTemplate>({
   isActive: { type: Boolean, default: true }
 });
 
+const PriceInquirySchema = new Schema<IPriceInquiry>({
+  name: { type: String, required: true },
+  phone: { type: String, required: true },
+  email: { type: String },
+  service: { type: String, required: true },
+  priceOffered: { type: Number, required: true },
+  priceStated: { type: Number, required: true },
+  notes: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+
 const InvoiceItemSchema = new Schema<IInvoiceItem>({
   description: { type: String, required: true },
   quantity: { type: Number, required: true, default: 1 },
@@ -368,5 +390,6 @@ export const Technician = mongoose.model<ITechnician>('Technician', TechnicianSc
 export const Inventory = mongoose.model<IInventoryItem>('Inventory', InventorySchema);
 export const Appointment = mongoose.model<IAppointment>('Appointment', AppointmentSchema);
 export const WhatsAppTemplate = mongoose.model<IWhatsAppTemplate>('WhatsAppTemplate', WhatsAppTemplateSchema);
+export const PriceInquiry = mongoose.model<IPriceInquiry>('PriceInquiry', PriceInquirySchema);
 export const Invoice = mongoose.model<IInvoice>('Invoice', InvoiceSchema);
 export const Admin = mongoose.model<IAdmin>('Admin', AdminSchema);

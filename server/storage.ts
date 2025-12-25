@@ -48,6 +48,10 @@ export interface IStorage {
   getWhatsAppTemplates(): Promise<IWhatsAppTemplate[]>;
   updateWhatsAppTemplate(stage: JobStage, message: string, isActive: boolean): Promise<IWhatsAppTemplate | null>;
   
+  getPriceInquiries(): Promise<IPriceInquiry[]>;
+  createPriceInquiry(data: Partial<IPriceInquiry>): Promise<IPriceInquiry>;
+  deletePriceInquiry(id: string): Promise<void>;
+  
   getInvoices(): Promise<IInvoice[]>;
   getInvoice(id: string): Promise<IInvoice | null>;
   getInvoiceByJob(jobId: string): Promise<IInvoice | null>;
@@ -369,6 +373,20 @@ export class MongoStorage implements IStorage {
       { message, isActive },
       { new: true, upsert: true }
     );
+  }
+
+  async getPriceInquiries(): Promise<IPriceInquiry[]> {
+    return PriceInquiry.find().sort({ createdAt: -1 });
+  }
+
+  async createPriceInquiry(data: Partial<IPriceInquiry>): Promise<IPriceInquiry> {
+    const inquiry = new PriceInquiry(data);
+    return inquiry.save();
+  }
+
+  async deletePriceInquiry(id: string): Promise<void> {
+    if (!mongoose.Types.ObjectId.isValid(id)) return;
+    await PriceInquiry.findByIdAndDelete(id);
   }
 
   async getDashboardStats() {
