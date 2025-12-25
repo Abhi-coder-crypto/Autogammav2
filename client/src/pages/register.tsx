@@ -454,7 +454,7 @@ export default function CustomerRegistration() {
                     <SelectTrigger className="border-slate-300" data-testid="select-referral">
                       <SelectValue placeholder="Select referral source" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                       {REFERRAL_SOURCES.map((source) => (
                         <SelectItem key={source} value={source}>
                           {source}
@@ -498,7 +498,7 @@ export default function CustomerRegistration() {
                     <SelectTrigger className="border-slate-300" data-testid="select-status">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                       {CUSTOMER_STATUSES.map((status) => (
                         <SelectItem key={status.value} value={status.value}>
                           {status.label}
@@ -530,7 +530,7 @@ export default function CustomerRegistration() {
                         <SelectTrigger className="border-slate-300" data-testid="select-ppf-category">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                           {Object.keys(PPF_CATEGORIES).map((category) => (
                             <SelectItem key={category} value={category}>
                               {category}
@@ -557,7 +557,7 @@ export default function CustomerRegistration() {
                           <SelectTrigger className="border-slate-300" data-testid="select-ppf-vehicle">
                             <SelectValue placeholder="Select vehicle type" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                             {Object.keys(PPF_CATEGORIES[customerData.ppfCategory as keyof typeof PPF_CATEGORIES]).map((type) => (
                               <SelectItem key={type} value={type}>
                                 {type}
@@ -586,7 +586,7 @@ export default function CustomerRegistration() {
                           <SelectTrigger className="border-slate-300" data-testid="select-ppf-warranty">
                             <SelectValue placeholder="Select warranty" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                             {Object.entries((PPF_CATEGORIES[customerData.ppfCategory as keyof typeof PPF_CATEGORIES] as Record<string, Record<string, number>>)[customerData.ppfVehicleType]).map(([warranty, price]) => (
                               <SelectItem key={warranty} value={warranty}>
                                 {warranty} - ₹{(price as number).toLocaleString('en-IN')}
@@ -607,7 +607,7 @@ export default function CustomerRegistration() {
                         <SelectTrigger className="border-slate-300" data-testid="select-service-name">
                           <SelectValue placeholder="Select service" />
                         </SelectTrigger>
-                        <SelectContent className="max-h-80 overflow-y-auto">
+                        <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                           {Object.keys(OTHER_SERVICES).map((service) => (
                             <SelectItem key={service} value={service}>
                               {service}
@@ -624,7 +624,7 @@ export default function CustomerRegistration() {
                           <SelectTrigger className="border-slate-300" data-testid="select-service-vehicle">
                             <SelectValue placeholder="Select vehicle type" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                             {Object.entries(OTHER_SERVICES[customerData.tempServiceName as keyof typeof OTHER_SERVICES]).map(([type, price]) => (
                               <SelectItem key={type} value={type}>
                                 {type} - ₹{(price as number).toLocaleString('en-IN')}

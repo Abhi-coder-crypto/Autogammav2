@@ -56,18 +56,18 @@ export default function CustomerDetails() {
       </div>
 
       {/* Customer Info Card */}
-      <Card className="border-none shadow-md overflow-hidden bg-white" data-testid={`customer-details-${customerId}`}>
-        <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-600" />
-        <CardContent className="p-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+      <Card className="border-none shadow-md overflow-hidden bg-white max-w-5xl mx-auto" data-testid={`customer-details-${customerId}`}>
+        <div className="h-2 bg-gradient-to-r from-red-500 to-red-600" />
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center border-2 border-blue-100">
-                <User className="w-8 h-8 text-blue-600" />
+              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center border-2 border-red-100">
+                <User className="w-7 h-7 text-red-600" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{customer.name}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{customer.name}</h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] h-4">
                     Active Customer
                   </Badge>
                 </div>
@@ -75,49 +75,49 @@ export default function CustomerDetails() {
             </div>
             
             <Link href={`/customer-service?customerId=${customer._id}`}>
-              <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm" data-testid={`button-create-service-${customer._id}`}>
+              <Button className="bg-red-600 hover:bg-red-700 shadow-sm h-9" data-testid={`button-create-service-${customer._id}`}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Service
               </Button>
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Contact Details */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                <Phone className="w-4 h-4" />
+            <div className="space-y-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5" />
                 Contact Details
               </h3>
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 space-y-4">
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 p-1.5 bg-white rounded-md shadow-sm">
-                    <Phone className="w-3.5 h-3.5 text-slate-600" />
+                  <div className="mt-0.5 p-1.5 bg-white rounded-md shadow-sm border border-slate-100">
+                    <Phone className="w-3 h-3 text-slate-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 mb-0.5">Phone Number</p>
-                    <p className="text-sm font-medium text-slate-900">{customer.phone}</p>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase mb-0.5">Phone</p>
+                    <p className="text-sm font-semibold text-slate-900">{customer.phone}</p>
                   </div>
                 </div>
                 {customer.email && (
                   <div className="flex items-start gap-3 pt-3 border-t border-slate-200/60">
-                    <div className="mt-1 p-1.5 bg-white rounded-md shadow-sm">
-                      <Mail className="w-3.5 h-3.5 text-slate-600" />
+                    <div className="mt-0.5 p-1.5 bg-white rounded-md shadow-sm border border-slate-100">
+                      <Mail className="w-3 h-3 text-slate-600" />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 mb-0.5">Email Address</p>
-                      <p className="text-sm font-medium text-slate-900 break-all">{customer.email}</p>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase mb-0.5">Email</p>
+                      <p className="text-sm font-semibold text-slate-900 break-all">{customer.email}</p>
                     </div>
                   </div>
                 )}
                 {customer.address && (
                   <div className="flex items-start gap-3 pt-3 border-t border-slate-200/60">
-                    <div className="mt-1 p-1.5 bg-white rounded-md shadow-sm">
-                      <MapPin className="w-3.5 h-3.5 text-slate-600" />
+                    <div className="mt-0.5 p-1.5 bg-white rounded-md shadow-sm border border-slate-100">
+                      <MapPin className="w-3 h-3 text-slate-600" />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 mb-0.5">Address</p>
-                      <p className="text-sm font-medium text-slate-900 leading-relaxed">{customer.address}</p>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase mb-0.5">Address</p>
+                      <p className="text-sm font-semibold text-slate-900 leading-snug">{customer.address}</p>
                     </div>
                   </div>
                 )}
@@ -125,25 +125,25 @@ export default function CustomerDetails() {
             </div>
 
             {/* Vehicle Fleet */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                <Car className="w-4 h-4" />
+            <div className="space-y-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Car className="w-3.5 h-3.5" />
                 Vehicles
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {customer.vehicles && customer.vehicles.length > 0 ? (
                   customer.vehicles.map((vehicle: any, i: number) => (
-                    <div key={i} className="group bg-slate-50 hover:bg-blue-50/50 rounded-xl p-4 border border-slate-100 hover:border-blue-200 transition-all">
+                    <div key={i} className="group bg-slate-50 hover:bg-red-50/50 rounded-xl p-3 border border-slate-100 hover:border-red-200 transition-all">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100">
-                            <Car className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                            <Car className="w-4 h-4 text-slate-600 group-hover:text-red-600 transition-colors" />
                           </div>
                           <div>
                             <p className="text-sm font-bold text-slate-900">{vehicle.make} {vehicle.model}</p>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-0.5">
                               {vehicle.plateNumber && (
-                                <Badge variant="secondary" className="bg-white text-[10px] py-0 px-1.5 font-mono border-slate-200 uppercase">
+                                <Badge variant="secondary" className="bg-white text-[9px] h-4 py-0 px-1.5 font-mono border-slate-200 uppercase">
                                   {vehicle.plateNumber}
                                 </Badge>
                               )}
@@ -155,41 +155,41 @@ export default function CustomerDetails() {
                     </div>
                   ))
                 ) : (
-                  <div className="bg-slate-50 rounded-xl p-8 border border-dashed border-slate-200 text-center">
-                    <p className="text-sm text-slate-400">No vehicles registered</p>
+                  <div className="bg-slate-50 rounded-xl p-6 border border-dashed border-slate-200 text-center">
+                    <p className="text-xs text-slate-400">No vehicles registered</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Current Service Plan */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                <Wrench className="w-4 h-4" />
+            <div className="space-y-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Wrench className="w-3.5 h-3.5" />
                 Service Interest
               </h3>
               {customer.service ? (
-                <div className="bg-indigo-50/50 rounded-xl p-5 border border-indigo-100 space-y-4">
+                <div className="bg-red-50/30 rounded-xl p-4 border border-red-100 space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="mt-1 p-1.5 bg-white rounded-md shadow-sm">
-                      <Package className="w-3.5 h-3.5 text-indigo-600" />
+                    <div className="mt-0.5 p-1.5 bg-white rounded-md shadow-sm border border-slate-100">
+                      <Package className="w-3 h-3 text-red-600" />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">Selected Services</p>
-                      <p className="text-sm font-medium text-slate-900 leading-snug">{customer.service}</p>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase mb-0.5">Selected Services</p>
+                      <p className="text-sm font-semibold text-slate-900 leading-snug">{customer.service}</p>
                     </div>
                   </div>
                   
                   {customer.serviceCost && (
-                    <div className="pt-4 border-t border-indigo-200/60 flex items-center justify-between">
-                      <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Estimated Cost</span>
-                      <span className="text-xl font-bold text-indigo-700">₹{customer.serviceCost.toLocaleString('en-IN')}</span>
+                    <div className="pt-3 border-t border-red-200/60 flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Estimated</span>
+                      <span className="text-lg font-bold text-red-700">₹{customer.serviceCost.toLocaleString('en-IN')}</span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="bg-slate-50 rounded-xl p-8 border border-dashed border-slate-200 text-center">
-                  <p className="text-sm text-slate-400">No active service plan</p>
+                <div className="bg-slate-50 rounded-xl p-6 border border-dashed border-slate-200 text-center">
+                  <p className="text-xs text-slate-400">No active service plan</p>
                 </div>
               )}
             </div>

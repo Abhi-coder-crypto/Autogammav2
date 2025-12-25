@@ -264,7 +264,7 @@ export default function RegisteredCustomers() {
               <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-city">
                 <SelectValue placeholder="All Cities" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="all">All Cities</SelectItem>
                 {filterOptions.cities.map((city) => (
                   <SelectItem key={city} value={city}>
@@ -280,7 +280,7 @@ export default function RegisteredCustomers() {
               <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-district">
                 <SelectValue placeholder="All Districts" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="all">All Districts</SelectItem>
                 {filterOptions.districts.map((district) => (
                   <SelectItem key={district} value={district}>
@@ -296,7 +296,7 @@ export default function RegisteredCustomers() {
               <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-state">
                 <SelectValue placeholder="All States" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="all">All States</SelectItem>
                 {filterOptions.states.map((state) => (
                   <SelectItem key={state} value={state}>
@@ -312,7 +312,7 @@ export default function RegisteredCustomers() {
               <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-status">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="Inquired">Inquired</SelectItem>
                 <SelectItem value="Working">Working</SelectItem>
@@ -327,7 +327,7 @@ export default function RegisteredCustomers() {
               <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm w-full" data-testid="select-date-range">
                 <SelectValue placeholder="Date Range" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="all">All Dates</SelectItem>
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="week">This Week</SelectItem>
