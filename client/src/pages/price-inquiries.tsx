@@ -633,6 +633,7 @@ export default function PriceInquiries() {
             })}
           </div>
         )}
+      </div>
     </div>
   );
 }
