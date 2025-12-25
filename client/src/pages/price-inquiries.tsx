@@ -323,10 +323,50 @@ export default function PriceInquiries() {
 
   return (
     <div className="space-y-6">
-      {/* Form Section */}
+      {/* Header and Search/Filter Section */}
       <div>
         <h1 className="text-3xl font-bold mb-6">Inquiry</h1>
         
+        {/* Search and Filter at Top */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-secondary" />
+            <Input
+              placeholder="Search by name or phone number..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+              data-testid="input-search"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-3"
+                data-testid="button-clear-search"
+              >
+                <X className="w-4 h-4 text-secondary" />
+              </button>
+            )}
+          </div>
+          
+          <Select value={filterService} onValueChange={setFilterService}>
+            <SelectTrigger data-testid="select-filter">
+              <SelectValue placeholder="Filter by service" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Services</SelectItem>
+              {ALL_SERVICES.map((service) => (
+                <SelectItem key={service} value={service} data-testid={`filter-option-${service}`}>
+                  {service}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Form Section */}
+      <div className="space-y-6">
         {!showForm ? (
           <Button 
             onClick={() => setShowForm(true)}
@@ -495,143 +535,104 @@ export default function PriceInquiries() {
         )}
       </div>
 
-      {/* Search and Filter Section */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Inquiry List</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-secondary" />
-            <Input
-              placeholder="Search by name, phone, or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-              data-testid="input-search"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-3"
-                data-testid="button-clear-search"
-              >
-                <X className="w-4 h-4 text-secondary" />
-              </button>
-            )}
-          </div>
-          
-          <Select value={filterService} onValueChange={setFilterService}>
-            <SelectTrigger data-testid="select-filter">
-              <SelectValue placeholder="Filter by service" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Services</SelectItem>
-              {ALL_SERVICES.map((service) => (
-                <SelectItem key={service} value={service} data-testid={`filter-option-${service}`}>
-                  {service}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       {/* Inquiries List */}
-      {isLoading ? (
-        <div className="text-center py-12">Loading...</div>
-      ) : filteredInquiries.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-secondary">
-            {inquiries.length === 0 ? 'No inquiries yet. Start by adding one!' : 'No inquiries match your search or filter.'}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {filteredInquiries.map((inquiry: any) => {
-            const priceDifference = inquiry.priceOffered - inquiry.priceStated;
-            const percentageDifference = ((priceDifference / inquiry.priceOffered) * 100).toFixed(1);
+      <div>
+        <h2 className="text-2xl font-bold mb-6">Inquiry List</h2>
+        {isLoading ? (
+          <div className="text-center py-12">Loading...</div>
+        ) : filteredInquiries.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-secondary">
+              {inquiries.length === 0 ? 'No inquiries yet. Start by adding one!' : 'No inquiries match your search or filter.'}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {filteredInquiries.map((inquiry: any) => {
+              const priceDifference = inquiry.priceOffered - inquiry.priceStated;
+              const percentageDifference = ((priceDifference / inquiry.priceOffered) * 100).toFixed(1);
 
-            return (
-              <Card key={inquiry._id} className="hover-elevate">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg" data-testid={`text-name-${inquiry._id}`}>
-                        {inquiry.name}
-                      </CardTitle>
-                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-secondary">
-                        <a href={`tel:${inquiry.phone}`} className="flex items-center gap-1 hover:text-primary" data-testid={`link-phone-${inquiry._id}`}>
-                          <Phone className="w-4 h-4" />
-                          {inquiry.phone}
-                        </a>
-                        {inquiry.email && (
-                          <a href={`mailto:${inquiry.email}`} className="flex items-center gap-1 hover:text-primary" data-testid={`link-email-${inquiry._id}`}>
-                            <Mail className="w-4 h-4" />
-                            {inquiry.email}
+              return (
+                <Card key={inquiry._id} className="hover-elevate">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg" data-testid={`text-name-${inquiry._id}`}>
+                          {inquiry.name}
+                        </CardTitle>
+                        <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-secondary">
+                          <a href={`tel:${inquiry.phone}`} className="flex items-center gap-1 hover:text-primary" data-testid={`link-phone-${inquiry._id}`}>
+                            <Phone className="w-4 h-4" />
+                            {inquiry.phone}
                           </a>
-                        )}
+                          {inquiry.email && (
+                            <a href={`mailto:${inquiry.email}`} className="flex items-center gap-1 hover:text-primary" data-testid={`link-email-${inquiry._id}`}>
+                              <Mail className="w-4 h-4" />
+                              {inquiry.email}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => deleteMutation.mutate(inquiry._id.toString ? inquiry._id.toString() : inquiry._id)}
+                        disabled={deleteMutation.isPending}
+                        data-testid={`button-delete-${inquiry._id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-secondary">Service</p>
+                        <p className="font-semibold" data-testid={`text-service-${inquiry._id}`}>{inquiry.service}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-secondary">Date</p>
+                        <p className="font-semibold" data-testid={`text-date-${inquiry._id}`}>
+                          {inquiry.createdAt ? format(new Date(inquiry.createdAt), 'MMM dd, yyyy') : 'N/A'}
+                        </p>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => deleteMutation.mutate(inquiry._id.toString ? inquiry._id.toString() : inquiry._id)}
-                      disabled={deleteMutation.isPending}
-                      data-testid={`button-delete-${inquiry._id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-secondary">Service</p>
-                      <p className="font-semibold" data-testid={`text-service-${inquiry._id}`}>{inquiry.service}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-secondary">Date</p>
-                      <p className="font-semibold" data-testid={`text-date-${inquiry._id}`}>
-                        {inquiry.createdAt ? format(new Date(inquiry.createdAt), 'MMM dd, yyyy') : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-3 gap-4 bg-secondary/10 p-4 rounded-lg">
-                    <div>
-                      <p className="text-xs text-secondary mb-1">Our Price</p>
-                      <p className="text-lg font-bold text-primary" data-testid={`text-offered-${inquiry._id}`}>
-                        ₹{inquiry.priceOffered.toLocaleString()}
-                      </p>
+                    <div className="grid grid-cols-3 gap-4 bg-secondary/10 p-4 rounded-lg">
+                      <div>
+                        <p className="text-xs text-secondary mb-1">Our Price</p>
+                        <p className="text-lg font-bold text-primary" data-testid={`text-offered-${inquiry._id}`}>
+                          ₹{inquiry.priceOffered.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-secondary mb-1">Customer Price</p>
+                        <p className="text-lg font-bold text-destructive" data-testid={`text-stated-${inquiry._id}`}>
+                          ₹{inquiry.priceStated.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-secondary mb-1">Difference</p>
+                        <p className={`text-lg font-bold ${priceDifference >= 0 ? 'text-green-600' : 'text-red-600'}`} data-testid={`text-difference-${inquiry._id}`}>
+                          {priceDifference >= 0 ? '+' : ''}₹{priceDifference.toLocaleString()}
+                          <span className="text-sm ml-1">({percentageDifference}%)</span>
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-secondary mb-1">Customer Price</p>
-                      <p className="text-lg font-bold text-destructive" data-testid={`text-stated-${inquiry._id}`}>
-                        ₹{inquiry.priceStated.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-secondary mb-1">Difference</p>
-                      <p className={`text-lg font-bold ${priceDifference >= 0 ? 'text-green-600' : 'text-red-600'}`} data-testid={`text-difference-${inquiry._id}`}>
-                        {priceDifference >= 0 ? '+' : ''}₹{priceDifference.toLocaleString()}
-                        <span className="text-sm ml-1">({percentageDifference}%)</span>
-                      </p>
-                    </div>
-                  </div>
 
-                  {inquiry.notes && (
-                    <div>
-                      <p className="text-sm text-secondary mb-1">Notes</p>
-                      <p className="text-sm" data-testid={`text-notes-${inquiry._id}`}>{inquiry.notes}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                    {inquiry.notes && (
+                      <div>
+                        <p className="text-sm text-secondary mb-1">Notes</p>
+                        <p className="text-sm" data-testid={`text-notes-${inquiry._id}`}>{inquiry.notes}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
     </div>
   );
 }
