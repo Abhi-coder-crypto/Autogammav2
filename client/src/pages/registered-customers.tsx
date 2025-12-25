@@ -257,73 +257,74 @@ export default function RegisteredCustomers() {
           />
         </div>
 
-        {/* Filter Dropdowns */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <Select value={selectedCity} onValueChange={setSelectedCity}>
-            <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-city">
-              <SelectValue placeholder="All Cities" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Cities</SelectItem>
-              {filterOptions.cities.map((city) => (
-                <SelectItem key={city} value={city}>
-                  {city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-            <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-district">
-              <SelectValue placeholder="All Districts" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Districts</SelectItem>
-              {filterOptions.districts.map((district) => (
-                <SelectItem key={district} value={district}>
-                  {district}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedState} onValueChange={setSelectedState}>
-            <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-state">
-              <SelectValue placeholder="All States" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All States</SelectItem>
-              {filterOptions.states.map((state) => (
-                <SelectItem key={state} value={state}>
-                  {state}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-status">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Inquired">Inquired</SelectItem>
-              <SelectItem value="Working">Working</SelectItem>
-              <SelectItem value="Waiting">Waiting</SelectItem>
-              <SelectItem value="Completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Sort & Date Filters */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Filter className="w-4 h-4 text-slate-600" />
-            <h3 className="text-sm font-semibold text-slate-900">Sort & Date Filters</h3>
+        {/* Filter Dropdowns and Sort & Date Filters in one line */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-[150px]">
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-city">
+                <SelectValue placeholder="All Cities" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Cities</SelectItem>
+                {filterOptions.cities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex flex-wrap items-end gap-3">
+
+          <div className="flex-1 min-w-[150px]">
+            <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+              <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-district">
+                <SelectValue placeholder="All Districts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Districts</SelectItem>
+                {filterOptions.districts.map((district) => (
+                  <SelectItem key={district} value={district}>
+                    {district}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1 min-w-[150px]">
+            <Select value={selectedState} onValueChange={setSelectedState}>
+              <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-state">
+                <SelectValue placeholder="All States" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All States</SelectItem>
+                {filterOptions.states.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1 min-w-[150px]">
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm" data-testid="select-status">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Inquired">Inquired</SelectItem>
+                <SelectItem value="Working">Working</SelectItem>
+                <SelectItem value="Waiting">Waiting</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1 min-w-[150px]">
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm w-full md:w-48" data-testid="select-date-range">
+              <SelectTrigger className="h-11 bg-white border border-slate-200 rounded-lg shadow-sm w-full" data-testid="select-date-range">
                 <SelectValue placeholder="Date Range" />
               </SelectTrigger>
               <SelectContent>
@@ -334,47 +335,43 @@ export default function RegisteredCustomers() {
                 <SelectItem value="custom">Custom Range</SelectItem>
               </SelectContent>
             </Select>
-
-            {dateRange === "custom" && (
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    className="pl-10 h-11 w-full bg-white border border-slate-200 rounded-lg focus:border-primary/50 shadow-sm"
-                    placeholder="From Date"
-                    data-testid="input-from-date"
-                  />
-                </div>
-
-                <div className="relative flex-1">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    className="pl-10 h-11 w-full bg-white border border-slate-200 rounded-lg focus:border-primary/50 shadow-sm"
-                    placeholder="To Date"
-                    data-testid="input-to-date"
-                  />
-                </div>
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Clear Filters Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleClearFilters}
-          className="text-slate-700 hover:text-slate-900"
-          data-testid="button-clear-filters"
-        >
-          Clear All Filters
-        </Button>
+          {dateRange === "custom" && (
+            <div className="flex gap-2 min-w-[300px]">
+              <div className="relative flex-1">
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="pl-3 h-11 w-full bg-white border border-slate-200 rounded-lg focus:border-primary/50 shadow-sm text-sm"
+                  placeholder="From"
+                  data-testid="input-from-date"
+                />
+              </div>
+              <div className="relative flex-1">
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="pl-3 h-11 w-full bg-white border border-slate-200 rounded-lg focus:border-primary/50 shadow-sm text-sm"
+                  placeholder="To"
+                  data-testid="input-to-date"
+                />
+              </div>
+            </div>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearFilters}
+            className="h-11 text-slate-700 hover:text-slate-900"
+            data-testid="button-clear-filters"
+          >
+            Clear
+          </Button>
+        </div>
       </div>
 
       {/* View Toggle and Results Header */}

@@ -212,6 +212,14 @@ const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
+const VEHICLE_MAKES = [
+  "Toyota", "Honda", "Maruti Suzuki", "Hyundai", "Tata", "Mahindra", "Kia", "MG", "Volkswagen", "Skoda", "BMW", "Mercedes-Benz", "Audi", "Land Rover", "Jaguar", "Volvo", "Porsche", "Lexus", "Jeep", "Other"
+];
+
+const VEHICLE_COLORS = [
+  "White", "Silver", "Grey", "Black", "Red", "Blue", "Brown", "Beige", "Golden", "Orange", "Yellow", "Green", "Maroon", "Purple", "Other"
+];
+
 export default function CustomerRegistration() {
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
@@ -364,7 +372,7 @@ export default function CustomerRegistration() {
     vehicleData.make && vehicleData.model && vehicleData.plateNumber;
 
   return (
-    <div className="p-4">
+    <div className="p-4 -mt-12">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Step 1: Customer Information */}
         {step === 1 && (
@@ -751,14 +759,23 @@ export default function CustomerRegistration() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-6">
                   <Label>Vehicle Make *</Label>
-                  <Input
+                  <Select
                     value={vehicleData.make}
-                    onChange={(e) =>
-                      setVehicleData({ ...vehicleData, make: e.target.value })
+                    onValueChange={(value) =>
+                      setVehicleData({ ...vehicleData, make: value })
                     }
-                    placeholder="e.g., Toyota, BMW"
-                    data-testid="input-vehicle-make"
-                  />
+                  >
+                    <SelectTrigger className="border-slate-300" data-testid="select-vehicle-make">
+                      <SelectValue placeholder="Select vehicle make" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VEHICLE_MAKES.map((make) => (
+                        <SelectItem key={make} value={make}>
+                          {make}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-6">
@@ -824,14 +841,23 @@ export default function CustomerRegistration() {
 
                 <div className="space-y-6">
                   <Label>Color</Label>
-                  <Input
+                  <Select
                     value={vehicleData.color}
-                    onChange={(e) =>
-                      setVehicleData({ ...vehicleData, color: e.target.value })
+                    onValueChange={(value) =>
+                      setVehicleData({ ...vehicleData, color: value })
                     }
-                    placeholder="e.g., White, Black"
-                    data-testid="input-color"
-                  />
+                  >
+                    <SelectTrigger className="border-slate-300" data-testid="select-vehicle-color">
+                      <SelectValue placeholder="Select color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VEHICLE_COLORS.map((color) => (
+                        <SelectItem key={color} value={color}>
+                          {color}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="md:col-span-2 space-y-6">
