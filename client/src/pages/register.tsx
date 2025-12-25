@@ -349,8 +349,8 @@ export default function CustomerRegistration() {
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (customerData.referralSource === "Friend/Family" && !customerData.referrerName) {
-      newErrors.referrerName = "Please enter the name of the person who referred you";
+    if (customerData.referralSource === "Other" && !customerData.referrerName) {
+      newErrors.referrerName = "Please specify how you heard about us";
     }
     
     setErrors(newErrors);
@@ -447,7 +447,7 @@ export default function CustomerRegistration() {
                       setCustomerData({
                         ...customerData,
                         referralSource: value,
-                        referrerName: value === "Friend/Family" ? customerData.referrerName : "",
+                        referrerName: value === "Other" ? customerData.referrerName : "",
                       })
                     }
                   >
@@ -464,9 +464,9 @@ export default function CustomerRegistration() {
                   </Select>
                 </div>
 
-                {customerData.referralSource === "Friend/Family" && (
+                {customerData.referralSource === "Other" && (
                   <div className="space-y-6">
-                    <Label>Name of the Person who referred *</Label>
+                    <Label>Please specify how you heard about us *</Label>
                     <Input
                       value={customerData.referrerName}
                       onChange={(e) => {
