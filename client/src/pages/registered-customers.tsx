@@ -502,6 +502,18 @@ export default function RegisteredCustomers() {
                           >
                             <ImagePlus className="w-3 h-3" />
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs text-red-600 hover:text-red-700"
+                            onClick={() => {
+                              setCustomerToDelete(customer);
+                              setDeleteDialogOpen(true);
+                            }}
+                            data-testid={`button-delete-${customer._id}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -522,21 +534,6 @@ export default function RegisteredCustomers() {
                     </div>
                   </div>
                 </CardContent>
-
-                {/* Delete Button */}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="absolute top-2 right-2 text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCustomerToDelete(customer);
-                    setDeleteDialogOpen(true);
-                  }}
-                  data-testid={`button-delete-${customer._id}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
               </Card>
             );
           })}
