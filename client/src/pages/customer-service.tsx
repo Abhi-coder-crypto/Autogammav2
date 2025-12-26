@@ -201,36 +201,35 @@ export default function CustomerService() {
       try {
         const prefs = await api.customers.getVehiclePreferences(selectedCustomerId, parseInt(selectedVehicleIndex, 10));
         if (prefs) {
-          // Immediately set what we have from preferences
+          // Load PPF preferences
           const category = prefs.ppfCategory || '';
           const vehicleType = prefs.ppfVehicleType || '';
           const warranty = prefs.ppfWarranty || '';
           
+          // Calculate price from catalog if needed
+          let price = prefs.ppfPrice || 0;
+          if (price === 0 && category && vehicleType && warranty) {
+            const categoryData = PPF_CATEGORIES[category];
+            if (categoryData && categoryData[vehicleType] && categoryData[vehicleType][warranty]) {
+              price = categoryData[vehicleType][warranty];
+            }
+          }
+          
+          // Set all PPF fields at once to avoid race conditions
           setPpfCategory(category);
           setPpfVehicleType(vehicleType);
+          setPpfWarranty(warranty);
+          setPpfPrice(price);
+          if (warranty) {
+            setPpfWarrantyFromPreferences(true);
+          }
           
-          // Small delay to ensure category and vehicle type are updated before setting warranty and price
-          // This avoids the catalog useEffect clearing the price
-          setTimeout(() => {
-            setPpfWarranty(warranty);
-            if (warranty) {
-              setPpfWarrantyFromPreferences(true);
-            }
-            
-            let price = prefs.ppfPrice || 0;
-            if (price === 0 && category && vehicleType && warranty) {
-              const categoryData = PPF_CATEGORIES[category];
-              if (categoryData && categoryData[vehicleType] && categoryData[vehicleType][warranty]) {
-                price = categoryData[vehicleType][warranty];
-              }
-            }
-            setPpfPrice(price);
-            
-            if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) {
-              setLaborCost(prefs.laborCost.toString());
-            }
-          }, 0);
+          // Load labor cost
+          if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) {
+            setLaborCost(prefs.laborCost.toString());
+          }
           
+          // Load other services
           if (Array.isArray(prefs.otherServices) && prefs.otherServices.length > 0) {
             const servicesWithPrices = prefs.otherServices.map((svc: any) => {
               const serviceData = OTHER_SERVICES[svc.name];
@@ -244,7 +243,7 @@ export default function CustomerService() {
             });
             setSelectedOtherServices(servicesWithPrices);
             
-            // Pre-fill the form fields with the first service so user can see and edit it
+            // Pre-fill the form fields with all services for user to see and edit
             if (servicesWithPrices.length > 0) {
               setOtherServiceName(servicesWithPrices[0].name);
               setOtherServiceVehicleType(servicesWithPrices[0].vehicleType);
