@@ -233,25 +233,17 @@ export default function PriceInquiries() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
   const { data: inquiriesData, isLoading } = useQuery({
-    queryKey: ['/api/price-inquiries', searchQuery, filterService, currentPage],
-    queryFn: () => api.priceInquiries.list({ 
-      page: currentPage, 
-      limit: itemsPerPage 
-    }),
+    queryKey: ['/api/price-inquiries', searchQuery, filterService],
+    queryFn: () => api.priceInquiries.list(),
   });
   const inquiries = inquiriesData?.inquiries || [];
-  const totalInquiries = inquiriesData?.total || 0;
-  const totalPages = Math.ceil(totalInquiries / itemsPerPage);
 
   const createMutation = useMutation({
     mutationFn: api.priceInquiries.create,
     onMutate: async (newInquiry) => {
       await queryClient.cancelQueries({ queryKey: ['/api/price-inquiries'] });
-      const previousInquiries = queryClient.getQueryData(['/api/price-inquiries', searchQuery, filterService, currentPage]);
+      const previousInquiries = queryClient.getQueryData(['/api/price-inquiries', searchQuery, filterService]);
       
       const optimisticInquiry = {
         ...newInquiry,
@@ -259,7 +251,7 @@ export default function PriceInquiries() {
         createdAt: new Date().toISOString(),
       };
 
-      queryClient.setQueryData(['/api/price-inquiries', searchQuery, filterService, currentPage], (old: any) => ({
+      queryClient.setQueryData(['/api/price-inquiries', searchQuery, filterService], (old: any) => ({
         ...old,
         inquiries: [optimisticInquiry, ...(old?.inquiries || [])]
       }));
@@ -267,7 +259,7 @@ export default function PriceInquiries() {
       return { previousInquiries };
     },
     onError: (err, newInquiry, context: any) => {
-      queryClient.setQueryData(['/api/price-inquiries', searchQuery, filterService, currentPage], context.previousInquiries);
+      queryClient.setQueryData(['/api/price-inquiries', searchQuery, filterService], context.previousInquiries);
       toast({ title: 'Failed to save inquiry', variant: 'destructive' });
     },
     onSuccess: () => {
@@ -286,9 +278,9 @@ export default function PriceInquiries() {
     mutationFn: api.priceInquiries.delete,
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ['/api/price-inquiries'] });
-      const previousInquiries = queryClient.getQueryData(['/api/price-inquiries', searchQuery, filterService, currentPage]);
+      const previousInquiries = queryClient.getQueryData(['/api/price-inquiries', searchQuery, filterService]);
       
-      queryClient.setQueryData(['/api/price-inquiries', searchQuery, filterService, currentPage], (old: any) => ({
+      queryClient.setQueryData(['/api/price-inquiries', searchQuery, filterService], (old: any) => ({
         ...old,
         inquiries: old?.inquiries?.filter((i: any) => i._id !== id)
       }));
@@ -296,7 +288,7 @@ export default function PriceInquiries() {
       return { previousInquiries };
     },
     onError: (err, id, context: any) => {
-      queryClient.setQueryData(['/api/price-inquiries', searchQuery, filterService, currentPage], context.previousInquiries);
+      queryClient.setQueryData(['/api/price-inquiries', searchQuery, filterService], context.previousInquiries);
       toast({ title: 'Failed to delete inquiry', variant: 'destructive' });
     },
     onSuccess: () => {
@@ -802,34 +794,6 @@ export default function PriceInquiries() {
             })}
           </div>
         )}
-      </div>
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-sm text-muted-foreground">
-          Showing {inquiries.length} of {totalInquiries} inquiries
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-            data-testid="button-pagination-prev"
-          >
-            Previous
-          </Button>
-          <div className="flex items-center px-2 text-sm font-medium">
-            Page {currentPage} of {totalPages || 1}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage >= totalPages}
-            data-testid="button-pagination-next"
-          >
-            Next
-          </Button>
-        </div>
       </div>
     </div>
   );
