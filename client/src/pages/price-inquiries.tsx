@@ -219,7 +219,7 @@ type ServiceItem = {
   name: string;
   carType: string;
   price: number;
-  customerPrice: number;
+  customerPrice?: number;
 };
 
 export default function PriceInquiries() {
@@ -316,8 +316,7 @@ export default function PriceInquiries() {
       id: Date.now().toString(),
       name: tempServiceName,
       carType: tempCarType,
-      price: price,
-      customerPrice: 0
+      price: price
     };
 
     setSelectedServiceItems([...selectedServiceItems, newItem]);
@@ -334,7 +333,7 @@ export default function PriceInquiries() {
   };
 
   const getTotalCustomerPrice = () => {
-    return selectedServiceItems.reduce((sum, item) => sum + item.customerPrice, 0);
+    return selectedServiceItems.reduce((sum, item) => sum + (item.customerPrice || 0), 0);
   };
 
   const updateServiceCustomerPrice = (id: string, newPrice: number) => {
