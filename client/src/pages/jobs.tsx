@@ -311,11 +311,6 @@ export default function ServiceFunnel() {
           );
         })
       )}
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-sm text-muted-foreground">
-          Showing {jobs.length} of {totalJobs} jobs
-        </div>
-      </div>
     </div>
   );
 }
