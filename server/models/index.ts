@@ -85,6 +85,7 @@ export interface IJob extends Document {
   paidAmount: number;
   paymentStatus: PaymentStatus;
   payments: IPayment[];
+  requiresGST?: boolean;
   checklist: { item: string; done: boolean }[];
   images: string[];
   createdAt: Date;
@@ -269,6 +270,7 @@ const JobSchema = new Schema<IJob>({
   paidAmount: { type: Number, default: 0 },
   paymentStatus: { type: String, enum: ['Pending', 'Partially Paid', 'Paid'], default: 'Pending' },
   payments: [PaymentSchema],
+  requiresGST: { type: Boolean, default: false },
   checklist: [{ item: String, done: Boolean }],
   images: [String],
   createdAt: { type: Date, default: Date.now },
