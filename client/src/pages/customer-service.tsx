@@ -329,16 +329,16 @@ export default function CustomerService() {
     setSelectedOtherServices(selectedOtherServices.filter((_, i) => i !== index));
   };
 
-  const getAvailableRolls = () => {
-    const item = (Array.isArray(inventory) ? inventory : []).find((inv: any) => inv._id === selectedItemId);
-    if (!item || !item.rolls) return [];
-    // Only return rolls that have remaining meters
-    return item.rolls.filter((roll: any) => {
-      const isFinished = roll.status === 'Finished';
-      const hasMeters = roll.remaining_meters > 0;
-      return !isFinished && hasMeters;
-    });
-  };
+    const getAvailableRolls = () => {
+      const item = (Array.isArray(inventory) ? inventory : []).find((inv: any) => inv._id === selectedItemId);
+      if (!item || !item.rolls) return [];
+      // Only return rolls that have remaining stock
+      return item.rolls.filter((roll: any) => {
+        const isFinished = roll.status === 'Finished';
+        const hasStock = roll.remaining_meters > 0 || roll.remaining_sqft > 0;
+        return !isFinished && hasStock;
+      });
+    };
 
   const handleAddItem = () => {
     if (!selectedItemId) {
@@ -361,29 +361,43 @@ export default function CustomerService() {
         return;
       }
 
-      if (roll.status === 'Finished' || roll.remaining_meters <= 0) {
+      if (roll.status === 'Finished' || (roll.remaining_meters <= 0 && roll.remaining_sqft <= 0)) {
         toast({ title: 'Selected roll is not available', variant: 'destructive' });
         return;
       }
 
-      const meters = parseFloat(metersUsed);
-      if (isNaN(meters) || meters <= 0) {
-        toast({ title: 'Please enter valid meters', variant: 'destructive' });
+      const val = parseFloat(metersUsed);
+      if (isNaN(val) || val <= 0) {
+        toast({ title: 'Please enter a valid amount', variant: 'destructive' });
         return;
       }
 
-      if (meters > roll.remaining_meters) {
-        toast({ title: `Only ${roll.remaining_meters}m available in this roll`, variant: 'destructive' });
-        return;
+      if (roll.remaining_sqft > 0) {
+        if (val > roll.remaining_sqft) {
+          toast({ title: `Only ${roll.remaining_sqft}sqft available in this roll`, variant: 'destructive' });
+          return;
+        }
+        setSelectedItems([...selectedItems, {
+          inventoryId: selectedItemId,
+          rollId: selectedRollId,
+          metersUsed: 0,
+          quantity: val,
+          name: `${item.name} - ${roll.name}`,
+          unit: 'Square Feet'
+        }]);
+      } else {
+        if (val > roll.remaining_meters) {
+          toast({ title: `Only ${roll.remaining_meters}m available in this roll`, variant: 'destructive' });
+          return;
+        }
+        setSelectedItems([...selectedItems, {
+          inventoryId: selectedItemId,
+          rollId: selectedRollId,
+          metersUsed: val,
+          name: `${item.name} - ${roll.name}`,
+          unit: 'meters'
+        }]);
       }
-
-      setSelectedItems([...selectedItems, {
-        inventoryId: selectedItemId,
-        rollId: selectedRollId,
-        metersUsed: meters,
-        name: `${item.name} - ${roll.name}`,
-        unit: 'meters'
-      }]);
     } else {
       const qty = parseFloat(metersUsed); // Use parseFloat to support decimal quantities
       if (isNaN(qty) || qty <= 0) {
@@ -845,7 +859,7 @@ export default function CustomerService() {
                           <SelectContent>
                             {inventory.map((item: any) => (
                               <SelectItem key={item._id} value={item._id}>
-                                {item.name} ({item.rolls?.filter((r: any) => r.remaining_meters > 0).length || 0} rolls)
+                                {item.name} ({item.rolls?.filter((r: any) => r.remaining_meters > 0 || r.remaining_sqft > 0).length || 0} rolls)
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -862,7 +876,7 @@ export default function CustomerService() {
                             <SelectContent>
                               {getAvailableRolls().map((roll: any) => (
                                 <SelectItem key={roll._id} value={roll._id}>
-                                  {roll.name} ({roll.remaining_meters}m left)
+                                  {roll.name} ({roll.remaining_sqft > 0 ? `${roll.remaining_sqft}sqft` : `${roll.remaining_meters}m`} left)
                                 </SelectItem>
                               ))}
                             </SelectContent>
