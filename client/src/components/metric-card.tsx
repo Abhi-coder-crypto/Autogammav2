@@ -1,5 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
   title: string;
@@ -11,6 +12,7 @@ interface MetricCardProps {
     isPositive: boolean;
   };
   description?: string;
+  className?: string;
   'data-testid'?: string;
 }
 
@@ -21,11 +23,12 @@ export function MetricCard({
   progress,
   trend,
   description,
+  className,
   'data-testid': testId
 }: MetricCardProps) {
   return (
     <div 
-      className="bg-gradient-to-br from-white to-slate-50 border border-red-300 rounded-lg p-3 shadow-sm hover:shadow-md hover:border-red-400 transition-all duration-300 group overflow-hidden relative"
+      className={cn("bg-gradient-to-br from-white to-slate-50 border border-red-300 rounded-lg p-3 shadow-sm hover:shadow-md hover:border-red-400 transition-all duration-300 group overflow-hidden relative", className)}
       data-testid={testId}
     >
       {/* Accent gradient background */}

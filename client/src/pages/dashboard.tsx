@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { Link } from "wouter";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -229,29 +230,38 @@ export default function Dashboard() {
           data-testid="card-todays-sales"
         />
 
-        <MetricCard
-          title="Active Service Jobs"
-          value={jobs.filter((j: any) => j.stage !== "Completed" && j.stage !== "Cancelled").length}
-          icon={Package}
-          description="Service jobs in progress"
-          data-testid="card-active-jobs-count"
-        />
+        <Link href="/jobs">
+          <MetricCard
+            title="Active Service Jobs"
+            value={jobs.filter((j: any) => j.stage !== "Completed" && j.stage !== "Cancelled").length}
+            icon={Package}
+            description="Service jobs in progress"
+            data-testid="card-active-jobs-count"
+            className="cursor-pointer hover:shadow-md transition-shadow"
+          />
+        </Link>
 
-        <MetricCard
-          title="Inquiries Today"
-          value={todayInquiries}
-          icon={MessageSquare}
-          description="Inquiries received today"
-          data-testid="card-inquiries-today"
-        />
+        <Link href="/price-inquiries">
+          <MetricCard
+            title="Inquiries Today"
+            value={todayInquiries}
+            icon={MessageSquare}
+            description="Inquiries received today"
+            data-testid="card-inquiries-today"
+            className="cursor-pointer hover:shadow-md transition-shadow"
+          />
+        </Link>
 
-        <MetricCard
-          title="Total Customers"
-          value={customers.length}
-          icon={Users}
-          description="Registered customers"
-          data-testid="card-total-customers"
-        />
+        <Link href="/registered-customers">
+          <MetricCard
+            title="Total Customers"
+            value={customers.length}
+            icon={Users}
+            description="Registered customers"
+            data-testid="card-total-customers"
+            className="cursor-pointer hover:shadow-md transition-shadow"
+          />
+        </Link>
       </div>
 
       {/* Charts Row 1 */}
