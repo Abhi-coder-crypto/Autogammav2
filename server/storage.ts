@@ -696,6 +696,10 @@ export class MongoStorage implements IStorage {
     const invoiceExists = await Invoice.findOne({ jobId });
     if (invoiceExists) return invoiceExists;
 
+    // Fetch customer to get phone number
+    const customer = await Customer.findById(job.customerId);
+    if (!customer) return null;
+
     const materialsTotal = job.materials.reduce((sum, m) => sum + m.cost, 0);
     const servicesTotal = job.serviceItems.reduce((sum, s) => sum + (s.price - (s.discount || 0)), 0);
     const subtotal = materialsTotal + servicesTotal;
@@ -714,27 +718,43 @@ export class MongoStorage implements IStorage {
     }
     const invoiceNumber = `INV${String(nextNumber).padStart(4, '0')}`;
 
+    // Build invoice items from service items and materials
+    const invoiceItems: any[] = [
+      ...job.serviceItems.map(s => ({
+        description: s.name,
+        quantity: 1,
+        unitPrice: s.price,
+        total: s.price - (s.discount || 0),
+        type: 'service' as const,
+        discount: s.discount || 0
+      })),
+      ...job.materials.map(m => ({
+        description: m.name,
+        quantity: m.quantity,
+        unitPrice: m.cost / m.quantity,
+        total: m.cost,
+        type: 'material' as const
+      }))
+    ];
+
     const invoice = new Invoice({
       jobId: job._id,
       customerId: job.customerId,
       customerName: job.customerName,
+      customerPhone: customer.phone,
+      customerEmail: customer.email,
+      customerAddress: customer.address,
       vehicleName: job.vehicleName,
       plateNumber: job.plateNumber,
       invoiceNumber,
-      items: job.serviceItems.map(s => ({
-        description: s.name,
-        quantity: 1,
-        unitPrice: s.price,
-        totalPrice: s.price - (s.discount || 0)
-      })),
+      items: invoiceItems,
       subtotal,
+      tax: taxAmount,
       taxRate: appliedTaxRate,
-      taxAmount,
       discount,
       totalAmount,
       paidAmount: job.paidAmount,
-      paymentStatus: job.paymentStatus,
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      paymentStatus: job.paymentStatus
     });
 
     await invoice.save();
