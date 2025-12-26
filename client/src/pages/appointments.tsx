@@ -10,9 +10,116 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Trash2, Grid3X3, List, AlertCircle, X } from 'lucide-react';
+import { Search, Trash2, Grid3X3, List, AlertCircle, X, ChevronUp, ChevronDown, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const TimePicker = ({ value, onChange, error }: { value: string, onChange: (val: string) => void, error?: string }) => {
+  // Parse initial value HH:mm
+  const initialHours = value ? parseInt(value.split(':')[0]) : 9;
+  const initialMinutes = value ? parseInt(value.split(':')[1]) : 0;
+  
+  const [hours, setHours] = useState(initialHours === 0 ? 12 : initialHours > 12 ? initialHours - 12 : initialHours);
+  const [minutes, setMinutes] = useState(initialMinutes);
+  const [ampm, setAmpm] = useState(initialHours >= 12 ? 'PM' : 'AM');
+
+  const updateTime = (h: number, m: number, p: string) => {
+    let finalHours = h;
+    if (p === 'PM' && h < 12) finalHours += 12;
+    if (p === 'AM' && h === 12) finalHours = 0;
+    const timeStr = `${finalHours.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    onChange(timeStr);
+  };
+
+  const incrementHours = () => {
+    const next = hours === 12 ? 1 : hours + 1;
+    setHours(next);
+    updateTime(next, minutes, ampm);
+  };
+  const decrementHours = () => {
+    const next = hours === 1 ? 12 : hours - 1;
+    setHours(next);
+    updateTime(next, minutes, ampm);
+  };
+  const incrementMinutes = () => {
+    const next = (minutes + 1) % 60;
+    setMinutes(next);
+    updateTime(hours, next, ampm);
+  };
+  const decrementMinutes = () => {
+    const next = (minutes - 1 + 60) % 60;
+    setMinutes(next);
+    updateTime(hours, next, ampm);
+  };
+  const toggleAmpm = () => {
+    const next = ampm === 'AM' ? 'PM' : 'AM';
+    setAmpm(next);
+    updateTime(hours, minutes, next);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className={cn(
+        "flex items-center gap-2 p-2 border rounded-md bg-background w-fit",
+        error ? "border-red-500" : "border-input"
+      )}>
+        <Clock className="w-4 h-4 text-muted-foreground mr-1" />
+        
+        {/* Hours */}
+        <div className="flex flex-col items-center">
+          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={incrementHours}>
+            <ChevronUp className="h-4 w-4" />
+          </Button>
+          <span className="font-mono text-lg w-8 text-center">{hours.toString().padStart(2, '0')}</span>
+          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={decrementHours}>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <span className="text-lg font-bold">:</span>
+
+        {/* Minutes */}
+        <div className="flex flex-col items-center">
+          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={incrementMinutes}>
+            <ChevronUp className="h-4 w-4" />
+          </Button>
+          <span className="font-mono text-lg w-8 text-center">{minutes.toString().padStart(2, '0')}</span>
+          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={decrementMinutes}>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* AM/PM */}
+        <div className="flex flex-col items-center ml-1">
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="h-10 px-2 font-bold"
+            onClick={toggleAmpm}
+          >
+            {ampm}
+          </Button>
+        </div>
+      </div>
+      {error && (
+        <div className="flex items-center gap-1 text-sm text-red-600">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const validatePhone = (phone: string): boolean => {
   const digitsOnly = phone.replace(/\D/g, '');
@@ -35,13 +142,15 @@ export default function Appointments() {
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [searchQuery, setSearchQuery] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [time, setTime] = useState('09:00');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: appointmentsData, isLoading } = useQuery({
     queryKey: ['appointments', searchQuery],
     queryFn: () => api.appointments.list({ 
-      search: searchQuery
+      date: undefined
     }),
   });
   const appointments = appointmentsData?.appointments || [];
@@ -137,7 +246,6 @@ export default function Appointments() {
     const phone = (formData.get('customerPhone') as string) || '';
     const email = (formData.get('customerEmail') as string) || '';
     const selectedDate = (formData.get('date') as string) || '';
-    const selectedTime = (formData.get('time') as string) || '';
     const errors: Record<string, string> = {};
 
     if (!validatePhone(phone)) {
@@ -148,12 +256,12 @@ export default function Appointments() {
     }
 
     // Validate that appointment time is not in the past
-    if (selectedDate && selectedTime) {
+    if (selectedDate && time) {
       const today = new Date();
       const todayString = format(today, 'yyyy-MM-dd');
       
       if (selectedDate === todayString) {
-        const [hours, minutes] = selectedTime.split(':');
+        const [hours, minutes] = time.split(':');
         const appointmentTime = new Date();
         appointmentTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
         
@@ -175,12 +283,13 @@ export default function Appointments() {
       vehicleInfo: formData.get('vehicleInfo') as string,
       serviceType: formData.get('serviceType') as string,
       date: selectedDate,
-      time: selectedTime,
+      time: time,
       notes: formData.get('notes') as string || undefined,
       status: 'Scheduled'
     });
     
     form.reset();
+    setTime('09:00');
   };
 
   const filteredAppointments = useMemo(() => {
@@ -353,21 +462,11 @@ export default function Appointments() {
                   </div>
                   <div>
                     <Label htmlFor="time">Time *</Label>
-                    <Input
-                      id="time"
-                      name="time"
-                      type="time"
-                      required
-                      placeholder="HH:MM"
-                      data-testid="input-time"
-                      className={formErrors.time ? 'border-red-500' : ''}
+                    <TimePicker 
+                      value={time} 
+                      onChange={setTime} 
+                      error={formErrors.time}
                     />
-                    {formErrors.time && (
-                      <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
-                        <AlertCircle className="w-4 h-4" />
-                        {formErrors.time}
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -421,7 +520,7 @@ export default function Appointments() {
           </Card>
         ) : viewMode === "card" ? (
           // Card View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredAppointments.map((appt: any) => (
               <Card
                 key={appt._id}
@@ -429,27 +528,29 @@ export default function Appointments() {
                 data-testid={`appointment-card-${appt._id}`}
               >
                 <CardContent className="p-0">
-                  <div className="p-5 space-y-4">
+                  <div className="p-4 space-y-3">
                     {/* Header */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-1 min-w-0">
-                        <h3 className="font-bold text-lg text-slate-900 truncate">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-0.5 min-w-0">
+                        <h3 className="font-bold text-base text-slate-900 truncate">
                           {appt.customerName}
                         </h3>
-                        <Badge 
-                          className={cn(
-                            "text-[10px] uppercase tracking-wider font-bold px-2 py-0.5", 
-                            STATUS_COLORS[appt.status]
-                          )}
-                        >
-                          {appt.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            className={cn(
+                              "text-[9px] uppercase tracking-wider font-bold px-1.5 py-0", 
+                              STATUS_COLORS[appt.status]
+                            )}
+                          >
+                            {appt.status}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {format(new Date(appt.date), 'MMM dd, yyyy')}
+                        <p className="text-xs font-bold text-slate-900">
+                          {format(new Date(appt.date), 'MMM dd')}
                         </p>
-                        <p className="text-xs text-slate-500 font-medium">
+                        <p className="text-[10px] text-slate-500 font-semibold">
                           {appt.time}
                         </p>
                       </div>
@@ -458,41 +559,28 @@ export default function Appointments() {
                     <Separator className="bg-slate-100" />
 
                     {/* Details Grid */}
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                      <div className="space-y-1">
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Phone</span>
-                        <p className="text-sm font-medium text-slate-700">{appt.customerPhone}</p>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400">Phone</span>
+                        <p className="text-xs font-medium text-slate-700">{appt.customerPhone}</p>
                       </div>
-                      {appt.customerEmail && (
-                        <div className="space-y-1">
-                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Email</span>
-                          <p className="text-sm font-medium text-slate-700 truncate">{appt.customerEmail}</p>
-                        </div>
-                      )}
-                      <div className="space-y-1">
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Vehicle</span>
-                        <p className="text-sm font-medium text-slate-700 truncate">{appt.vehicleInfo}</p>
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400">Vehicle</span>
+                        <p className="text-xs font-medium text-slate-700 truncate">{appt.vehicleInfo}</p>
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Service</span>
-                        <p className="text-sm font-medium text-slate-700 truncate">{appt.serviceType}</p>
+                      <div className="space-y-0.5 col-span-2">
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400">Service</span>
+                        <p className="text-xs font-medium text-slate-700 truncate">{appt.serviceType}</p>
                       </div>
                     </div>
-
-                    {appt.notes && (
-                      <div className="bg-slate-50 p-3 rounded-md border border-slate-100">
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Notes</span>
-                        <p className="text-xs text-slate-600 italic line-clamp-2">{appt.notes}</p>
-                      </div>
-                    )}
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 p-3 bg-slate-50 border-t border-slate-100">
+                  <div className="flex items-center gap-2 p-2 bg-slate-50 border-t border-slate-100">
                     {appt.status === 'Scheduled' && (
                       <Button
                         size="sm"
-                        className="flex-1 font-bold text-xs h-8"
+                        className="flex-1 font-bold text-[10px] h-7"
                         onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Done' })}
                         data-testid={`button-done-${appt._id}`}
                       >
@@ -502,11 +590,11 @@ export default function Appointments() {
                     <Button
                       size="icon"
                       variant="outline"
-                      className="h-8 w-8 text-destructive border-slate-200 hover:bg-red-50 hover:text-red-600 transition-colors"
-                      onClick={() => deleteAppointmentMutation.mutate(appt._id)}
+                      className="h-7 w-7 text-destructive border-slate-200 hover:bg-red-50 hover:text-red-600 transition-colors"
+                      onClick={() => setDeleteId(appt._id)}
                       data-testid={`button-delete-${appt._id}`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 </CardContent>
@@ -596,6 +684,30 @@ export default function Appointments() {
           </div>
         )}
       </div>
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this appointment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the appointment from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (deleteId) {
+                  deleteAppointmentMutation.mutate(deleteId);
+                  setDeleteId(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
