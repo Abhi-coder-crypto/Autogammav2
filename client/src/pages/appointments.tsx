@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Trash2, Grid3X3, List, AlertCircle, X } from 'lucide-react';
@@ -420,61 +421,78 @@ export default function Appointments() {
           </Card>
         ) : viewMode === "card" ? (
           // Card View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAppointments.map((appt: any) => (
               <Card
                 key={appt._id}
-                className="hover-elevate"
+                className="hover-elevate border-slate-200 shadow-sm overflow-hidden"
                 data-testid={`appointment-card-${appt._id}`}
               >
-                <CardContent className="p-4 space-y-3">
-                  {/* Header */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-sm">{appt.customerName}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {format(new Date(appt.date), 'MMM dd, yyyy')} at {appt.time}
-                      </p>
-                    </div>
-                    <Badge className={cn("text-xs whitespace-nowrap", STATUS_COLORS[appt.status])}>
-                      {appt.status}
-                    </Badge>
-                  </div>
-
-                  {/* Details */}
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Phone:</span>
-                      <p className="font-medium">{appt.customerPhone}</p>
-                    </div>
-                    {appt.customerEmail && (
-                      <div>
-                        <span className="text-muted-foreground">Email:</span>
-                        <p className="font-medium truncate text-xs">{appt.customerEmail}</p>
+                <CardContent className="p-0">
+                  <div className="p-5 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1 min-w-0">
+                        <h3 className="font-bold text-lg text-slate-900 truncate">
+                          {appt.customerName}
+                        </h3>
+                        <Badge 
+                          className={cn(
+                            "text-[10px] uppercase tracking-wider font-bold px-2 py-0.5", 
+                            STATUS_COLORS[appt.status]
+                          )}
+                        >
+                          {appt.status}
+                        </Badge>
                       </div>
-                    )}
-                    <div>
-                      <span className="text-muted-foreground">Vehicle:</span>
-                      <p className="font-medium">{appt.vehicleInfo}</p>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {format(new Date(appt.date), 'MMM dd, yyyy')}
+                        </p>
+                        <p className="text-xs text-slate-500 font-medium">
+                          {appt.time}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Service:</span>
-                      <p className="font-medium">{appt.serviceType}</p>
+
+                    <Separator className="bg-slate-100" />
+
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Phone</span>
+                        <p className="text-sm font-medium text-slate-700">{appt.customerPhone}</p>
+                      </div>
+                      {appt.customerEmail && (
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Email</span>
+                          <p className="text-sm font-medium text-slate-700 truncate">{appt.customerEmail}</p>
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Vehicle</span>
+                        <p className="text-sm font-medium text-slate-700 truncate">{appt.vehicleInfo}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Service</span>
+                        <p className="text-sm font-medium text-slate-700 truncate">{appt.serviceType}</p>
+                      </div>
                     </div>
+
                     {appt.notes && (
-                      <div>
-                        <span className="text-muted-foreground">Notes:</span>
-                        <p className="text-xs">{appt.notes}</p>
+                      <div className="bg-slate-50 p-3 rounded-md border border-slate-100">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Notes</span>
+                        <p className="text-xs text-slate-600 italic line-clamp-2">{appt.notes}</p>
                       </div>
                     )}
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-2 border-t">
+                  <div className="flex items-center gap-2 p-3 bg-slate-50 border-t border-slate-100">
                     {appt.status === 'Scheduled' && (
                       <Button
                         size="sm"
-                        className="flex-1 text-xs"
+                        className="flex-1 font-bold text-xs h-8"
                         onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Done' })}
                         data-testid={`button-done-${appt._id}`}
                       >
@@ -482,13 +500,13 @@ export default function Appointments() {
                       </Button>
                     )}
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="outline"
-                      className="flex-1 text-xs text-destructive"
+                      className="h-8 w-8 text-destructive border-slate-200 hover:bg-red-50 hover:text-red-600 transition-colors"
                       onClick={() => deleteAppointmentMutation.mutate(appt._id)}
                       data-testid={`button-delete-${appt._id}`}
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </CardContent>
