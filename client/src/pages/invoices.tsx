@@ -113,14 +113,14 @@ export default function Invoices() {
     }
   };
 
-  const getInvoiceHTML = (): string => {
-    if (!selectedInvoice) return "";
+  const getInvoiceHTML = (invoice: any): string => {
+    if (!invoice) return "";
     
     const getPaymentModeHTML = () => {
-      if (selectedInvoice.paymentStatus === "Paid" && selectedInvoice.paymentMode) {
+      if (invoice.paymentStatus === "Paid" && invoice.paymentMode) {
         return `<div style="background-color: #d1fae5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 8px; width: fit-content; margin-top: 16px; display: flex; align-items: center; gap: 8px;">
           <span style="color: #047857; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
-            Paid via ${selectedInvoice.paymentMode}
+            Paid via ${invoice.paymentMode}
           </span>
         </div>`;
       }
@@ -137,11 +137,11 @@ export default function Invoices() {
         <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
           <div>
             <p style="color: #9ca3af; font-size: 12px; margin: 0;">Invoice Number</p>
-            <p style="font-weight: bold; font-size: 14px; margin: 4px 0 0 0;">${selectedInvoice.invoiceNumber}</p>
+            <p style="font-weight: bold; font-size: 14px; margin: 4px 0 0 0;">${invoice.invoiceNumber}</p>
           </div>
           <div style="text-align: right;">
             <p style="color: #9ca3af; font-size: 12px; margin: 0;">Date</p>
-            <p style="font-weight: bold; font-size: 14px; margin: 4px 0 0 0;">${new Date(selectedInvoice.createdAt).toLocaleDateString("en-IN", {
+            <p style="font-weight: bold; font-size: 14px; margin: 4px 0 0 0;">${new Date(invoice.createdAt).toLocaleDateString("en-IN", {
               day: "2-digit",
               month: "short",
               year: "numeric",
@@ -153,15 +153,15 @@ export default function Invoices() {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
               <h3 style="font-weight: 600; margin: 0 0 8px 0; font-size: 14px;">Customer Details</h3>
-              <p style="font-weight: 500; margin: 4px 0; font-size: 13px;">${selectedInvoice.customerName}</p>
-              ${selectedInvoice.customerPhone ? `<p style="color: #6b7280; font-size: 12px; margin: 2px 0;">Tel: ${selectedInvoice.customerPhone}</p>` : ""}
-              ${selectedInvoice.customerEmail ? `<p style="color: #6b7280; font-size: 12px; margin: 2px 0;">Email: ${selectedInvoice.customerEmail}</p>` : ""}
-              ${selectedInvoice.customerAddress ? `<p style="color: #6b7280; font-size: 12px; margin: 2px 0;">Address: ${selectedInvoice.customerAddress}</p>` : ""}
+              <p style="font-weight: 500; margin: 4px 0; font-size: 13px;">${invoice.customerName}</p>
+              ${invoice.customerPhone ? `<p style="color: #6b7280; font-size: 12px; margin: 2px 0;">Tel: ${invoice.customerPhone}</p>` : ""}
+              ${invoice.customerEmail ? `<p style="color: #6b7280; font-size: 12px; margin: 2px 0;">Email: ${invoice.customerEmail}</p>` : ""}
+              ${invoice.customerAddress ? `<p style="color: #6b7280; font-size: 12px; margin: 2px 0;">Address: ${invoice.customerAddress}</p>` : ""}
             </div>
             <div>
               <h3 style="font-weight: 600; margin: 0 0 8px 0; font-size: 14px;">Vehicle Details</h3>
-              <p style="font-weight: 500; margin: 4px 0; font-size: 13px;">${selectedInvoice.vehicleName}</p>
-              <p style="color: #6b7280; font-size: 12px; margin: 2px 0;">Plate: ${selectedInvoice.plateNumber}</p>
+              <p style="font-weight: 500; margin: 4px 0; font-size: 13px;">${invoice.vehicleName}</p>
+              <p style="color: #6b7280; font-size: 12px; margin: 2px 0;">Plate: ${invoice.plateNumber}</p>
             </div>
           </div>
         </div>
@@ -178,7 +178,7 @@ export default function Invoices() {
               </tr>
             </thead>
             <tbody>
-              ${selectedInvoice.items?.filter((item: any) => item.type === 'service' && !item.description.toLowerCase().includes('labor')).map((item: any) => `
+              ${invoice.items?.filter((item: any) => item.type === 'service' && !item.description.toLowerCase().includes('labor')).map((item: any) => `
                 <tr>
                   <td style="padding: 10px; border: 1px solid #e5e7eb;">${item.description}</td>
                   <td style="text-align: right; padding: 10px; border: 1px solid #e5e7eb;">₹${item.unitPrice.toLocaleString("en-IN")}</td>
@@ -192,10 +192,10 @@ export default function Invoices() {
 
         <div style="display: grid; grid-template-columns: 1fr 280px; gap: 30px; margin: 30px 0;">
           <div>
-            ${selectedInvoice.notes ? `
+            ${invoice.notes ? `
               <div style="font-size: 12px; margin-bottom: 20px;">
                 <p style="font-weight: 600; margin: 0 0 4px 0;">Notes:</p>
-                <p style="color: #6b7280; margin: 0; font-style: italic;">${selectedInvoice.notes}</p>
+                <p style="color: #6b7280; margin: 0; font-style: italic;">${invoice.notes}</p>
               </div>
             ` : ""}
             ${getPaymentModeHTML()}
@@ -203,33 +203,33 @@ export default function Invoices() {
           <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; background-color: #f9fafb;">
             <div style="display: flex; justify-content: space-between; font-size: 12px; color: #4b5563; margin-bottom: 8px;">
               <span>Subtotal:</span>
-              <span>₹${selectedInvoice.subtotal.toLocaleString("en-IN")}</span>
+              <span>₹${invoice.subtotal.toLocaleString("en-IN")}</span>
             </div>
-            ${selectedInvoice.tax > 0 ? `
+            ${invoice.tax > 0 ? `
               <div style="display: flex; justify-content: space-between; font-size: 12px; color: #4b5563; margin-bottom: 8px;">
-                <span>Tax (${selectedInvoice.taxRate}%):</span>
-                <span>₹${selectedInvoice.tax.toLocaleString("en-IN")}</span>
+                <span>Tax (${invoice.taxRate}%):</span>
+                <span>₹${invoice.tax.toLocaleString("en-IN")}</span>
               </div>
             ` : ""}
-            ${selectedInvoice.discount > 0 ? `
+            ${invoice.discount > 0 ? `
               <div style="display: flex; justify-content: space-between; font-size: 12px; color: #dc2626; margin-bottom: 8px;">
                 <span>Total Discount:</span>
-                <span>-₹${selectedInvoice.discount.toLocaleString("en-IN")}</span>
+                <span>-₹${invoice.discount.toLocaleString("en-IN")}</span>
               </div>
             ` : ""}
             <div style="border-top: 1px solid #d1d5db; padding-top: 8px; margin-bottom: 8px;"></div>
             <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 8px;">
               <span>Grand Total:</span>
-              <span>₹${selectedInvoice.totalAmount.toLocaleString("en-IN")}</span>
+              <span>₹${invoice.totalAmount.toLocaleString("en-IN")}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; margin-bottom: 8px;">
               <span>Amount Paid:</span>
-              <span>₹${selectedInvoice.paidAmount.toLocaleString("en-IN")}</span>
+              <span>₹${invoice.paidAmount.toLocaleString("en-IN")}</span>
             </div>
-            ${(selectedInvoice.totalAmount - selectedInvoice.paidAmount) > 0 ? `
+            ${(invoice.totalAmount - invoice.paidAmount) > 0 ? `
               <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #dc2626;">
                 <span>Balance Due:</span>
-                <span>₹${(selectedInvoice.totalAmount - selectedInvoice.paidAmount).toLocaleString("en-IN")}</span>
+                <span>₹${(invoice.totalAmount - invoice.paidAmount).toLocaleString("en-IN")}</span>
               </div>
             ` : ""}
           </div>
@@ -244,6 +244,8 @@ export default function Invoices() {
   };
 
   const handlePrint = () => {
+    if (!selectedInvoice) return;
+    
     const printFrame = document.createElement('iframe');
     printFrame.style.display = 'none';
     document.body.appendChild(printFrame);
@@ -255,7 +257,7 @@ export default function Invoices() {
         <html>
           <head>
             <meta charset="utf-8" />
-            <title>Invoice ${selectedInvoice?.invoiceNumber}</title>
+            <title>Invoice ${selectedInvoice.invoiceNumber}</title>
             <style>
               * {
                 margin: 0;
@@ -278,7 +280,7 @@ export default function Invoices() {
             </style>
           </head>
           <body>
-            ${getInvoiceHTML()}
+            ${getInvoiceHTML(selectedInvoice)}
           </body>
         </html>
       `);
@@ -303,7 +305,7 @@ export default function Invoices() {
     try {
       const html2pdf = (await import('html2pdf.js')).default;
       
-      // Create a complete HTML document
+      // Create a complete HTML document with the invoice parameter
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -315,7 +317,7 @@ export default function Invoices() {
             </style>
           </head>
           <body>
-            ${getInvoiceHTML()}
+            ${getInvoiceHTML(invoiceToDownload)}
           </body>
         </html>
       `;
