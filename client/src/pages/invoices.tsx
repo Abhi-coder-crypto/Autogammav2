@@ -41,6 +41,7 @@ export default function Invoices() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentMode, setPaymentMode] = useState<string>("Cash");
+  const [otherPaymentDetails, setOtherPaymentDetails] = useState<string>("");
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -50,8 +51,8 @@ export default function Invoices() {
   });
 
   const markPaidMutation = useMutation({
-    mutationFn: (data: { invoiceId: string; paymentMode: string }) => 
-      api.invoices.markPaid(data.invoiceId, data.paymentMode),
+    mutationFn: (data: { invoiceId: string; paymentMode: string; otherPaymentDetails?: string }) => 
+      api.invoices.markPaid(data.invoiceId, data.paymentMode, data.otherPaymentDetails),
     onSuccess: (updatedInvoice: any) => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
@@ -123,9 +124,12 @@ export default function Invoices() {
     
     const getPaymentModeHTML = () => {
       if (invoice.paymentStatus === "Paid" && invoice.paymentMode) {
+        const details = invoice.paymentMode === 'Other' && invoice.otherPaymentDetails 
+          ? ` (${invoice.otherPaymentDetails})` 
+          : '';
         return `<div style="background-color: #d1fae5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 8px; width: fit-content; margin-top: 16px; display: flex; align-items: center; gap: 8px;">
           <span style="color: #047857; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
-            Paid via ${invoice.paymentMode}
+            Paid via ${invoice.paymentMode}${details}
           </span>
         </div>`;
       }
@@ -800,6 +804,17 @@ export default function Invoices() {
                 </SelectContent>
               </Select>
             </div>
+            {paymentMode === "Other" && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+                <label className="text-sm font-medium">Specify Payment Details</label>
+                <Input
+                  placeholder="Enter payment details (e.g. Reference No.)"
+                  value={otherPaymentDetails}
+                  onChange={(e) => setOtherPaymentDetails(e.target.value)}
+                  data-testid="input-other-payment-details"
+                />
+              </div>
+            )}
             <p className="text-sm text-slate-500">
               This will record a full payment for invoice <span className="font-bold">{selectedInvoice?.invoiceNumber}</span>.
             </p>
@@ -809,9 +824,10 @@ export default function Invoices() {
             <Button 
               onClick={() => markPaidMutation.mutate({ 
                 invoiceId: selectedInvoice?._id, 
-                paymentMode 
+                paymentMode,
+                otherPaymentDetails: paymentMode === "Other" ? otherPaymentDetails : undefined
               })}
-              disabled={markPaidMutation.isPending}
+              disabled={markPaidMutation.isPending || (paymentMode === "Other" && !otherPaymentDetails.trim())}
               data-testid="button-confirm-payment"
             >
               Confirm Payment

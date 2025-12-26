@@ -61,8 +61,8 @@ export const api = {
   invoices: {
     list: () => request<any[]>('/invoices'),
     get: (id: string) => request<any>(`/invoices/${id}`),
-    markPaid: (id: string, paymentMode?: string) => 
-      request<any>(`/invoices/${id}/pay`, { method: 'PATCH', body: JSON.stringify({ paymentMode }) }),
+    markPaid: (id: string, paymentMode?: string, otherPaymentDetails?: string) => 
+      request<any>(`/invoices/${id}/pay`, { method: 'PATCH', body: JSON.stringify({ paymentMode, otherPaymentDetails }) }),
   },
   
   technicians: {

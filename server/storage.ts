@@ -546,7 +546,7 @@ export class MongoStorage implements IStorage {
     return Invoice.findByIdAndUpdate(id, data, { new: true });
   }
 
-  async markInvoicePaid(id: string, paymentMode?: string): Promise<IInvoice | null> {
+  async markInvoicePaid(id: string, paymentMode?: string, otherPaymentDetails?: string): Promise<IInvoice | null> {
     if (!mongoose.Types.ObjectId.isValid(id)) return null;
     const invoice = await Invoice.findById(id);
     if (!invoice) return null;
@@ -562,7 +562,8 @@ export class MongoStorage implements IStorage {
     const updatedInvoice = await Invoice.findByIdAndUpdate(id, {
       paidAmount: newPaidAmount,
       paymentStatus,
-      paymentMode: paymentMode || invoice.paymentMode
+      paymentMode: paymentMode || invoice.paymentMode,
+      otherPaymentDetails: otherPaymentDetails || invoice.otherPaymentDetails
     }, { new: true });
 
     if (updatedInvoice) {
@@ -574,8 +575,9 @@ export class MongoStorage implements IStorage {
           paymentStatus,
           payments: [...job.payments, { 
             amount: actualApplied, 
-            mode: paymentMode || 'Cash', 
+            mode: (paymentMode as any) || 'Cash', 
             date: new Date(), 
+            otherPaymentDetails,
             notes: `Invoice ${invoice.invoiceNumber} payment` 
           }],
           updatedAt: new Date()

@@ -64,6 +64,7 @@ export interface IPayment {
   amount: number;
   mode: PaymentMode;
   date: Date;
+  otherPaymentDetails?: string;
   notes?: string;
 }
 
@@ -181,6 +182,8 @@ export interface IInvoice extends Document {
   totalAmount: number;
   paidAmount: number;
   paymentStatus: PaymentStatus;
+  paymentMode?: string;
+  otherPaymentDetails?: string;
   notes?: string;
   createdAt: Date;
 }
@@ -239,8 +242,9 @@ const ServiceItemSchema = new Schema<IServiceItem>({
 
 const PaymentSchema = new Schema<IPayment>({
   amount: { type: Number, required: true },
-  mode: { type: String, enum: ['Cash', 'UPI', 'Card', 'Bank Transfer'], required: true },
+  mode: { type: String, enum: ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Credit Card', 'Debit Card', 'Cheque', 'Other'], required: true },
   date: { type: Date, default: Date.now },
+  otherPaymentDetails: { type: String },
   notes: { type: String }
 });
 
@@ -371,6 +375,8 @@ const InvoiceSchema = new Schema<IInvoice>({
   totalAmount: { type: Number, required: true },
   paidAmount: { type: Number, default: 0 },
   paymentStatus: { type: String, enum: ['Pending', 'Partially Paid', 'Paid'], default: 'Pending' },
+  paymentMode: { type: String },
+  otherPaymentDetails: { type: String },
   notes: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
