@@ -161,7 +161,7 @@ export default function CustomerService() {
     setOtherServiceVehicleType('');
   };
 
-  const selectedCustomer = customers.find((c: any) => c._id === selectedCustomerId);
+  const selectedCustomer = (Array.isArray(customers) ? customers : []).find((c: any) => c._id === selectedCustomerId);
 
   useEffect(() => {
     if (selectedCustomer) {
@@ -327,7 +327,7 @@ export default function CustomerService() {
   };
 
   const getAvailableRolls = () => {
-    const item = inventory.find((inv: any) => inv._id === selectedItemId);
+    const item = (Array.isArray(inventory) ? inventory : []).find((inv: any) => inv._id === selectedItemId);
     if (!item || !item.rolls) return [];
     return item.rolls.filter((roll: any) => roll.status !== 'Finished' && roll.remaining_meters > 0);
   };
@@ -338,7 +338,7 @@ export default function CustomerService() {
       return;
     }
     
-    const item = inventory.find((inv: any) => inv._id === selectedItemId);
+    const item = (Array.isArray(inventory) ? inventory : []).find((inv: any) => inv._id === selectedItemId);
     if (!item) return;
 
     // If item has rolls, user must select one
@@ -426,7 +426,7 @@ export default function CustomerService() {
       return;
     }
 
-    const customer = customers.find((c: any) => c._id === selectedCustomerId);
+    const customer = (Array.isArray(customers) ? customers : []).find((c: any) => c._id === selectedCustomerId);
     if (!customer) return;
 
     const vehicleIdx = parseInt(selectedVehicleIndex, 10);
@@ -437,7 +437,7 @@ export default function CustomerService() {
     const gstAmount = includeGst ? subtotal * 0.18 : 0;
     const totalAmount = subtotal + gstAmount;
 
-    const selectedTechnician = technicians.find((t: any) => t._id === selectedTechnicianId);
+    const selectedTechnician = (Array.isArray(technicians) ? technicians : []).find((t: any) => t._id === selectedTechnicianId);
 
     const serviceItemsList: { name: string; price: number; discount?: number; category?: string; vehicleType?: string; warranty?: string }[] = [];
     if (ppfPrice > 0) {
@@ -528,10 +528,10 @@ export default function CustomerService() {
                       <SelectValue placeholder="Choose a customer" />
                     </SelectTrigger>
                     <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
-                      {customers.length === 0 ? (
+                      {(Array.isArray(customers) ? customers : []).length === 0 ? (
                         <div className="p-2 text-sm text-muted-foreground text-center">No customers found</div>
                       ) : (
-                        customers.map((customer: any) => (
+                        (Array.isArray(customers) ? customers : []).map((customer: any) => (
                           <SelectItem key={customer._id} value={customer._id}>
                             <div className="flex items-center gap-2">
                               <User className="w-4 h-4" />
