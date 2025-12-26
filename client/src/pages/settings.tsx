@@ -54,6 +54,13 @@ export default function Settings() {
     updateTemplateMutation.mutate({ stage, message, isActive });
   };
 
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Settings</h1>
+        <p className="text-muted-foreground mt-1">Manage your garage information and WhatsApp integration</p>
+      </div>
+
       <div className="grid gap-6 max-w-3xl">
         <Card className="card-modern">
           <CardHeader>
