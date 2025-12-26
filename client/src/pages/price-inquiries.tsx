@@ -219,6 +219,7 @@ type ServiceItem = {
   name: string;
   carType: string;
   price: number;
+  customerPrice: number;
 };
 
 export default function PriceInquiries() {
@@ -226,6 +227,7 @@ export default function PriceInquiries() {
   const [selectedServiceItems, setSelectedServiceItems] = useState<ServiceItem[]>([]);
   const [tempServiceName, setTempServiceName] = useState('');
   const [tempCarType, setTempCarType] = useState('');
+  const [tempCustomerPrice, setTempCustomerPrice] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterService, setFilterService] = useState('');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
@@ -300,8 +302,8 @@ export default function PriceInquiries() {
   });
 
   const addServiceItem = () => {
-    if (!tempServiceName || !tempCarType) {
-      toast({ title: 'Please select both service and car type', variant: 'destructive' });
+    if (!tempServiceName || !tempCarType || !tempCustomerPrice) {
+      toast({ title: 'Please select service, car type, and enter customer price', variant: 'destructive' });
       return;
     }
     
@@ -315,12 +317,14 @@ export default function PriceInquiries() {
       id: Date.now().toString(),
       name: tempServiceName,
       carType: tempCarType,
-      price: price
+      price: price,
+      customerPrice: parseFloat(tempCustomerPrice)
     };
 
     setSelectedServiceItems([...selectedServiceItems, newItem]);
     setTempServiceName('');
     setTempCarType('');
+    setTempCustomerPrice('');
   };
 
   const removeServiceItem = (id: string) => {
@@ -329,6 +333,12 @@ export default function PriceInquiries() {
 
   const getTotalPrice = () => {
     return selectedServiceItems.reduce((sum, item) => sum + item.price, 0);
+  };
+
+  const updateServiceCustomerPrice = (id: string, newPrice: number) => {
+    setSelectedServiceItems(selectedServiceItems.map(item =>
+      item.id === id ? { ...item, customerPrice: newPrice } : item
+    ));
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -524,14 +534,14 @@ export default function PriceInquiries() {
                 {/* Services Section */}
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-4">Add Services</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div>
                       <Label htmlFor="tempService">Service Type</Label>
                       <Select value={tempServiceName} onValueChange={setTempServiceName}>
                         <SelectTrigger id="tempService" data-testid="select-service">
                           <SelectValue placeholder="Select service" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-48">
                           {ALL_SERVICES.map((service) => (
                             <SelectItem key={service} value={service} data-testid={`option-service-${service}`}>
                               {service}
@@ -555,6 +565,18 @@ export default function PriceInquiries() {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div>
+                      <Label htmlFor="tempCustomerPrice">Customer Price (₹)</Label>
+                      <Input
+                        id="tempCustomerPrice"
+                        type="number"
+                        placeholder="Enter price"
+                        value={tempCustomerPrice}
+                        onChange={(e) => setTempCustomerPrice(e.target.value)}
+                        min="0"
+                        data-testid="input-customer-price"
+                      />
+                    </div>
                     <div className="flex items-end">
                       <Button 
                         type="button" 
@@ -570,33 +592,45 @@ export default function PriceInquiries() {
                   {/* Selected Services Table */}
                   {selectedServiceItems.length > 0 && (
                     <div className="mb-4">
-                      <div className="border rounded-lg overflow-hidden">
-                        <div className="bg-slate-100 p-3 font-semibold text-sm grid grid-cols-4 gap-2">
+                      <div className="border rounded-lg overflow-x-auto">
+                        <div className="bg-slate-100 p-3 font-semibold text-sm grid grid-cols-5 gap-2 min-w-max">
                           <div>Service</div>
                           <div>Car Type</div>
-                          <div>Price (₹)</div>
+                          <div>Service Price (₹)</div>
+                          <div>Customer Price (₹)</div>
                           <div>Action</div>
                         </div>
                         {selectedServiceItems.map((item) => (
-                          <div key={item.id} className="border-t p-3 grid grid-cols-4 gap-2 items-center text-sm">
+                          <div key={item.id} className="border-t p-3 grid grid-cols-5 gap-2 items-center text-sm min-w-max">
                             <div>{item.name}</div>
                             <div>{item.carType}</div>
                             <div className="font-semibold">{item.price}</div>
+                            <div>
+                              <Input
+                                type="number"
+                                value={item.customerPrice}
+                                onChange={(e) => updateServiceCustomerPrice(item.id, parseFloat(e.target.value) || 0)}
+                                className="w-32"
+                                min="0"
+                                data-testid={`input-service-customer-price-${item.id}`}
+                              />
+                            </div>
                             <Button
                               type="button"
-                              variant="ghost"
+                              variant="destructive"
                               size="sm"
                               onClick={() => removeServiceItem(item.id)}
-                              data-testid={`button-remove-service-${item.id}`}
+                              data-testid={`button-delete-service-${item.id}`}
                             >
-                              <X className="w-4 h-4" />
+                              Delete
                             </Button>
                           </div>
                         ))}
-                        <div className="border-t bg-blue-50 p-3 font-bold grid grid-cols-4 gap-2 text-sm">
+                        <div className="border-t bg-blue-50 p-3 font-bold grid grid-cols-5 gap-2 text-sm min-w-max">
                           <div>Total:</div>
                           <div></div>
                           <div className="text-blue-600">₹{getTotalPrice()}</div>
+                          <div></div>
                           <div></div>
                         </div>
                       </div>
@@ -646,6 +680,7 @@ export default function PriceInquiries() {
                       setSelectedServiceItems([]);
                       setTempServiceName('');
                       setTempCarType('');
+                      setTempCustomerPrice('');
                     }}
                     data-testid="button-cancel-inquiry"
                   >
