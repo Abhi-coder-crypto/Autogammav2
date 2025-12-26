@@ -244,7 +244,11 @@ export default function Invoices() {
   };
 
   const handlePrint = () => {
-    const printWindow = window.open("", "_blank");
+    const printFrame = document.createElement('iframe');
+    printFrame.style.display = 'none';
+    document.body.appendChild(printFrame);
+    
+    const printWindow = printFrame.contentWindow;
     if (printWindow) {
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -279,9 +283,12 @@ export default function Invoices() {
         </html>
       `);
       printWindow.document.close();
-      printWindow.focus();
+      
       setTimeout(() => {
         printWindow.print();
+        setTimeout(() => {
+          document.body.removeChild(printFrame);
+        }, 100);
       }, 300);
     }
   };
@@ -718,7 +725,7 @@ export default function Invoices() {
               data-testid="button-download-modal"
             >
               <Download className="w-4 h-4" />
-              Download PDF
+              Download Invoice
             </Button>
           </DialogFooter>
         </DialogContent>
