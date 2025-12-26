@@ -157,11 +157,14 @@ export default function Dashboard() {
     };
   });
 
-  const categoryCount = inventory.reduce(
-    (acc: Record<string, number>, item: any) => {
+  const inventoryStats = inventory.reduce(
+    (acc: Record<string, { sqft: number; rolls: number }>, item: any) => {
       const cat = item.category || "Uncategorized";
-      const totalRemainingSqft = (item.rolls || []).reduce((sum: number, roll: any) => sum + (roll.remaining_sqft || 0), 0);
-      acc[cat] = (acc[cat] || 0) + totalRemainingSqft;
+      if (!acc[cat]) acc[cat] = { sqft: 0, rolls: 0 };
+      
+      const rolls = item.rolls || [];
+      acc[cat].sqft += rolls.reduce((sum: number, roll: any) => sum + (roll.remaining_sqft || 0), 0);
+      acc[cat].rolls += rolls.length;
       return acc;
     },
     {},
@@ -170,7 +173,8 @@ export default function Dashboard() {
   const categories = ['Elite', 'Garware Plus', 'Garware Premium', 'Garware Matt'];
   const inventoryData = categories.map(cat => ({
     name: cat,
-    products: Math.round((categoryCount[cat] || 0) * 100) / 100,
+    sqft: Math.round((inventoryStats[cat]?.sqft || 0) * 100) / 100,
+    rolls: inventoryStats[cat]?.rolls || 0,
   }));
 
   const activeJobs = jobs
@@ -378,8 +382,13 @@ export default function Dashboard() {
                 <YAxis dataKey="name" type="category" stroke="rgba(0,0,0,0.6)" width={100} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid rgba(249,115,22,0.3)' }}
+                  formatter={(value: any, name: string) => {
+                    if (name === 'sqft') return [`${value} sqft`, 'Remaining Area'];
+                    if (name === 'rolls') return [`${value}`, 'Number of Rolls'];
+                    return [value, name];
+                  }}
                 />
-                <Bar dataKey="products" fill="#F97316" radius={[0, 8, 8, 0]} />
+                <Bar dataKey="rolls" name="rolls" fill="#F97316" radius={[0, 8, 8, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
