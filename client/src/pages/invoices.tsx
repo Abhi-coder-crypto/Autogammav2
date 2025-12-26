@@ -305,35 +305,35 @@ export default function Invoices() {
     try {
       const html2pdf = (await import('html2pdf.js')).default;
       
-      // Create a complete HTML document with the invoice parameter
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <style>
-              * { margin: 0; padding: 0; box-sizing: border-box; }
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #111827; }
-            </style>
-          </head>
-          <body>
-            ${getInvoiceHTML(invoiceToDownload)}
-          </body>
-        </html>
-      `;
-      
+      // Create a wrapper div for better PDF generation
       const element = document.createElement('div');
-      element.innerHTML = htmlContent;
+      element.style.padding = '0';
+      element.style.margin = '0';
+      element.style.width = '210mm';
+      element.innerHTML = getInvoiceHTML(invoiceToDownload);
+      
+      // Append to body temporarily for rendering
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '-9999px';
+      document.body.appendChild(element);
       
       const opt = {
-        margin: 10 as any,
+        margin: [8, 8, 8, 8] as any,
         filename: `Invoice_${invoiceToDownload.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false, 
+          allowTaint: true,
+          windowHeight: 1500
+        },
         jsPDF: { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const }
       };
 
       await html2pdf().set(opt).from(element).save();
+      document.body.removeChild(element);
       toast({ title: "Invoice downloaded successfully" });
     } catch (error) {
       console.error("Download error:", error);
