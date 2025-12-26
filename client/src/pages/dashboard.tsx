@@ -160,15 +160,17 @@ export default function Dashboard() {
   const categoryCount = inventory.reduce(
     (acc: Record<string, number>, item: any) => {
       const cat = item.category || "Uncategorized";
-      acc[cat] = (acc[cat] || 0) + item.quantity;
+      const totalRemainingSqft = (item.rolls || []).reduce((sum: number, roll: any) => sum + (roll.remaining_sqft || 0), 0);
+      acc[cat] = (acc[cat] || 0) + totalRemainingSqft;
       return acc;
     },
     {},
   );
 
-  const categoryData = Object.entries(categoryCount).map(([name, value]) => ({
-    name,
-    products: value,
+  const categories = ['Elite', 'Garware Plus', 'Garware Premium', 'Garware Matt'];
+  const inventoryData = categories.map(cat => ({
+    name: cat,
+    products: Math.round((categoryCount[cat] || 0) * 100) / 100,
   }));
 
   const activeJobs = jobs
@@ -370,7 +372,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={categoryData} layout="vertical">
+              <BarChart data={inventoryData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
                 <XAxis type="number" stroke="rgba(0,0,0,0.6)" />
                 <YAxis dataKey="name" type="category" stroke="rgba(0,0,0,0.6)" width={100} />
