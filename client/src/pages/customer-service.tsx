@@ -184,42 +184,33 @@ export default function CustomerService() {
       try {
         const prefs = await api.customers.getVehiclePreferences(selectedCustomerId, parseInt(selectedVehicleIndex, 10));
         if (prefs) {
-          let category = prefs.ppfCategory || '';
-          let vehicleType = prefs.ppfVehicleType || '';
-          let warranty = prefs.ppfWarranty || '';
-          let price = prefs.ppfPrice || 0;
-          
-          if (category && vehicleType && warranty) {
-            const categoryData = PPF_CATEGORIES[category];
-            if (!categoryData || !categoryData[vehicleType] || !categoryData[vehicleType][warranty]) {
-              warranty = '';
-              price = 0;
-            } else if (price === 0) {
-              price = categoryData[vehicleType][warranty];
-            }
-          } else {
-            warranty = '';
-            price = 0;
-          }
+          // Immediately set what we have from preferences
+          const category = prefs.ppfCategory || '';
+          const vehicleType = prefs.ppfVehicleType || '';
+          const warranty = prefs.ppfWarranty || '';
           
           setPpfCategory(category);
           setPpfVehicleType(vehicleType);
-          setPpfWarranty(warranty);
           
-          // Ensure we set the price from preferences if it exists
-          if (price > 0) {
-            setPpfPrice(price);
-          } else if (category && vehicleType && warranty) {
-            // Fallback to catalog if price in preferences is 0
-            const categoryData = PPF_CATEGORIES[category];
-            if (categoryData && categoryData[vehicleType] && categoryData[vehicleType][warranty]) {
-              setPpfPrice(categoryData[vehicleType][warranty]);
+          // Small delay to ensure category and vehicle type are updated before setting warranty and price
+          // This avoids the catalog useEffect clearing the price
+          setTimeout(() => {
+            setPpfWarranty(warranty);
+            
+            let price = prefs.ppfPrice || 0;
+            if (price === 0 && category && vehicleType && warranty) {
+              const categoryData = PPF_CATEGORIES[category];
+              if (categoryData && categoryData[vehicleType] && categoryData[vehicleType][warranty]) {
+                price = categoryData[vehicleType][warranty];
+              }
             }
-          }
+            setPpfPrice(price);
+            
+            if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) {
+              setLaborCost(prefs.laborCost.toString());
+            }
+          }, 0);
           
-          if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) {
-            setLaborCost(prefs.laborCost.toString());
-          }
           if (Array.isArray(prefs.otherServices) && prefs.otherServices.length > 0) {
             const servicesWithPrices = prefs.otherServices.map((svc: any) => {
               const serviceData = OTHER_SERVICES[svc.name];
@@ -232,12 +223,10 @@ export default function CustomerService() {
               };
             });
             setSelectedOtherServices(servicesWithPrices);
-            const firstService = prefs.otherServices[0];
-            if (firstService.name) setOtherServiceName(firstService.name);
-            if (firstService.vehicleType) setOtherServiceVehicleType(firstService.vehicleType);
           }
         }
       } catch (error) {
+        console.error("Error loading vehicle preferences:", error);
       } finally {
         setIsLoadingLastService(false);
       }
@@ -246,22 +235,22 @@ export default function CustomerService() {
     loadVehiclePreferences();
   }, [selectedCustomerId, selectedVehicleIndex]);
 
+  // Catalog auto-fill effect - only run when user MANUALLY changes selection
   useEffect(() => {
+    // Avoid running this when loading preferences to prevent overwriting
+    if (isLoadingLastService) return;
+
     if (!ppfCategory || !ppfVehicleType || !ppfWarranty) {
-      if (!ppfWarranty) {
-        setPpfPrice(0);
-      }
       return;
     }
     
     const categoryData = PPF_CATEGORIES[ppfCategory];
     if (categoryData && categoryData[ppfVehicleType] && categoryData[ppfVehicleType][ppfWarranty]) {
       const calculatedPrice = categoryData[ppfVehicleType][ppfWarranty];
-      setPpfPrice(calculatedPrice);
-    } else {
-      setPpfPrice(0);
+      // Only update if current price is 0 or different (prevents loop)
+      setPpfPrice(prev => (prev === 0 || prev !== calculatedPrice ? calculatedPrice : prev));
     }
-  }, [ppfCategory, ppfVehicleType, ppfWarranty]);
+  }, [ppfCategory, ppfVehicleType, ppfWarranty, isLoadingLastService]);
 
   const handleAddVehicle = () => {
     if (!selectedCustomerId) {
