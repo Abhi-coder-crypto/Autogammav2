@@ -497,13 +497,13 @@ export default function CustomerService() {
 
   const ppfDiscountAmount = parseFloat(ppfDiscount) || 0;
   const ppfAfterDiscount = Math.max(0, ppfPrice - ppfDiscountAmount);
-  const otherServicesAfterDiscount = selectedOtherServices.map(s => ({
-    ...s,
-    finalPrice: Math.max(0, s.price - (s.discount || 0))
-  }));
-  const totalServiceCost = ppfAfterDiscount + otherServicesAfterDiscount.reduce((sum, s) => sum + s.finalPrice, 0);
+  const otherServicesTotal = selectedOtherServices.reduce((sum, s) => sum + s.price, 0);
+  const otherServicesDiscount = selectedOtherServices.reduce((sum, s) => sum + (s.discount || 0), 0);
+  const totalServiceBaseCost = ppfPrice + otherServicesTotal;
+  const totalDiscount = ppfDiscountAmount + otherServicesDiscount;
+  const totalServiceAfterDiscount = ppfAfterDiscount + selectedOtherServices.reduce((sum, s) => sum + Math.max(0, s.price - (s.discount || 0)), 0);
   const parsedLaborCost = parseFloat(laborCost) || 0;
-  const subtotal = totalServiceCost + parsedLaborCost;
+  const subtotal = totalServiceAfterDiscount + parsedLaborCost;
   const gst = includeGst ? subtotal * 0.18 : 0;
   const totalCost = subtotal + gst;
 
@@ -934,26 +934,53 @@ export default function CustomerService() {
                   </div>
                 )}
 
-                <div className="border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-gray-50 via-gray-50 to-slate-50 space-y-3">
-                  <h4 className="font-bold text-base text-slate-900">Cost Summary</h4>
-                  <div className="flex justify-between text-sm">
-                    <span>Labor Cost:</span>
-                    <span>₹{parsedLaborCost.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Subtotal:</span>
-                    <span>₹{subtotal.toLocaleString('en-IN')}</span>
-                  </div>
-                  {includeGst && (
+                <div className="border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-gray-50 via-gray-50 to-slate-50 space-y-4">
+                  <h4 className="font-bold text-base text-slate-900 border-b pb-2">Cost Summary</h4>
+                  
+                  <div className="space-y-2">
                     <div className="flex justify-between text-sm text-slate-600">
-                      <span>GST (18%):</span>
-                      <span>₹{gst.toLocaleString('en-IN')}</span>
+                      <span>Service Cost (PPF + Others):</span>
+                      <span className="font-medium">₹{totalServiceBaseCost.toLocaleString('en-IN')}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between text-lg font-bold border-t pt-3 text-red-600">
+                    
+                    {totalDiscount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600 font-medium">
+                        <span>Discount Given:</span>
+                        <span>- ₹{totalDiscount.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-sm text-slate-600">
+                      <span>Labor Cost:</span>
+                      <span className="font-medium">₹{parsedLaborCost.toLocaleString('en-IN')}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm font-semibold text-slate-900 border-t pt-2 mt-2">
+                      <span>Subtotal:</span>
+                      <span>₹{subtotal.toLocaleString('en-IN')}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm py-1">
+                      <div className="flex items-center gap-2">
+                        <Checkbox 
+                          id="include-gst-summary" 
+                          checked={includeGst}
+                          onCheckedChange={(checked) => setIncludeGst(checked as boolean)}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="include-gst-summary" className="text-slate-600 cursor-pointer">GST (18%)</Label>
+                      </div>
+                      <span className={includeGst ? "font-medium text-slate-900" : "text-slate-400 line-through"}>
+                        ₹{gst.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between text-xl font-black border-t-2 border-dashed pt-4 mt-2 text-red-600">
                     <span>Total Amount:</span>
                     <span>₹{totalCost.toLocaleString('en-IN')}</span>
                   </div>
+
                   <Button
                     type="submit"
                     className="w-full bg-red-600 hover:bg-red-700 text-white font-bold h-12 rounded-lg mt-4 shadow-lg hover:shadow-xl transition-all duration-300 active:scale-[0.98]"
