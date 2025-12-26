@@ -748,6 +748,58 @@ export class MongoStorage implements IStorage {
   }
 
   async addMaterialsToJob(jobId: string, materials: { inventoryId: string; quantity: number }[]): Promise<IJob | null> {
+    if (!mongoose.Types.ObjectId.isValid(jobId)) return null;
+    const job = await Job.findById(jobId);
+    if (!job) return null;
+
+    if (job.stage === 'Completed' || job.stage === 'Cancelled') {
+      throw new Error('Cannot add materials to a completed or cancelled job');
+    }
+
+    const validatedMaterials: { item: IInventoryItem; quantity: number }[] = [];
+    for (const mat of materials) {
+      const item = await this.getInventoryItem(mat.inventoryId);
+      if (!item) {
+        throw new Error(`Inventory item not found: ${mat.inventoryId}`);
+      }
+      if (item.quantity < mat.quantity) {
+        throw new Error(`Insufficient stock for ${item.name}. Available: ${item.quantity}, Requested: ${mat.quantity}`);
+      }
+      validatedMaterials.push({ item, quantity: mat.quantity });
+    }
+
+    const newMaterials: { inventoryId: mongoose.Types.ObjectId; name: string; quantity: number; cost: number }[] = [];
+    for (const { item, quantity } of validatedMaterials) {
+      newMaterials.push({
+        inventoryId: item._id as mongoose.Types.ObjectId,
+        name: item.name,
+        quantity: quantity,
+        cost: 0
+      });
+    }
+
+    const allMaterials = [...job.materials, ...newMaterials];
+    const materialsTotal = allMaterials.reduce((sum, m) => sum + m.cost, 0);
+    const servicesTotal = job.serviceItems.reduce((sum, s) => sum + s.price, 0);
+    const serviceCost = job.serviceCost || 0;
+    const totalAmount = materialsTotal + servicesTotal + serviceCost;
+
+    const updatedJob = await Job.findByIdAndUpdate(jobId, {
+      materials: allMaterials,
+      totalAmount,
+      updatedAt: new Date()
+    }, { new: true });
+
+    if (!updatedJob) {
+      throw new Error('Failed to update job with materials');
+    }
+
+    for (const { item, quantity } of validatedMaterials) {
+      await this.adjustInventory(item._id!.toString(), -quantity);
+    }
+
+    return updatedJob;
+  }
 }
 
 export const storage = new MongoStorage();
