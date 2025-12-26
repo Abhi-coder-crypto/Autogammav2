@@ -907,6 +907,20 @@ export default function CustomerService() {
                   </div>
                 )}
 
+                <div className="space-y-2">
+                  <Label>Labor Cost</Label>
+                  <Input
+                    type="number"
+                    value={laborCost}
+                    onChange={(e) => setLaborCost(e.target.value)}
+                    placeholder="Enter labor cost (optional)"
+                    min="0"
+                    step="10"
+                    data-testid="input-labor-cost"
+                    className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&]:appearance-none"
+                  />
+                </div>
+
                 <div className="border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-gray-50 via-gray-50 to-slate-50 space-y-4">
                   <h4 className="font-bold text-base text-slate-900 border-b pb-2">Cost Summary</h4>
                   
@@ -953,14 +967,16 @@ export default function CustomerService() {
                     <span>Total Amount:</span>
                     <span>₹{totalCost.toLocaleString('en-IN')}</span>
                   </div>
+                </div>
 
+                <div className="flex justify-end">
                   <Button
                     type="submit"
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold h-12 rounded-lg mt-4 shadow-lg hover:shadow-xl transition-all duration-300 active:scale-[0.98]"
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 active:scale-[0.98]"
                     disabled={createJobMutation.isPending}
                     data-testid="button-create-service"
                   >
-                    {createJobMutation.isPending ? 'Creating...' : 'Confirm & Create Service'}
+                    {createJobMutation.isPending ? 'Creating...' : 'Create Service'}
                   </Button>
                 </div>
               </div>
