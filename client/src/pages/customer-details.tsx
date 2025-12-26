@@ -325,7 +325,6 @@ export default function CustomerDetails() {
                         {job.serviceItems.map((item: any, idx: number) => (
                           <div key={idx} className="flex items-center justify-between text-xs bg-slate-50 p-2 rounded-lg border border-slate-100">
                             <span className="font-medium text-slate-700 truncate">{item.description || item.name || 'Service'}</span>
-                            {item.cost && <span className="font-bold text-slate-900 whitespace-nowrap ml-2">₹{item.cost.toLocaleString('en-IN')}</span>}
                             {item.price && <span className="font-bold text-slate-900 whitespace-nowrap ml-2">₹{item.price.toLocaleString('en-IN')}</span>}
                           </div>
                         ))}
