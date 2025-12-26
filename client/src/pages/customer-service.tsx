@@ -205,7 +205,17 @@ export default function CustomerService() {
           setPpfCategory(category);
           setPpfVehicleType(vehicleType);
           setPpfWarranty(warranty);
-          setPpfPrice(price);
+          
+          // Ensure we set the price from preferences if it exists
+          if (price > 0) {
+            setPpfPrice(price);
+          } else if (category && vehicleType && warranty) {
+            // Fallback to catalog if price in preferences is 0
+            const categoryData = PPF_CATEGORIES[category];
+            if (categoryData && categoryData[vehicleType] && categoryData[vehicleType][warranty]) {
+              setPpfPrice(categoryData[vehicleType][warranty]);
+            }
+          }
           
           if (typeof prefs.laborCost === 'number' && prefs.laborCost > 0) {
             setLaborCost(prefs.laborCost.toString());
