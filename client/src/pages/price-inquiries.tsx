@@ -299,16 +299,55 @@ export default function PriceInquiries() {
               </Select>
               <Button type="button" onClick={addServiceItem}>Add</Button>
             </div>
-            {selectedServiceItems.map(item => (
-              <div key={item.id} className="flex justify-between items-center bg-slate-50 p-2 rounded">
-                <span>{item.name} - {item.carType}</span>
-                <Input type="number" placeholder="Customer Price" className="w-32" onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setSelectedServiceItems(selectedServiceItems.map(i => i.id === item.id ? { ...i, customerPrice: val } : i));
-                }} />
-                <Button variant="ghost" size="icon" onClick={() => setSelectedServiceItems(selectedServiceItems.filter(i => i.id !== item.id))}><Trash2 className="w-4 h-4" /></Button>
+            {selectedServiceItems.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="p-3 text-left">Service Name</th>
+                      <th className="p-3 text-right">Service Price</th>
+                      <th className="p-3 text-right">Customer Price</th>
+                      <th className="p-3 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedServiceItems.map(item => (
+                      <tr key={item.id} className="border-b hover:bg-slate-50" data-testid={`row-service-${item.id}`}>
+                        <td className="p-3">
+                          <div className="font-medium" data-testid={`text-servicename-${item.id}`}>{item.name}</div>
+                          <div className="text-xs text-slate-500" data-testid={`text-cartype-${item.id}`}>{item.carType}</div>
+                        </td>
+                        <td className="p-3 text-right font-medium" data-testid={`text-serviceprice-${item.id}`}>₹{item.price.toLocaleString()}</td>
+                        <td className="p-3">
+                          <Input 
+                            type="number" 
+                            placeholder="Enter price" 
+                            className="w-full" 
+                            data-testid={`input-customerprice-${item.id}`}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value) || 0;
+                              setSelectedServiceItems(selectedServiceItems.map(i => i.id === item.id ? { ...i, customerPrice: val } : i));
+                            }}
+                            value={item.customerPrice || ''}
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            type="button"
+                            data-testid={`button-delete-service-${item.id}`}
+                            onClick={() => setSelectedServiceItems(selectedServiceItems.filter(i => i.id !== item.id))}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
+            )}
             <div className="flex gap-2">
               <Button type="submit">Save Inquiry</Button>
               <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
