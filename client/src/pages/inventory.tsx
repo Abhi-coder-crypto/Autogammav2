@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Package, AlertTriangle, ArrowUp, ArrowDown, Search, Filter, Plus, Info, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, AlertTriangle, Search, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PPF_ITEMS = [
@@ -19,7 +19,6 @@ const PPF_ITEMS = [
   { name: 'Garware Matt', category: 'Garware Matt' }
 ];
 
-const UNITS = ['sheets', 'Square Feet'];
 const MIN_STOCK = 5;
 const DEFAULT_UNIT = 'Square Feet';
 
@@ -31,12 +30,11 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function Inventory() {
-  const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [rollDialogOpen, setRollDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [adjustType, setAdjustType] = useState<'in' | 'out'>('in');
-  const [adjustAmount, setAdjustAmount] = useState('1');
-  const [adjustUnit, setAdjustUnit] = useState(DEFAULT_UNIT);
+  const [adjustType] = useState<'in' | 'out'>('in');
+  const [adjustAmount] = useState('1');
+  const [adjustUnit] = useState(DEFAULT_UNIT);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'quantity'>('name');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -44,10 +42,6 @@ export default function Inventory() {
   const [rollQuantity, setRollQuantity] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
-  const selectedItemForDetail = useMemo(() => {
-    if (!selectedProductId) return null;
-    return filteredAndSortedItems.find(item => item._id === selectedProductId);
-  }, [selectedProductId, filteredAndSortedItems]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -56,13 +50,47 @@ export default function Inventory() {
     queryFn: api.inventory.list,
   });
 
+  const isLowStock = (item: any) => (item.rolls?.length || 0) <= 1;
+
+  // Filter and sort items
+  const filteredAndSortedItems = useMemo(() => {
+    let items = PPF_ITEMS.map((ppfItem) => {
+      const item = inventory.find((inv: any) => inv.category === ppfItem.category);
+      return item || { name: ppfItem.name, category: ppfItem.category, quantity: 0, unit: DEFAULT_UNIT, minStock: MIN_STOCK, _id: null };
+    });
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      items = items.filter((item) => 
+        item.category.toLowerCase().includes(query) || 
+        item.name.toLowerCase().includes(query)
+      );
+    }
+
+    if (filterCategory !== 'all') {
+      items = items.filter((item) => item.category === filterCategory);
+    }
+
+    if (sortBy === 'quantity') {
+      items.sort((a, b) => (b.rolls?.length || 0) - (a.rolls?.length || 0));
+    } else {
+      items.sort((a, b) => a.category.localeCompare(b.category));
+    }
+
+    return items;
+  }, [inventory, searchQuery, filterCategory, sortBy]);
+
+  const selectedItemForDetail = useMemo(() => {
+    if (!selectedProductId) return null;
+    return filteredAndSortedItems.find(item => item._id === selectedProductId);
+  }, [selectedProductId, filteredAndSortedItems]);
+
+  const lowStockItems = useMemo(() => filteredAndSortedItems.filter(isLowStock), [filteredAndSortedItems]);
+
   const adjustMutation = useMutation({
     mutationFn: ({ id, quantity }: { id: string; quantity: number }) => api.inventory.adjust(id, quantity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      setAdjustDialogOpen(false);
-      setAdjustAmount('1');
-      setAdjustUnit(DEFAULT_UNIT);
       toast({ title: `Stock adjusted successfully` });
     },
     onError: () => {
@@ -73,7 +101,6 @@ export default function Inventory() {
   const createMutation = useMutation({
     mutationFn: (data: any) => api.inventory.create(data),
     onSuccess: (newItem: any) => {
-      // After creating, adjust the stock
       adjustMutation.mutate({
         id: newItem._id,
         quantity: adjustType === 'in' ? parseInt(adjustAmount, 10) : -parseInt(adjustAmount, 10)
@@ -109,82 +136,6 @@ export default function Inventory() {
     }
   });
 
-  const handleAdjust = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedItem) return;
-    
-    const amount = parseInt(adjustAmount, 10);
-    if (amount <= 0) {
-      toast({ title: 'Please enter a valid quantity', variant: 'destructive' });
-      return;
-    }
-    
-    // If item doesn't have an ID yet, create it first
-    if (!selectedItem._id) {
-      createMutation.mutate({
-        name: selectedItem.name,
-        category: selectedItem.category,
-        quantity: 0,
-        unit: adjustUnit,
-        minStock: MIN_STOCK
-      });
-      return;
-    }
-    
-    // Update the item with the new unit before adjusting
-    if (selectedItem.unit !== adjustUnit) {
-      // Update unit on the server
-      api.inventory.update(selectedItem._id, { unit: adjustUnit }).then(() => {
-        adjustMutation.mutate({
-          id: selectedItem._id,
-          quantity: adjustType === 'in' ? amount : -amount
-        });
-      }).catch(() => {
-        toast({ title: 'Failed to update unit', variant: 'destructive' });
-      });
-    } else {
-      adjustMutation.mutate({
-        id: selectedItem._id,
-        quantity: adjustType === 'in' ? amount : -amount
-      });
-    }
-  };
-
-  const isLowStock = (item: any) => (item.rolls?.length || 0) <= 1;
-  
-  // Filter and sort items
-  const filteredAndSortedItems = useMemo(() => {
-    let items = PPF_ITEMS.map((ppfItem) => {
-      const item = inventory.find((inv: any) => inv.category === ppfItem.category);
-      return item || { name: ppfItem.name, category: ppfItem.category, quantity: 0, unit: DEFAULT_UNIT, minStock: MIN_STOCK, _id: null };
-    });
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      items = items.filter((item) => 
-        item.category.toLowerCase().includes(query) || 
-        item.name.toLowerCase().includes(query)
-      );
-    }
-
-    // Apply category filter
-    if (filterCategory !== 'all') {
-      items = items.filter((item) => item.category === filterCategory);
-    }
-
-    // Apply sorting
-    if (sortBy === 'quantity') {
-      items.sort((a, b) => (b.rolls?.length || 0) - (a.rolls?.length || 0));
-    } else {
-      items.sort((a, b) => a.category.localeCompare(b.category));
-    }
-
-    return items;
-  }, [inventory, searchQuery, filterCategory, sortBy]);
-
-  const lowStockItems = filteredAndSortedItems.filter(isLowStock);
-
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -194,7 +145,6 @@ export default function Inventory() {
         </div>
         
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          {/* Search Bar */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
@@ -206,7 +156,6 @@ export default function Inventory() {
             />
           </div>
 
-          {/* Sort Button */}
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'name' | 'quantity')}>
             <SelectTrigger className="w-40" data-testid="select-sort">
               <SelectValue />
@@ -217,17 +166,13 @@ export default function Inventory() {
             </SelectContent>
           </Select>
 
-          {/* Filter Button */}
           <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="w-40" data-testid="select-filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="Elite">Elite</SelectItem>
-              <SelectItem value="Garware Plus">Garware Plus</SelectItem>
-              <SelectItem value="Garware Premium">Garware Premium</SelectItem>
-              <SelectItem value="Garware Matt">Garware Matt</SelectItem>
+              {PPF_ITEMS.map(i => <SelectItem key={i.category} value={i.category}>{i.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -257,71 +202,58 @@ export default function Inventory() {
               <div className="col-span-full text-center py-8 text-muted-foreground">No products match your search or filters</div>
             ) : (
               filteredAndSortedItems.map((displayItem) => {
-                const displayName = displayItem.category;
                 const isSelected = selectedProductId === displayItem._id;
                 
                 return (
-                  <div key={displayItem.category}>
-                    <Card 
-                      className={cn(
-                        "card-modern border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20",
-                        isLowStock(displayItem) ? "border-red-200" : "border-border",
-                        isSelected && "ring-2 ring-primary border-primary bg-primary/5"
-                      )}
-                      onClick={() => setSelectedProductId(isSelected ? null : displayItem._id)}
-                      data-testid={`inventory-card-${displayItem.category}`}
-                    >
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-base">{displayName}</CardTitle>
-                            <Badge className={cn("mt-1", CATEGORY_COLORS[displayItem.category])}>
-                              {displayItem.category}
-                            </Badge>
-                          </div>
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                  <Card 
+                    key={displayItem.category}
+                    className={cn(
+                      "card-modern border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20",
+                      isLowStock(displayItem) ? "border-red-200" : "border-border",
+                      isSelected && "ring-2 ring-primary border-primary bg-primary/5"
+                    )}
+                    onClick={() => setSelectedProductId(isSelected ? null : displayItem._id)}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-base">{displayItem.category}</CardTitle>
+                          <Badge className={cn("mt-1", CATEGORY_COLORS[displayItem.category])}>
+                            {displayItem.category}
+                          </Badge>
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex items-baseline justify-between">
-                          <span className="text-3xl font-display font-bold">
-                            {displayItem.rolls?.length || 0}
-                          </span>
-                          <span className="text-sm text-muted-foreground">rolls</span>
-                        </div>
-                        
-                        {isLowStock(displayItem) && (
-                          <p className="text-xs text-orange-600 flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3" />
-                            Low stock
-                          </p>
-                        )}
-
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedItem(displayItem);
-                              setRollDialogOpen(true);
-                            }}
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Add Roll
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-3xl font-display font-bold">
+                          {displayItem.rolls?.length || 0}
+                        </span>
+                        <span className="text-sm text-muted-foreground">rolls</span>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedItem(displayItem);
+                          setRollDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Roll
+                      </Button>
+                    </CardContent>
+                  </Card>
                 );
               })
             )}
           </div>
         </div>
 
-        {/* Details Panel */}
         {selectedProductId && selectedItemForDetail && (
           <div className="lg:col-span-7 animate-in slide-in-from-right-4 duration-300">
             <Card className="sticky top-4 border-primary/20 shadow-lg overflow-hidden">
@@ -333,13 +265,7 @@ export default function Inventory() {
                   </h2>
                   <p className="text-sm text-muted-foreground">Detailed Roll Inventory</p>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setSelectedProductId(null)}
-                >
-                  Close
-                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedProductId(null)}>Close</Button>
               </div>
               
               <CardContent className="p-0">
@@ -393,9 +319,7 @@ export default function Inventory() {
                                   <span className={cn(
                                     "text-xl font-bold",
                                     (roll.remaining_sqft / roll.squareFeet) < 0.2 ? "text-destructive" : "text-primary"
-                                  )}>
-                                    {roll.remaining_sqft?.toFixed(1)}
-                                  </span>
+                                  )}>{roll.remaining_sqft?.toFixed(1)}</span>
                                   <span className="text-xs text-muted-foreground">sqft</span>
                                 </div>
                               </div>
@@ -438,7 +362,7 @@ export default function Inventory() {
                     }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add New Roll to {selectedItemForDetail.category}
+                    Add New Roll
                   </Button>
                 </div>
               </CardContent>
@@ -450,7 +374,7 @@ export default function Inventory() {
       <Dialog open={rollDialogOpen} onOpenChange={setRollDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Add Roll to {selectedItem?.name}</DialogTitle>
+            <DialogTitle>Add Roll to {selectedItem?.category}</DialogTitle>
           </DialogHeader>
           <form onSubmit={(e) => {
             e.preventDefault();
@@ -458,12 +382,11 @@ export default function Inventory() {
               toast({ title: 'Fill all fields', variant: 'destructive' });
               return;
             }
-            const quantity = parseFloat(rollQuantity);
             addRollMutation.mutate({
               id: selectedItem._id,
               roll: {
                 name: rollName,
-                squareFeet: quantity,
+                squareFeet: parseFloat(rollQuantity),
                 meters: 0,
                 unit: 'Square Feet'
               }
@@ -471,36 +394,18 @@ export default function Inventory() {
           }} className="space-y-4">
             <div className="space-y-2">
               <Label>Roll Number</Label>
-              <Input 
-                placeholder="e.g., ELITE-ROLL-1" 
-                value={rollName}
-                onChange={(e) => setRollName(e.target.value)}
-                data-testid="input-roll-name"
-              />
+              <Input placeholder="e.g., ELITE-ROLL-1" value={rollName} onChange={(e) => setRollName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Quantity (Square Feet)</Label>
-              <Input 
-                type="number" 
-                step="0.1" 
-                placeholder="0" 
-                value={rollQuantity}
-                onChange={(e) => setRollQuantity(e.target.value)}
-                data-testid="input-roll-sqft"
-              />
+              <Input type="number" step="0.1" placeholder="0" value={rollQuantity} onChange={(e) => setRollQuantity(e.target.value)} />
             </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-primary"
-              disabled={addRollMutation.isPending}
-              data-testid="button-save-roll"
-            >
+            <Button type="submit" className="w-full bg-primary" disabled={addRollMutation.isPending}>
               {addRollMutation.isPending ? 'Adding...' : 'Add Roll'}
             </Button>
           </form>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
