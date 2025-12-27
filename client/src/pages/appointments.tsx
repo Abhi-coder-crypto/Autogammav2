@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Trash2, Grid3X3, List, AlertCircle, X, ChevronUp, ChevronDown, Clock } from 'lucide-react';
+import { Search, Trash2, List, AlertCircle, X, ChevronUp, ChevronDown, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -127,7 +127,6 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Appointments() {
   const [showForm, setShowForm] = useState(false);
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [searchQuery, setSearchQuery] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -244,26 +243,6 @@ export default function Appointments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Appointments</h1>
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === "card" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("card")}
-            className="flex items-center gap-2"
-          >
-            <Grid3X3 className="w-4 h-4" />
-            Card
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-            className="flex items-center gap-2"
-          >
-            <List className="w-4 h-4" />
-            List
-          </Button>
-        </div>
       </div>
 
       <div className="relative">
@@ -333,65 +312,6 @@ export default function Appointments() {
 
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Loading...</div>
-      ) : viewMode === "card" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredAppointments.map((appt: any) => (
-            <Card key={appt._id} className="hover-elevate border-slate-200 shadow-sm overflow-hidden">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-slate-900">{appt.customerName}</h3>
-                    <p className="text-[11px] text-slate-500 font-medium">{appt.customerPhone}</p>
-                    {appt.customerEmail && <p className="text-[10px] text-slate-400 truncate max-w-[120px]">{appt.customerEmail}</p>}
-                    <Badge className={cn("text-[10px] uppercase mt-1", STATUS_COLORS[appt.status])}>
-                      {appt.status}
-                    </Badge>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">{format(new Date(appt.date), 'MMM dd')}</p>
-                    <p className="text-[11px] text-slate-500">{appt.time}</p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <p className="text-slate-400 uppercase font-bold text-[9px]">Vehicle</p>
-                    <p className="font-medium truncate">{appt.vehicleInfo}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-slate-400 uppercase font-bold text-[9px]">Service</p>
-                    <p className="font-medium truncate">{appt.serviceType}</p>
-                  </div>
-                </div>
-                {appt.notes && (
-                  <div className="pt-1">
-                    <p className="text-slate-400 uppercase font-bold text-[9px]">Notes</p>
-                    <p className="text-[10px] text-slate-600 line-clamp-2">{appt.notes}</p>
-                  </div>
-                )}
-                <div className="flex gap-2 pt-2">
-                  {appt.status === 'Scheduled' && (
-                    <Button 
-                      size="sm" 
-                      className="flex-1 h-8 text-xs" 
-                      onClick={() => updateStatusMutation.mutate({ id: appt._id, status: 'Done' })}
-                    >
-                      Mark Done
-                    </Button>
-                  )}
-                  <Button 
-                    size="icon" 
-                    variant="outline" 
-                    className="h-8 w-8 text-destructive" 
-                    onClick={() => setDeleteId(appt._id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       ) : (
         <div className="border border-slate-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
