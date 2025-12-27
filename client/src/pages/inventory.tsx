@@ -42,7 +42,12 @@ export default function Inventory() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [rollName, setRollName] = useState('');
   const [rollQuantity, setRollQuantity] = useState('');
-  const [expandedRolls, setExpandedRolls] = useState<string>('');
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
+  const selectedItemForDetail = useMemo(() => {
+    if (!selectedProductId) return null;
+    return filteredAndSortedItems.find(item => item._id === selectedProductId);
+  }, [selectedProductId, filteredAndSortedItems]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -237,162 +242,208 @@ export default function Inventory() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {isLoading ? (
-          <div className="col-span-full text-center py-8 text-muted-foreground">Loading inventory...</div>
-        ) : filteredAndSortedItems.length === 0 ? (
-          <div className="col-span-full text-center py-8 text-muted-foreground">No products match your search or filters</div>
-        ) : (
-          filteredAndSortedItems.map((displayItem) => {
-            const displayName = displayItem.category;
-            
-            return (
-              <div key={displayItem.category}>
-                <Card 
-                  className={cn(
-                    "card-modern border border-red-300",
-                    isLowStock(displayItem) && "border-red-400 shadow-md"
-                  )}
-                  data-testid={`inventory-card-${displayItem.category}`}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">{displayName}</CardTitle>
-                        <Badge className={cn("mt-1", CATEGORY_COLORS[displayItem.category])}>
-                          {displayItem.category}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-3xl font-display font-bold">
-                        {displayItem.rolls?.length || 0}
-                      </span>
-                      <span className="text-sm text-muted-foreground">rolls</span>
-                    </div>
-                    
-                    {isLowStock(displayItem) && (
-                      <p className="text-xs text-orange-600 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        Low stock ({(displayItem.rolls?.length || 0)} roll{(displayItem.rolls?.length || 0) !== 1 ? 's' : ''})
-                      </p>
-                    )}
-
-                    {(!displayItem._id || (displayItem.rolls?.length || 0) === 0) && (
-                      <p className="text-xs text-muted-foreground">
-                        No rolls added yet
-                      </p>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => {
-                          setSelectedItem(displayItem);
-                          setRollDialogOpen(true);
-                        }}
-                        data-testid={`button-stock-${displayItem.category}`}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Stock
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => setExpandedRolls(expandedRolls === displayItem._id ? '' : displayItem._id)}
-                        disabled={!displayItem.rolls || displayItem.rolls.length === 0}
-                        data-testid={`button-toggle-rolls-${displayItem.category}`}
-                      >
-                        {expandedRolls === displayItem._id ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className={cn(
+          "space-y-4 transition-all duration-300",
+          selectedProductId ? "lg:col-span-5 hidden lg:block" : "lg:col-span-12"
+        )}>
+          <div className={cn(
+            "grid gap-4",
+            selectedProductId ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-4"
+          )}>
+            {isLoading ? (
+              <div className="col-span-full text-center py-8 text-muted-foreground">Loading inventory...</div>
+            ) : filteredAndSortedItems.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-muted-foreground">No products match your search or filters</div>
+            ) : (
+              filteredAndSortedItems.map((displayItem) => {
+                const displayName = displayItem.category;
+                const isSelected = selectedProductId === displayItem._id;
+                
+                return (
+                  <div key={displayItem.category}>
+                    <Card 
+                      className={cn(
+                        "card-modern border cursor-pointer transition-all hover:ring-2 hover:ring-primary/20",
+                        isLowStock(displayItem) ? "border-red-200" : "border-border",
+                        isSelected && "ring-2 ring-primary border-primary bg-primary/5"
+                      )}
+                      onClick={() => setSelectedProductId(isSelected ? null : displayItem._id)}
+                      data-testid={`inventory-card-${displayItem.category}`}
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-base">{displayName}</CardTitle>
+                            <Badge className={cn("mt-1", CATEGORY_COLORS[displayItem.category])}>
+                              {displayItem.category}
+                            </Badge>
+                          </div>
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-3xl font-display font-bold">
+                            {displayItem.rolls?.length || 0}
+                          </span>
+                          <span className="text-sm text-muted-foreground">rolls</span>
+                        </div>
+                        
+                        {isLowStock(displayItem) && (
+                          <p className="text-xs text-orange-600 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            Low stock
+                          </p>
                         )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {expandedRolls === displayItem._id && displayItem.rolls && displayItem.rolls.length > 0 && (
-                  <div className="mt-2 bg-muted/30 border rounded-lg overflow-hidden transition-all animate-in fade-in slide-in-from-top-1">
-                    <div className="p-3 border-b bg-muted/50 flex items-center justify-between">
-                      <h4 className="font-semibold text-sm flex items-center gap-2">
-                        <Package className="w-4 h-4 text-muted-foreground" />
-                        Roll Details
-                      </h4>
-                      <Badge variant="outline" className="text-[10px] h-5">
-                        {displayItem.rolls.length} Rolls
-                      </Badge>
-                    </div>
-                    <div className="p-2 space-y-2 max-h-[400px] overflow-y-auto">
-                      {displayItem.rolls.map((roll: any) => (
-                        <div 
-                          key={roll._id} 
-                          className="group relative p-3 bg-card border rounded-md hover:border-primary/50 transition-colors shadow-sm"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="font-medium text-sm truncate">{roll.name}</p>
-                                <Badge 
-                                  variant={roll.status === 'Finished' ? 'outline' : 'secondary'} 
-                                  className={cn(
-                                    "text-[10px] h-4 px-1.5",
-                                    roll.status !== 'Finished' && "bg-green-500/10 text-green-600 border-green-200"
-                                  )}
-                                >
-                                  {roll.status === 'Finished' ? 'Finished' : 'Available'}
-                                </Badge>
-                              </div>
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <span className="opacity-70 text-[10px] uppercase tracking-wider font-semibold">Total:</span>
-                                  <span className="text-foreground font-medium">{roll.squareFeet?.toFixed(1)}</span>
-                                  <span className="text-[9px]">sqft</span>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedItem(displayItem);
+                              setRollDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add Roll
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Details Panel */}
+        {selectedProductId && selectedItemForDetail && (
+          <div className="lg:col-span-7 animate-in slide-in-from-right-4 duration-300">
+            <Card className="sticky top-4 border-primary/20 shadow-lg overflow-hidden">
+              <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Package className="w-5 h-5 text-primary" />
+                    {selectedItemForDetail.category}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">Detailed Roll Inventory</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedProductId(null)}
+                >
+                  Close
+                </Button>
+              </div>
+              
+              <CardContent className="p-0">
+                {!selectedItemForDetail.rolls || selectedItemForDetail.rolls.length === 0 ? (
+                  <div className="p-12 text-center text-muted-foreground">
+                    <Package className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <p>No rolls found for this product.</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => {
+                        setSelectedItem(selectedItemForDetail);
+                        setRollDialogOpen(true);
+                      }}
+                    >
+                      Add First Roll
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="p-4 space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto">
+                    {selectedItemForDetail.rolls.map((roll: any) => (
+                      <div 
+                        key={roll._id} 
+                        className="group relative p-4 bg-card border rounded-lg hover:border-primary/50 transition-all shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <p className="font-bold text-lg truncate">{roll.name}</p>
+                              <Badge 
+                                variant={roll.status === 'Finished' ? 'outline' : 'secondary'} 
+                                className={cn(
+                                  "h-5 px-2",
+                                  roll.status !== 'Finished' && "bg-green-500/10 text-green-600 border-green-200"
+                                )}
+                              >
+                                {roll.status === 'Finished' ? 'Finished' : 'Available'}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground block">Total Stock</span>
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-xl font-bold">{roll.squareFeet?.toFixed(1)}</span>
+                                  <span className="text-xs text-muted-foreground">sqft</span>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <span className="opacity-70 text-[10px] uppercase tracking-wider font-semibold">Left:</span>
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground block">Remaining</span>
+                                <div className="flex items-baseline gap-1">
                                   <span className={cn(
-                                    "font-bold",
+                                    "text-xl font-bold",
                                     (roll.remaining_sqft / roll.squareFeet) < 0.2 ? "text-destructive" : "text-primary"
                                   )}>
                                     {roll.remaining_sqft?.toFixed(1)}
                                   </span>
-                                  <span className="text-[9px]">sqft</span>
+                                  <span className="text-xs text-muted-foreground">sqft</span>
                                 </div>
                               </div>
                             </div>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => deleteRollMutation.mutate({ id: displayItem._id, rollId: roll._id })}
-                              data-testid={`button-delete-roll-${roll._id}`}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
                           </div>
-                          {/* Progress Bar for remaining stock */}
-                          <div className="mt-2 h-1 w-full bg-muted rounded-full overflow-hidden">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteRollMutation.mutate({ id: selectedItemForDetail._id, rollId: roll._id })}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="mt-4">
+                          <div className="flex justify-between text-[10px] mb-1 font-medium">
+                            <span>Usage Progress</span>
+                            <span>{Math.round((roll.remaining_sqft / (roll.squareFeet || 1)) * 100)}% Available</span>
+                          </div>
+                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                             <div 
                               className={cn(
-                                "h-full transition-all duration-500",
+                                "h-full transition-all duration-700",
                                 (roll.remaining_sqft / roll.squareFeet) < 0.2 ? "bg-destructive" : "bg-primary"
                               )}
                               style={{ width: `${Math.min(100, (roll.remaining_sqft / (roll.squareFeet || 1)) * 100)}%` }}
                             />
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 )}
-              </div>
-            );
-          })
+                <div className="p-4 bg-muted/20 border-t">
+                  <Button 
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedItem(selectedItemForDetail);
+                      setRollDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New Roll to {selectedItemForDetail.category}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
