@@ -31,6 +31,7 @@ export default function CustomerService() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [selectedVehicleIndex, setSelectedVehicleIndex] = useState<string>('');
   const [selectedTechnicianId, setSelectedTechnicianId] = useState<string>('');
+  const [customerSearch, setCustomerSearch] = useState('');
   const [serviceNotes, setServiceNotes] = useState('');
   const [ppfDiscount, setPpfDiscount] = useState<string>('');
   const [laborCost, setLaborCost] = useState<string>('');
@@ -74,7 +75,15 @@ export default function CustomerService() {
     queryFn: () => api.customers.list(),
   });
 
-  const customers = Array.isArray(customersData) ? customersData : (customersData as any)?.customers || [];
+  const customers = (Array.isArray(customersData) ? customersData : (customersData as any)?.customers || [])
+    .sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+  const filteredCustomers = customers.filter((customer: any) => 
+    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) || 
+    customer.phone.includes(customerSearch)
+  );
+
+  const displayedCustomers = customerSearch ? filteredCustomers : filteredCustomers.slice(0, 5);
 
   const { data: inventoryData = [] } = useQuery<any>({
     queryKey: ['inventory'],
@@ -590,19 +599,35 @@ export default function CustomerService() {
                     <SelectTrigger data-testid="select-customer">
                       <SelectValue placeholder="Choose a customer" />
                     </SelectTrigger>
-                    <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
-                      {(Array.isArray(customers) ? customers : []).length === 0 ? (
-                        <div className="p-2 text-sm text-muted-foreground text-center">No customers found</div>
-                      ) : (
-                        (Array.isArray(customers) ? customers : []).map((customer: any) => (
-                          <SelectItem key={customer._id} value={customer._id}>
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4" />
-                              {customer.name} - {customer.phone}
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
+                    <SelectContent position="popper" className="max-h-[300px] w-[var(--radix-select-trigger-width)]">
+                      <div className="p-2 sticky top-0 bg-white z-10 border-b">
+                        <Input
+                          placeholder="Search customer..."
+                          value={customerSearch}
+                          onChange={(e) => setCustomerSearch(e.target.value)}
+                          className="h-8 text-sm"
+                          onKeyDown={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      <div className="overflow-y-auto max-h-[220px]">
+                        {displayedCustomers.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">No customers found</div>
+                        ) : (
+                          displayedCustomers.map((customer: any) => (
+                            <SelectItem key={customer._id} value={customer._id}>
+                              <div className="flex items-center gap-2">
+                                <User className="w-4 h-4" />
+                                {customer.name} - {customer.phone}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                        {!customerSearch && customers.length > 5 && (
+                          <div className="p-2 text-[10px] text-center text-slate-400 border-t bg-slate-50 italic">
+                            Showing latest 5. Use search for more.
+                          </div>
+                        )}
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>
