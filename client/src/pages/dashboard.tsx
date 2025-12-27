@@ -443,12 +443,6 @@ export default function Dashboard() {
                     {job.serviceItems?.some((item: any) => item.name?.startsWith('PPF')) && (
                       <>
                         <div>
-                          <p className="text-slate-600">Product</p>
-                          <p className="font-medium text-slate-900 truncate max-w-[150px]">
-                            {job.serviceItems.find((item: any) => item.rollName)?.name || 'N/A'}
-                          </p>
-                        </div>
-                        <div>
                           <p className="text-slate-600">Roll No</p>
                           <p className="font-medium text-slate-900">
                             {job.serviceItems.find((item: any) => item.rollName)?.rollName || 'N/A'}
