@@ -64,29 +64,9 @@ const TimePicker = ({ value, onChange, error }: { value: string, onChange: (val:
           value={h12.toString().padStart(2, '0')} 
           onValueChange={(h) => handleTimeChange(h, initialMinutes.toString(), initialAmPm)}
         >
-          <div className="relative group">
-            <input
-              className="w-[60px] h-8 font-bold text-sm border border-slate-200 bg-white shadow-sm rounded-md px-2 focus:ring-1 focus:ring-primary outline-none pr-6"
-              value={hoursInput}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '').slice(0, 2);
-                setHoursInput(val);
-                const h = parseInt(val);
-                if (!isNaN(h) && h >= 1 && h <= 12) {
-                  handleTimeChange(val.padStart(2, '0'), initialMinutes.toString(), initialAmPm);
-                }
-              }}
-              onBlur={() => {
-                if (!hoursInput || parseInt(hoursInput) < 1 || parseInt(hoursInput) > 12) {
-                  setHoursInput(h12.toString().padStart(2, '0'));
-                }
-              }}
-            />
-            <SelectTrigger className="absolute right-0 top-0 h-8 w-6 border-0 bg-transparent hover:bg-slate-100 transition-colors p-0 flex items-center justify-center opacity-100">
-              <SelectValue className="hidden" />
-              <ChevronDown className="h-3 w-3 text-slate-400" />
-            </SelectTrigger>
-          </div>
+          <SelectTrigger className="w-[70px] h-8 font-bold text-sm border-slate-200 bg-white shadow-sm">
+            <SelectValue placeholder="HH" />
+          </SelectTrigger>
           <SelectContent className="max-h-[200px]">
             {hours.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
           </SelectContent>
@@ -98,29 +78,9 @@ const TimePicker = ({ value, onChange, error }: { value: string, onChange: (val:
           value={initialMinutes.toString().padStart(2, '0')} 
           onValueChange={(m) => handleTimeChange(h12.toString(), m, initialAmPm)}
         >
-          <div className="relative group">
-            <input
-              className="w-[60px] h-8 font-bold text-sm border border-slate-200 bg-white shadow-sm rounded-md px-2 focus:ring-1 focus:ring-primary outline-none pr-6"
-              value={minutesInput}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '').slice(0, 2);
-                setMinutesInput(val);
-                const m = parseInt(val);
-                if (!isNaN(m) && m >= 0 && m <= 59) {
-                  handleTimeChange(h12.toString(), val.padStart(2, '0'), initialAmPm);
-                }
-              }}
-              onBlur={() => {
-                if (!minutesInput || parseInt(minutesInput) < 0 || parseInt(minutesInput) > 59) {
-                  setMinutesInput(initialMinutes.toString().padStart(2, '0'));
-                }
-              }}
-            />
-            <SelectTrigger className="absolute right-0 top-0 h-8 w-6 border-0 bg-transparent hover:bg-slate-100 transition-colors p-0 flex items-center justify-center opacity-100">
-              <SelectValue className="hidden" />
-              <ChevronDown className="h-3 w-3 text-slate-400" />
-            </SelectTrigger>
-          </div>
+          <SelectTrigger className="w-[70px] h-8 font-bold text-sm border-slate-200 bg-white shadow-sm">
+            <SelectValue placeholder="MM" />
+          </SelectTrigger>
           <SelectContent className="max-h-[200px]">
             {minutes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
           </SelectContent>
