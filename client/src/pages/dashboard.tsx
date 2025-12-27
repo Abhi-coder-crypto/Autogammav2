@@ -441,6 +441,22 @@ export default function Dashboard() {
                       <p className="text-slate-600">Payment Status</p>
                       <p className="font-medium text-slate-900">{job.paymentStatus}</p>
                     </div>
+                    {job.serviceItems?.some((item: any) => item.name?.startsWith('PPF')) && (
+                      <>
+                        <div>
+                          <p className="text-slate-600">Roll No</p>
+                          <p className="font-medium text-slate-900">
+                            {job.serviceItems.find((item: any) => item.name?.startsWith('PPF'))?.rollName || 'N/A'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-slate-600">Size Used</p>
+                          <p className="font-medium text-slate-900">
+                            {job.serviceItems.find((item: any) => item.name?.startsWith('PPF'))?.sizeUsed || 'N/A'} sqft
+                          </p>
+                        </div>
+                      </>
+                    )}
                     <div>
                       <p className="text-slate-600">Total Amount</p>
                       <p className="font-medium text-slate-900">₹{job.totalAmount}</p>

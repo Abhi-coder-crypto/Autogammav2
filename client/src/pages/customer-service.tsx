@@ -418,11 +418,17 @@ export default function CustomerService() {
 
     const serviceItemsList: any[] = [];
     if (ppfPrice > 0) {
+      const ppfItem = selectedItems.find(item => item.name.includes(' - '));
       serviceItemsList.push({
         name: `PPF ${ppfCategory} - ${ppfWarranty}`,
         price: ppfPrice,
         discount: ppfDiscountAmount,
-        type: 'part'
+        type: 'part',
+        category: ppfCategory,
+        vehicleType: ppfVehicleType,
+        warranty: ppfWarranty,
+        rollName: ppfItem ? ppfItem.name.split(' - ')[1] : undefined,
+        sizeUsed: ppfItem ? (ppfItem.quantity || ppfItem.metersUsed) : undefined
       });
     }
     selectedOtherServices.forEach(s => {

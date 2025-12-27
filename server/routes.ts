@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { sendStageUpdateMessage, sendCustomerStatusUpdate } from "./whatsapp";
+import { sendStageUpdateMessage } from "./whatsapp";
 import { Customer, Admin } from "./models";
 import type { JobStage, CustomerStatus } from "./models";
 import mongoose from "mongoose";
