@@ -715,7 +715,80 @@ export default function CustomerService() {
                   <Textarea value={serviceNotes} onChange={(e) => setServiceNotes(e.target.value)} placeholder="Additional notes..." rows={3} />
                 </div>
 
-                <div className="space-y-3 border border-red-200 p-4 rounded-lg bg-white">
+                <div className="space-y-2">
+                  <Label>Labor Charge</Label>
+                  <Input type="number" value={laborCost} onChange={(e) => setLaborCost(e.target.value)} placeholder="0" min="0" />
+                </div>
+
+                <div className="space-y-4 border border-gray-200 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm">Add Item from Inventory</h3>
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-sm">Select Product</Label>
+                      <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+                        <SelectTrigger data-testid="select-inventory-item">
+                          <SelectValue placeholder="Choose a product" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(Array.isArray(inventory) ? inventory : []).map((item: any) => (
+                            <SelectItem key={item._id} value={item._id}>
+                              {item.category} - {item.quantity} {item.unit}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedItemId && (Array.isArray(inventory) ? inventory : []).find((item: any) => item._id === selectedItemId)?.rolls && (Array.isArray(inventory) ? inventory : []).find((item: any) => item._id === selectedItemId).rolls.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">Select Roll</Label>
+                        <Select value={selectedRollId} onValueChange={setSelectedRollId}>
+                          <SelectTrigger data-testid="select-roll">
+                            <SelectValue placeholder="Choose a roll" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(Array.isArray(inventory) ? inventory : []).find((item: any) => item._id === selectedItemId)?.rolls?.map((roll: any) => (
+                              <SelectItem key={roll._id} value={roll._id}>
+                                {roll.name} - {roll.remaining_sqft || roll.remaining_meters}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-sm">Quantity/Amount</Label>
+                      <Input type="number" value={metersUsed} onChange={(e) => setMetersUsed(e.target.value)} placeholder="0" min="0" />
+                    </div>
+
+                    <Button type="button" variant="outline" onClick={handleAddItem} className="w-full">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Item
+                    </Button>
+                  </div>
+
+                  {selectedItems.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">Selected Items</Label>
+                      <div className="border rounded-lg divide-y">
+                        {selectedItems.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between p-2">
+                            <div>
+                              <p className="text-sm font-medium">{item.name}</p>
+                              <p className="text-xs text-muted-foreground">{item.quantity} {item.unit}</p>
+                            </div>
+                            <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3 border border-gray-200 p-4 rounded-lg bg-white">
                   <h3 className="font-semibold text-sm flex items-center gap-2">
                     <Package className="w-4 h-4 text-red-600" />
                     Cost Summary
@@ -733,8 +806,8 @@ export default function CustomerService() {
                       <span>₹{totalCostValue.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold h-12 text-lg shadow-lg" disabled={createJobMutation.isPending}>
-                    {createJobMutation.isPending ? "Creating Service..." : "Create Service & Job Card"}
+                  <Button type="submit" className="w-full" disabled={createJobMutation.isPending}>
+                    {createJobMutation.isPending ? "Creating..." : "Create Service"}
                   </Button>
                 </div>
               </div>
