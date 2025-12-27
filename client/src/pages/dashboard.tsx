@@ -178,8 +178,7 @@ export default function Dashboard() {
   }));
 
   const activeJobs = jobs
-    .filter((j: any) => j.stage !== "Completed" && j.stage !== "Cancelled")
-    .slice(0, 5);
+    .filter((j: any) => j.stage !== "Completed" && j.stage !== "Cancelled");
 
   const todaySales = jobs.reduce((sum: number, job: any) => {
     const jobDate = new Date(job.createdAt);
@@ -410,11 +409,11 @@ export default function Dashboard() {
           {activeJobs.length > 0 ? (
             <div className="space-y-4">
               {activeJobs.map((job: any) => (
-                <div
-                  key={job.id}
-                  className="p-4 rounded-lg bg-gradient-to-r from-slate-50 to-white hover:from-slate-100 hover:to-slate-50 transition-all border border-slate-200 hover:border-slate-300"
-                  data-testid={`job-row-${job.id}`}
-                >
+                <Link key={job.id} href="/funnel">
+                  <div
+                    className="p-4 rounded-lg bg-gradient-to-r from-slate-50 to-white hover:from-slate-100 hover:to-slate-50 transition-all border border-slate-200 hover:border-slate-300 cursor-pointer mb-4"
+                    data-testid={`job-row-${job.id}`}
+                  >
                   {/* Header with customer and stage */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -483,7 +482,8 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
-              ))}
+              </Link>
+            ))}
             </div>
           ) : (
             <div className="text-center py-8 text-slate-500">
