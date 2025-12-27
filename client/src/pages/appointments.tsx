@@ -66,7 +66,7 @@ const TimePicker = ({ value, onChange, error }: { value: string, onChange: (val:
         >
           <div className="relative group">
             <input
-              className="w-[60px] h-8 font-bold text-sm border border-slate-200 bg-white shadow-sm rounded-md px-2 focus:ring-1 focus:ring-primary outline-none"
+              className="w-[60px] h-8 font-bold text-sm border border-slate-200 bg-white shadow-sm rounded-md px-2 focus:ring-1 focus:ring-primary outline-none pr-6"
               value={hoursInput}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '').slice(0, 2);
@@ -82,7 +82,7 @@ const TimePicker = ({ value, onChange, error }: { value: string, onChange: (val:
                 }
               }}
             />
-            <SelectTrigger className="absolute right-0 top-0 h-8 w-6 border-0 bg-transparent hover:bg-slate-100 transition-colors p-0 flex items-center justify-center opacity-100 [&>svg]:block">
+            <SelectTrigger className="absolute right-0 top-0 h-8 w-6 border-0 bg-transparent hover:bg-slate-100 transition-colors p-0 flex items-center justify-center opacity-100">
               <ChevronDown className="h-3 w-3 text-slate-400" />
             </SelectTrigger>
           </div>
@@ -99,7 +99,7 @@ const TimePicker = ({ value, onChange, error }: { value: string, onChange: (val:
         >
           <div className="relative group">
             <input
-              className="w-[60px] h-8 font-bold text-sm border border-slate-200 bg-white shadow-sm rounded-md px-2 focus:ring-1 focus:ring-primary outline-none"
+              className="w-[60px] h-8 font-bold text-sm border border-slate-200 bg-white shadow-sm rounded-md px-2 focus:ring-1 focus:ring-primary outline-none pr-6"
               value={minutesInput}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '').slice(0, 2);
@@ -115,7 +115,7 @@ const TimePicker = ({ value, onChange, error }: { value: string, onChange: (val:
                 }
               }}
             />
-            <SelectTrigger className="absolute right-0 top-0 h-8 w-6 border-0 bg-transparent hover:bg-slate-100 transition-colors p-0 flex items-center justify-center opacity-100 [&>svg]:block">
+            <SelectTrigger className="absolute right-0 top-0 h-8 w-6 border-0 bg-transparent hover:bg-slate-100 transition-colors p-0 flex items-center justify-center opacity-100">
               <ChevronDown className="h-3 w-3 text-slate-400" />
             </SelectTrigger>
           </div>
