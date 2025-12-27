@@ -265,6 +265,17 @@ export async function registerRoutes(
     try {
       const { stage, discount = 0 } = req.body;
       
+      const currentJob = await storage.getJob(req.params.id);
+      if (!currentJob) return res.status(404).json({ message: "Job not found" });
+
+      // Prevent changes once marked 'Completed' or 'Cancelled'
+      if (currentJob.stage === 'Completed') {
+        return res.status(403).json({ message: "Cannot change status once marked as Completed" });
+      }
+      if (currentJob.stage === 'Cancelled') {
+        return res.status(403).json({ message: "Cannot change status once marked as Cancelled" });
+      }
+
       // Check if THIS JOB has an invoice
       // Each job is independent - a customer can have multiple jobs, each with its own invoice
       const existingInvoice = await storage.getInvoiceByJob(req.params.id);

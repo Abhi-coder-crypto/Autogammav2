@@ -235,6 +235,7 @@ export default function CustomerFunnel() {
                         <div className="pt-1.5 border-t border-slate-100">
                           <Select
                             value={job.stage}
+                            disabled={job.stage === 'Completed' || job.stage === 'Cancelled'}
                             onValueChange={(value) => {
                               updateStatusMutation.mutate({
                                 id: job._id,
@@ -247,7 +248,12 @@ export default function CustomerFunnel() {
                             </SelectTrigger>
                             <SelectContent>
                               {FUNNEL_STAGES.map((s) => (
-                                <SelectItem key={s.key} value={s.key} className="text-[10px]">
+                                <SelectItem 
+                                  key={s.key} 
+                                  value={s.key} 
+                                  className="text-[10px]"
+                                  disabled={s.key === 'Cancelled' && job.stage === 'Completed'}
+                                >
                                   {s.label}
                                 </SelectItem>
                               ))}
