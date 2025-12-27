@@ -304,7 +304,9 @@ export default function CustomerRegistration() {
   // Vehicle info
   const [vehicleData, setVehicleData] = useState({
     make: "",
+    otherMake: "",
     model: "",
+    otherModel: "",
     year: "",
     plateNumber: "",
     chassisNumber: "",
@@ -373,8 +375,8 @@ export default function CustomerRegistration() {
       referrerPhone: customerData.referrerPhone || undefined,
       vehicles: [
         {
-          make: vehicleData.make,
-          model: vehicleData.model,
+          make: vehicleData.make === "Other" ? vehicleData.otherMake : vehicleData.make,
+          model: (vehicleData.make === "Other" || vehicleData.model === "Other") ? vehicleData.otherModel : vehicleData.model,
           year: vehicleData.year,
           plateNumber: vehicleData.plateNumber,
           color: vehicleData.color,
@@ -813,47 +815,75 @@ export default function CustomerRegistration() {
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <Label>Vehicle Name *</Label>
-                  <Select
-                    value={vehicleData.make}
-                    onValueChange={(value) =>
-                      setVehicleData({ ...vehicleData, make: value, model: "" })
-                    }
-                  >
-                    <SelectTrigger className="border-slate-300" data-testid="select-vehicle-make">
-                      <SelectValue placeholder="Select vehicle make" />
-                    </SelectTrigger>
-                    <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
-                      {VEHICLE_MAKES.map((make) => (
-                        <SelectItem key={make} value={make}>
-                          {make}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Vehicle Name *</Label>
+                    <Select
+                      value={vehicleData.make}
+                      onValueChange={(value) =>
+                        setVehicleData({ ...vehicleData, make: value, model: "", otherMake: "", otherModel: "" })
+                      }
+                    >
+                      <SelectTrigger className="border-slate-300" data-testid="select-vehicle-make">
+                        <SelectValue placeholder="Select vehicle make" />
+                      </SelectTrigger>
+                      <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
+                        {VEHICLE_MAKES.map((make) => (
+                          <SelectItem key={make} value={make}>
+                            {make}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {vehicleData.make === "Other" && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+                      <Label>Enter Vehicle Make *</Label>
+                      <Input
+                        value={vehicleData.otherMake}
+                        onChange={(e) => setVehicleData({ ...vehicleData, otherMake: e.target.value })}
+                        placeholder="e.g. Tesla, Ferrari"
+                        className="border-slate-300"
+                        data-testid="input-other-make"
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-6">
-                  <Label>Vehicle Model *</Label>
-                  <Select
-                    value={vehicleData.model}
-                    onValueChange={(value) =>
-                      setVehicleData({ ...vehicleData, model: value })
-                    }
-                    disabled={!vehicleData.make}
-                  >
-                    <SelectTrigger className="border-slate-300" data-testid="select-vehicle-model">
-                      <SelectValue placeholder={vehicleData.make ? "Select model" : "Select vehicle name first"} />
-                    </SelectTrigger>
-                    <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
-                      {vehicleData.make && VEHICLE_MODELS[vehicleData.make as keyof typeof VEHICLE_MODELS]?.map((model) => (
-                        <SelectItem key={model} value={model}>
-                          {model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Vehicle Model *</Label>
+                    <Select
+                      value={vehicleData.model}
+                      onValueChange={(value) =>
+                        setVehicleData({ ...vehicleData, model: value, otherModel: "" })
+                      }
+                      disabled={!vehicleData.make}
+                    >
+                      <SelectTrigger className="border-slate-300" data-testid="select-vehicle-model">
+                        <SelectValue placeholder={vehicleData.make ? "Select model" : "Select vehicle name first"} />
+                      </SelectTrigger>
+                      <SelectContent position="popper" className="max-h-60 w-[var(--radix-select-trigger-width)]">
+                        {vehicleData.make && VEHICLE_MODELS[vehicleData.make as keyof typeof VEHICLE_MODELS]?.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {(vehicleData.make === "Other" || vehicleData.model === "Other") && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+                      <Label>Enter Vehicle Model *</Label>
+                      <Input
+                        value={vehicleData.otherModel}
+                        onChange={(e) => setVehicleData({ ...vehicleData, otherModel: e.target.value })}
+                        placeholder="e.g. Model S, 488"
+                        className="border-slate-300"
+                        data-testid="input-other-model"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-6">
