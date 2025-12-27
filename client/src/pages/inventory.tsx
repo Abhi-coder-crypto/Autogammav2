@@ -51,7 +51,6 @@ export default function Inventory() {
 
   const isLowStock = (item: any) => (item.rolls?.length || 0) <= 1;
 
-  // Filter and sort items
   const filteredAndSortedItems = useMemo(() => {
     let items = PPF_ITEMS.map((ppfItem) => {
       const item = inventory.find((inv: any) => inv.category === ppfItem.category);
@@ -252,13 +251,7 @@ export default function Inventory() {
                   </h2>
                   <p className="text-sm text-muted-foreground">Detailed Roll Inventory</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => {
-                  setSelectedItem(selectedItemForDetail);
-                  setRollDialogOpen(true);
-                }}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add New Roll
-                </Button>
+                {/* Fixed the double Add button issue - Removed from here and kept at card level for specific items if needed or overall button below */}
               </div>
               
               <CardContent className="p-0">
@@ -266,71 +259,85 @@ export default function Inventory() {
                   <div className="p-12 text-center text-muted-foreground">
                     <Package className="w-12 h-12 mx-auto mb-4 opacity-20" />
                     <p>No rolls found for this product.</p>
+                    <Button variant="outline" className="mt-4" onClick={() => {
+                      setSelectedItem(selectedItemForDetail);
+                      setRollDialogOpen(true);
+                    }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add First Roll
+                    </Button>
                   </div>
                 ) : (
-                  <div className="p-4 space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto">
-                    {selectedItemForDetail.rolls.map((roll: any) => (
-                      <div 
-                        key={roll._id} 
-                        className="group relative p-3 bg-card border rounded-lg hover:border-primary/40 transition-all shadow-sm"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <p className="font-bold text-base truncate">{roll.name}</p>
-                              <Badge 
-                                variant={roll.status === 'Finished' ? 'outline' : 'secondary'} 
-                                className={cn(
-                                  "h-4 px-1.5 text-[10px]",
-                                  roll.status !== 'Finished' && "bg-green-500/10 text-green-600 border-green-200"
-                                )}
-                              >
-                                {roll.status === 'Finished' ? 'Finished' : 'Available'}
-                              </Badge>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-0.5">
-                                <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground block">Stock</span>
-                                <div className="flex items-baseline gap-1">
-                                  <span className="text-base font-bold">{roll.squareFeet?.toFixed(1)}</span>
-                                  <span className="text-[10px] text-muted-foreground">sqft</span>
-                                </div>
+                  <>
+                    <div className="p-4 space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto">
+                      {selectedItemForDetail.rolls.map((roll: any) => (
+                        <div 
+                          key={roll._id} 
+                          className="group relative p-2 bg-card border rounded-lg hover:border-primary/40 transition-all shadow-sm"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <p className="font-bold text-sm truncate">{roll.name}</p>
+                                <Badge 
+                                  variant={roll.status === 'Finished' ? 'outline' : 'secondary'} 
+                                  className={cn(
+                                    "h-3.5 px-1.5 text-[9px]",
+                                    roll.status !== 'Finished' && "bg-green-500/10 text-green-600 border-green-200"
+                                  )}
+                                >
+                                  {roll.status === 'Finished' ? 'Finished' : 'Available'}
+                                </Badge>
                               </div>
-                              <div className="space-y-0.5">
-                                <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground block">Left</span>
+                              <div className="flex gap-4 text-[10px] text-muted-foreground">
                                 <div className="flex items-baseline gap-1">
+                                  <span className="font-semibold uppercase text-[8px] opacity-70">Stock:</span>
+                                  <span className="font-bold text-foreground">{roll.squareFeet?.toFixed(1)}</span>
+                                  <span>sqft</span>
+                                </div>
+                                <div className="flex items-baseline gap-1">
+                                  <span className="font-semibold uppercase text-[8px] opacity-70">Left:</span>
                                   <span className={cn(
-                                    "text-base font-bold",
+                                    "font-bold",
                                     (roll.remaining_sqft / roll.squareFeet) < 0.2 ? "text-destructive" : "text-primary"
                                   )}>{roll.remaining_sqft?.toFixed(1)}</span>
-                                  <span className="text-[10px] text-muted-foreground">sqft</span>
+                                  <span>sqft</span>
                                 </div>
                               </div>
                             </div>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => deleteRollMutation.mutate({ id: selectedItemForDetail._id, rollId: roll._id })}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => deleteRollMutation.mutate({ id: selectedItemForDetail._id, rollId: roll._id })}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="mt-3">
-                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                            <div 
-                              className={cn(
-                                "h-full transition-all duration-700",
-                                (roll.remaining_sqft / roll.squareFeet) < 0.2 ? "bg-destructive" : "bg-primary"
-                              )}
-                              style={{ width: `${Math.min(100, (roll.remaining_sqft / (roll.squareFeet || 1)) * 100)}%` }}
-                            />
+                          <div className="mt-1.5">
+                            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className={cn(
+                                  "h-full transition-all duration-700",
+                                  (roll.remaining_sqft / roll.squareFeet) < 0.2 ? "bg-destructive" : "bg-primary"
+                                )}
+                                style={{ width: `${Math.min(100, (roll.remaining_sqft / (roll.squareFeet || 1)) * 100)}%` }}
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                    <div className="p-3 bg-muted/20 border-t">
+                      <Button className="w-full" size="sm" onClick={() => {
+                        setSelectedItem(selectedItemForDetail);
+                        setRollDialogOpen(true);
+                      }}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add New Roll
+                      </Button>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
