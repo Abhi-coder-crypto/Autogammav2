@@ -291,7 +291,9 @@ export default function PriceInquiries() {
             <div className="grid grid-cols-3 gap-4">
               <Select value={tempServiceName} onValueChange={setTempServiceName}>
                 <SelectTrigger><SelectValue placeholder="Service" /></SelectTrigger>
-                <SelectContent>{ALL_SERVICES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <SelectContent className="max-h-64 overflow-y-auto">
+                  {ALL_SERVICES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
               </Select>
               <Select value={tempCarType} onValueChange={setTempCarType}>
                 <SelectTrigger><SelectValue placeholder="Car Type" /></SelectTrigger>
