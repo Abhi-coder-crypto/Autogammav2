@@ -709,50 +709,56 @@ export class MongoStorage implements IStorage {
       throw new Error('Cannot add materials to a completed or cancelled job');
     }
 
-    const validatedMaterials: { item: IInventoryItem; quantity: number }[] = [];
+    const validatedMaterials: { item: IInventoryItem; quantity: number; rollUsage?: { rollId: string; rollName: string; quantityUsed: number }[] }[] = [];
     for (const mat of materials) {
       const item = await this.getInventoryItem(mat.inventoryId);
       if (!item) {
         throw new Error(`Inventory item not found: ${mat.inventoryId}`);
       }
+      
+      let rollUsage: { rollId: string; rollName: string; quantityUsed: number }[] | undefined;
+
       // For items with rolls, validate using FIFO logic
       if (item.rolls && item.rolls.length > 0) {
         const totalAvailable = item.rolls.reduce((sum, r) => {
-          // Use the unit field to determine which quantity to use
           const qty = r.unit === 'Square Feet' ? (r.remaining_sqft || 0) : (r.remaining_meters || 0);
           return sum + qty;
         }, 0);
         if (totalAvailable < mat.quantity) {
           throw new Error(`Insufficient stock for ${item.name}. Available: ${totalAvailable}, Requested: ${mat.quantity}`);
         }
+
+        const result = await this.consumeRollsWithFIFO(item._id!.toString(), mat.quantity);
+        if (!result.success) {
+          throw new Error(`Failed to consume rolls for ${item.name}`);
+        }
+
+        rollUsage = result.consumedRolls.map(cr => {
+          const roll = item.rolls.find(r => r._id?.toString() === cr.rollId);
+          return {
+            rollId: cr.rollId,
+            rollName: roll?.name || 'Unknown Roll',
+            quantityUsed: cr.quantityUsed
+          };
+        });
       } else {
         // For items without rolls, validate normal stock
         if (item.quantity < mat.quantity) {
           throw new Error(`Insufficient stock for ${item.name}. Available: ${item.quantity}, Requested: ${mat.quantity}`);
         }
+        await this.adjustInventory(item._id!.toString(), -mat.quantity);
       }
-      validatedMaterials.push({ item, quantity: mat.quantity });
+      
+      validatedMaterials.push({ item, quantity: mat.quantity, rollUsage });
     }
 
-    // Apply FIFO consumption for items with rolls
-    for (const { item, quantity } of validatedMaterials) {
-      if (item.rolls && item.rolls.length > 0) {
-        const result = await this.consumeRollsWithFIFO(item._id!.toString(), quantity);
-        if (!result.success) {
-          throw new Error(`Failed to consume rolls for ${item.name}`);
-        }
-      }
-    }
-
-    const newMaterials: { inventoryId: mongoose.Types.ObjectId; name: string; quantity: number; cost: number }[] = [];
-    for (const { item, quantity } of validatedMaterials) {
-      newMaterials.push({
-        inventoryId: item._id as mongoose.Types.ObjectId,
-        name: item.name,
-        quantity: quantity,
-        cost: 0
-      });
-    }
+    const newMaterials: any[] = validatedMaterials.map(({ item, quantity, rollUsage }) => ({
+      inventoryId: item._id as mongoose.Types.ObjectId,
+      name: item.name,
+      quantity: quantity,
+      cost: 0,
+      rollDetails: rollUsage
+    }));
 
     const allMaterials = [...job.materials, ...newMaterials];
     const materialsTotal = allMaterials.reduce((sum, m) => sum + m.cost, 0);
@@ -766,17 +772,6 @@ export class MongoStorage implements IStorage {
       totalAmount,
       updatedAt: new Date()
     }, { new: true });
-
-    if (!updatedJob) {
-      throw new Error('Failed to update job with materials');
-    }
-
-    // Only adjust inventory for items without rolls (rolls were already deducted via FIFO)
-    for (const { item, quantity } of validatedMaterials) {
-      if (!item.rolls || item.rolls.length === 0) {
-        await this.adjustInventory(item._id!.toString(), -quantity);
-      }
-    }
 
     return updatedJob;
   }

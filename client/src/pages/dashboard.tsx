@@ -440,16 +440,31 @@ export default function Dashboard() {
                       <p className="text-slate-600">Payment Status</p>
                       <p className="font-medium text-slate-900">{job.paymentStatus}</p>
                     </div>
-                    {job.serviceItems?.some((item: any) => item.rollName) && (
+                    {/* Roll details */}
+                    {(job.materials?.some((m: any) => m.rollDetails?.length > 0) || job.serviceItems?.some((item: any) => item.rollName)) && (
                       <div className="col-span-2 mt-2 pt-2 border-t border-slate-100">
                         <p className="text-slate-600 mb-1">Materials Used</p>
                         <div className="space-y-1">
+                          {/* Display from serviceItems (old way) */}
                           {job.serviceItems
-                            .filter((item: any) => item.rollName)
+                            ?.filter((item: any) => item.rollName)
                             .map((item: any, i: number) => (
-                              <div key={i} className="flex justify-between items-center bg-slate-50 p-1.5 rounded text-[10px]">
+                              <div key={`svc-${i}`} className="flex justify-between items-center bg-slate-50 p-1.5 rounded text-[10px]">
                                 <span className="font-medium text-slate-700">{item.rollName}</span>
                                 <span className="text-slate-900 font-bold">{item.sizeUsed || 0} sqft</span>
+                              </div>
+                            ))}
+                          {/* Display from materials.rollDetails (new way) */}
+                          {job.materials
+                            ?.filter((m: any) => m.rollDetails?.length > 0)
+                            .map((m: any, mi: number) => (
+                              <div key={`mat-${mi}`} className="space-y-1">
+                                {m.rollDetails.map((rd: any, rdi: number) => (
+                                  <div key={`rd-${mi}-${rdi}`} className="flex justify-between items-center bg-red-50 p-1.5 rounded text-[10px]">
+                                    <span className="font-medium text-red-700">{m.name}: {rd.rollName}</span>
+                                    <span className="text-red-900 font-bold">{rd.quantityUsed} sqft</span>
+                                  </div>
+                                ))}
                               </div>
                             ))}
                         </div>

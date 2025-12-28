@@ -276,7 +276,12 @@ const JobSchema = new Schema<IJob>({
     inventoryId: { type: Schema.Types.ObjectId, ref: 'Inventory' },
     name: String,
     quantity: Number,
-    cost: Number
+    cost: Number,
+    rollDetails: [{
+      rollId: String,
+      rollName: String,
+      quantityUsed: Number
+    }]
   }],
   totalAmount: { type: Number, default: 0 },
   paidAmount: { type: Number, default: 0 },
