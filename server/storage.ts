@@ -38,6 +38,7 @@ export interface IStorage {
   addRoll(inventoryId: string, roll: any): Promise<IInventoryItem | null>;
   deleteRoll(inventoryId: string, rollId: string): Promise<IInventoryItem | null>;
   deductRoll(inventoryId: string, rollId: string, metersUsed: number): Promise<IInventoryItem | null>;
+  consumeRollsWithFIFO(inventoryId: string, quantityNeeded: number): Promise<{ success: boolean; consumedRolls: { rollId: string; quantityUsed: number }[] }>;
   
   getAppointments(options?: { page?: number; limit?: number; date?: Date }): Promise<{ appointments: IAppointment[]; total: number }>;
   getAppointmentsByDate(date: Date): Promise<IAppointment[]>;
@@ -320,7 +321,8 @@ export class MongoStorage implements IStorage {
       remaining_meters: roll.meters,
       remaining_sqft: roll.squareFeet,
       status: 'Available',
-      unit: roll.unit || 'Meters'
+      unit: roll.unit || 'Meters',
+      createdAt: new Date()
     };
     return Inventory.findByIdAndUpdate(inventoryId, { $push: { rolls: newRoll } }, { new: true });
   }
@@ -328,6 +330,61 @@ export class MongoStorage implements IStorage {
   async deleteRoll(inventoryId: string, rollId: string): Promise<IInventoryItem | null> {
     if (!mongoose.Types.ObjectId.isValid(inventoryId)) return null;
     return Inventory.findByIdAndUpdate(inventoryId, { $pull: { rolls: { _id: rollId } } }, { new: true });
+  }
+
+  async consumeRollsWithFIFO(inventoryId: string, quantityNeeded: number): Promise<{ success: boolean; consumedRolls: { rollId: string; quantityUsed: number }[] }> {
+    if (!mongoose.Types.ObjectId.isValid(inventoryId)) return { success: false, consumedRolls: [] };
+    const item = await Inventory.findById(inventoryId);
+    if (!item || !item.rolls || item.rolls.length === 0) {
+      return { success: false, consumedRolls: [] };
+    }
+
+    const consumedRolls: { rollId: string; quantityUsed: number }[] = [];
+    let remaining = quantityNeeded;
+
+    // Sort rolls by createdAt (FIFO - oldest first)
+    const sortedRolls = [...item.rolls].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB;
+    });
+
+    for (const roll of sortedRolls) {
+      if (remaining <= 0) break;
+      if (!roll._id) continue;
+
+      const availableQty = roll.remaining_sqft && roll.remaining_sqft > 0 ? roll.remaining_sqft : roll.remaining_meters;
+      if (availableQty <= 0) continue;
+
+      const toConsume = Math.min(remaining, availableQty);
+      consumedRolls.push({ rollId: roll._id.toString(), quantityUsed: toConsume });
+      remaining -= toConsume;
+
+      // Update roll quantities
+      if (roll.remaining_sqft && roll.remaining_sqft > 0) {
+        roll.remaining_sqft = Math.max(0, roll.remaining_sqft - toConsume);
+        if (roll.squareFeet > 0 && roll.meters > 0) {
+          roll.remaining_meters = (roll.remaining_sqft / roll.squareFeet) * roll.meters;
+        }
+      } else {
+        roll.remaining_meters = Math.max(0, roll.remaining_meters - toConsume);
+        if (roll.meters > 0 && roll.squareFeet > 0) {
+          roll.remaining_sqft = (roll.remaining_meters / roll.meters) * roll.squareFeet;
+        }
+      }
+
+      // Mark as finished if depleted
+      if (roll.remaining_meters <= 0 && roll.remaining_sqft <= 0) {
+        roll.status = 'Finished';
+      }
+    }
+
+    if (remaining > 0) {
+      return { success: false, consumedRolls: [] };
+    }
+
+    await item.save();
+    return { success: true, consumedRolls };
   }
 
   async deductRoll(inventoryId: string, rollId: string, metersUsed: number): Promise<IInventoryItem | null> {
@@ -649,13 +706,32 @@ export class MongoStorage implements IStorage {
       if (!item) {
         throw new Error(`Inventory item not found: ${mat.inventoryId}`);
       }
-      // Only validate stock if item doesn't have rolls (rolls are already deducted separately)
-      if (!item.rolls || item.rolls.length === 0) {
+      // For items with rolls, validate using FIFO logic
+      if (item.rolls && item.rolls.length > 0) {
+        const totalAvailable = item.rolls.reduce((sum, r) => {
+          const qty = r.remaining_sqft && r.remaining_sqft > 0 ? r.remaining_sqft : r.remaining_meters;
+          return sum + qty;
+        }, 0);
+        if (totalAvailable < mat.quantity) {
+          throw new Error(`Insufficient stock for ${item.name}. Available: ${totalAvailable}, Requested: ${mat.quantity}`);
+        }
+      } else {
+        // For items without rolls, validate normal stock
         if (item.quantity < mat.quantity) {
           throw new Error(`Insufficient stock for ${item.name}. Available: ${item.quantity}, Requested: ${mat.quantity}`);
         }
       }
       validatedMaterials.push({ item, quantity: mat.quantity });
+    }
+
+    // Apply FIFO consumption for items with rolls
+    for (const { item, quantity } of validatedMaterials) {
+      if (item.rolls && item.rolls.length > 0) {
+        const result = await this.consumeRollsWithFIFO(item._id!.toString(), quantity);
+        if (!result.success) {
+          throw new Error(`Failed to consume rolls for ${item.name}`);
+        }
+      }
     }
 
     const newMaterials: { inventoryId: mongoose.Types.ObjectId; name: string; quantity: number; cost: number }[] = [];
@@ -685,7 +761,7 @@ export class MongoStorage implements IStorage {
       throw new Error('Failed to update job with materials');
     }
 
-    // Only adjust inventory for items without rolls (rolls were already deducted)
+    // Only adjust inventory for items without rolls (rolls were already deducted via FIFO)
     for (const { item, quantity } of validatedMaterials) {
       if (!item.rolls || item.rolls.length === 0) {
         await this.adjustInventory(item._id!.toString(), -quantity);

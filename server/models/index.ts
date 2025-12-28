@@ -113,6 +113,7 @@ export interface IRoll {
   remaining_sqft: number;
   status?: 'Available' | 'Finished';
   unit?: 'Meters' | 'Square KM' | 'Square Feet';
+  createdAt?: Date;
 }
 
 export interface IInventoryItem extends Document {
