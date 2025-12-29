@@ -69,3 +69,37 @@ Preferred communication style: Simple, everyday language.
 - `recharts`: Dashboard charts
 - `date-fns`: Date formatting utilities
 - `zod`: Runtime schema validation
+- `html2pdf.js`: Client-side PDF generation
+
+## Recent Changes (Dec 29, 2025)
+
+### PDF Generation & Management Optimization
+**Problem**: PDF generation was inefficient - each Send WhatsApp action regenerated PDFs even if they already existed, causing duplicate files and slower performance.
+
+**Solution**: Implemented a dual-strategy PDF workflow:
+
+1. **Download Button Enhancement**:
+   - Saves PDF to server (`public/quotations/`) with customer name in filename
+   - Simultaneously downloads PDF to user's computer
+   - Filename format: `quote_CUSTOMERNAME_INQUIRYID_TIMESTAMP.pdf`
+   - Toast notification confirms successful save
+
+2. **Send WhatsApp Optimization**:
+   - Checks if PDF already exists using new `/api/check-pdf/:inquiryId` endpoint
+   - Reuses existing PDF if available (saves processing time)
+   - Only generates new PDF if none exists
+   - Shares public link to PDF in WhatsApp message
+   - Shows "Using existing quotation..." toast when PDF is found
+
+3. **Backend Improvements**:
+   - `/api/save-pdf` endpoint now accepts `customerName` query parameter
+   - Implements smart PDF filename format with customer name for easy identification
+   - Checks for existing PDFs before saving to prevent duplicates
+   - New `/api/check-pdf/:inquiryId` GET endpoint to verify PDF existence
+   - Updated `/api/delete-pdf/:inquiryId` to match flexible filename patterns
+
+**Benefits**:
+- Faster WhatsApp sharing (no regeneration needed if PDF exists)
+- Better file organization with customer names in filenames
+- Reduced server storage from duplicate PDFs
+- Consistent customer experience with shareable links
