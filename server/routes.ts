@@ -7,6 +7,9 @@ import type { JobStage, CustomerStatus } from "./models";
 import mongoose from "mongoose";
 import path from "path";
 import fs from "fs";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 async function seedAdminUser() {
   try {
@@ -60,11 +63,16 @@ export async function registerRoutes(
 
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
+      
+      // Add a small delay to ensure styles and images are loaded
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       await page.pdf({
         path: filepath,
         format: 'A4',
         margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' },
-        printBackground: true
+        printBackground: true,
+        preferCSSPageSize: true
       });
 
       await browser.close();
