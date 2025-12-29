@@ -337,40 +337,35 @@ export default function PriceInquiries() {
     };
 
     try {
-      toast({ title: 'Preparing PDF for WhatsApp...' });
+      toast({ title: 'Sending to WhatsApp...' });
       
-      // Generate the PDF blob
-      const pdfBlob = await html2pdf().from(receiptHtml).set(opt).output('blob');
-      
-      // Create a file object from the blob
-      const file = new File([pdfBlob], `Quotation_${inquiry.name}.pdf`, { type: 'application/pdf' });
+      // Trigger the PDF download so the user has the professional copy
+      html2pdf().from(receiptHtml).set(opt).save();
 
-      // Use the Web Share API if available
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Auto Gamma Quotation',
-          text: `Official Quotation for ${inquiry.name} from Auto Gamma Car Care Studio.`,
-        });
-      } else {
-        // Fallback: If Web Share isn't supported, we send the text and trigger the download
-        const details = serviceDetails.map((s: any) => `✅ *${s.name}* (${s.carType}) - ₹${s.servicePrice.toLocaleString()}`).join('\n');
-        const text = `*AUTO GAMMA - OFFICIAL QUOTATION*\n\n👤 *Customer:* ${inquiry.name}\n💰 *Total: ₹${inquiry.priceOffered.toLocaleString()}*\n\n🛠️ *Services:*\n${details}\n\nDownload the attached PDF quotation.`;
-        
-        // Open WhatsApp with the text
-        window.open(`https://wa.me/${inquiry.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
-        
-        // Also trigger the PDF download so the user can then upload it manually to the chat
-        html2pdf().from(receiptHtml).set(opt).save();
-        
-        toast({ 
-          title: 'WhatsApp message sent',
-          description: 'PDF has been downloaded. Please upload it to the WhatsApp chat.'
-        });
-      }
+      // Format a highly detailed text message for WhatsApp
+      const details = serviceDetails.map((s: any) => `✅ *${s.name}*\n   (${s.carType})\n   Price: ₹${s.servicePrice.toLocaleString()}`).join('\n\n');
+      
+      const whatsappText = `*AUTO GAMMA - OFFICIAL QUOTATION*\n\n` +
+        `👤 *Customer:* ${inquiry.name}\n` +
+        `📅 *Date:* ${format(new Date(inquiry.createdAt), 'MMMM d, yyyy')}\n` +
+        `🆔 *Quote ID:* INQ${inquiry._id.slice(-6).toUpperCase()}\n\n` +
+        `🛠️ *Requested Services:*\n${details}\n\n` +
+        (inquiry.notes ? `📝 *Special Notes:* _${inquiry.notes}_\n\n` : '') +
+        `----------------------------------\n` +
+        `💰 *GRAND TOTAL: ₹${inquiry.priceOffered.toLocaleString()}*\n` +
+        `----------------------------------\n\n` +
+        `The official PDF Quotation has been downloaded to your device. Please attach it to this chat.\n\n` +
+        `Thank you for choosing Auto Gamma! We look forward to serving you.\n\n` +
+        `📍 *Location:* Auto Gamma Car Care Studio`;
+
+      // Redirect directly to WhatsApp
+      const phoneNumber = inquiry.phone.replace(/\D/g, '');
+      const whatsappUrl = `https://wa.me/91${phoneNumber}?text=${encodeURIComponent(whatsappText)}`;
+      window.open(whatsappUrl, '_blank');
+
     } catch (error) {
-      console.error('Error sharing PDF:', error);
-      toast({ title: 'Failed to share quotation', variant: 'destructive' });
+      console.error('Error sharing to WhatsApp:', error);
+      toast({ title: 'Failed to initiate WhatsApp share', variant: 'destructive' });
     }
   };
 
