@@ -659,7 +659,7 @@ export default function PriceInquiries() {
                             className="hover-elevate bg-orange-500 border-orange-500 text-white hover:bg-orange-600"
                             onClick={() => handlePrint(inquiry)}
                           >
-                            Print
+                            Download
                           </Button>
                           <Button 
                             variant="outline" 
