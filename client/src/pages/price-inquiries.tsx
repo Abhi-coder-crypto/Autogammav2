@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import html2pdf from 'html2pdf.js';
-import autogammaLogo from "@assets/logo.png";
+const autogammaLogo = "/logo.png";
 
 const validatePhone = (phone: string): boolean => {
   const digitsOnly = phone.replace(/\D/g, '');
