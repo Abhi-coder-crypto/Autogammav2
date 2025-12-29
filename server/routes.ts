@@ -506,7 +506,7 @@ export async function registerRoutes(
         }
       }
       
-      res.json(job);
+      res.json({ ...job.toObject(), message: stage === 'Completed' ? "Service completed & invoice created!" : "Status updated" });
     } catch (error) {
       console.error("Job stage update error:", error);
       res.status(500).json({ 

@@ -89,13 +89,15 @@ export default function CustomerFunnel() {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
-      api.jobs.update(id, { stage: status }),
-    onSuccess: () => {
+      api.jobs.updateStage(id, status),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      toast({ title: "Status updated" });
+      const message = data.stage === 'Completed' ? "Service completed & invoice created!" : "Status updated";
+      toast({ title: message });
     },
-    onError: () => {
-      toast({ title: "Failed to update status", variant: "destructive" });
+    onError: (error: any) => {
+      const errorMsg = error?.message || "Failed to update status";
+      toast({ title: errorMsg, variant: "destructive" });
     },
   });
 
