@@ -191,25 +191,102 @@ export default function PriceInquiries() {
   const queryClient = useQueryClient();
 
   const handlePrint = (inquiry: any) => {
-    const receiptElement = document.getElementById(`receipt-${inquiry._id}`);
-    if (!receiptElement) return;
+    const serviceDetails = inquiry.serviceDetailsJson ? JSON.parse(inquiry.serviceDetailsJson) : [];
+    
+    const receiptHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; background: white;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="${autogammaLogo}" alt="Auto Gamma Logo" style="height: 80px; margin-bottom: 10px;" />
+          <h1 style="font-size: 28px; font-weight: bold; color: #000; margin: 0; letter-spacing: 1px;">AUTO GAMMA</h1>
+          <p style="font-size: 14px; color: #666; margin-top: 5px;">Professional Car Care & Detailing Studio</p>
+        </div>
+
+        <div style="border-top: 2px solid #eee; border-bottom: 2px solid #eee; padding: 20px 0; margin-bottom: 30px; display: flex; justify-content: space-between;">
+          <div>
+            <h2 style="font-size: 12px; font-weight: bold; color: #999; text-transform: uppercase; margin: 0 0 5px 0;">Customer Details</h2>
+            <p style="font-size: 16px; font-weight: bold; margin: 0;">${inquiry.name}</p>
+            <p style="font-size: 14px; margin: 5px 0 0 0;">Phone: ${inquiry.phone}</p>
+            ${inquiry.email ? `<p style="font-size: 14px; margin: 2px 0 0 0;">Email: ${inquiry.email}</p>` : ''}
+          </div>
+          <div style="text-align: right;">
+            <h2 style="font-size: 12px; font-weight: bold; color: #999; text-transform: uppercase; margin: 0 0 5px 0;">Quotation Info</h2>
+            <p style="font-size: 14px; margin: 0;">ID: INQ${inquiry._id.slice(-6).toUpperCase()}</p>
+            <p style="font-size: 14px; margin: 5px 0 0 0;">Date: ${format(new Date(inquiry.createdAt), 'MMMM d, yyyy')}</p>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h2 style="font-size: 18px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">Services Requested</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f9f9f9;">
+                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee; font-size: 14px;">Service Description</th>
+                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #eee; font-size: 14px;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${serviceDetails.map((item: any) => `
+                <tr>
+                  <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                    <div style="font-weight: bold; font-size: 15px;">${item.name}</div>
+                    <div style="font-size: 12px; color: #666;">Vehicle Category: ${item.carType}</div>
+                  </td>
+                  <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold; font-size: 15px;">
+                    ₹${item.servicePrice.toLocaleString()}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        ${inquiry.notes ? `
+          <div style="margin-bottom: 30px; background: #fffcf5; border: 1px solid #fdf2d1; padding: 15px; border-radius: 5px;">
+            <h3 style="font-size: 12px; font-weight: bold; color: #b45309; text-transform: uppercase; margin: 0 0 5px 0;">Special Notes</h3>
+            <p style="font-size: 14px; color: #451a03; margin: 0; font-style: italic;">"${inquiry.notes}"</p>
+          </div>
+        ` : ''}
+
+        <div style="background: #000; color: white; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 18px; font-weight: bold; text-transform: uppercase;">Total Quotation Amount</span>
+          <span style="font-size: 24px; font-weight: bold;">₹${inquiry.priceOffered.toLocaleString()}</span>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center; color: #999; font-size: 12px;">
+          <p>This is a computer-generated quotation.</p>
+          <p style="margin-top: 5px;">© ${new Date().getFullYear()} Auto Gamma Car Care Studio. All rights reserved.</p>
+        </div>
+      </div>
+    `;
 
     const opt = {
-      margin: 10,
+      margin: 0,
       filename: `Quotation_${inquiry.name}_${inquiry._id.slice(-6)}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 3, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    } as any;
+    };
 
-    html2pdf().from(receiptElement).set(opt).save();
+    html2pdf().from(receiptHtml).set(opt).save();
     toast({ title: 'Quotation generating...' });
   };
 
   const handleSendWhatsApp = (inquiry: any) => {
     const serviceDetails = inquiry.serviceDetailsJson ? JSON.parse(inquiry.serviceDetailsJson) : [];
-    const details = serviceDetails.map((s: any) => `• ${s.name}: ₹${s.servicePrice.toLocaleString()}`).join('\n');
-    const text = `*AUTO GAMMA - QUOTATION*\n\n*Customer Details:*\nName: ${inquiry.name}\nPhone: ${inquiry.phone}\n\n*Services Requested:*\n${details}\n\n*Total Quotation Amount: ₹${inquiry.priceOffered.toLocaleString()}*\n\nThank you for choosing Auto Gamma!`;
+    const details = serviceDetails.map((s: any) => `✅ *${s.name}*\n   (${s.carType})\n   Price: ₹${s.servicePrice.toLocaleString()}`).join('\n\n');
+    
+    const text = `*AUTO GAMMA - OFFICIAL QUOTATION*\n\n` +
+      `👤 *Customer:* ${inquiry.name}\n` +
+      `📅 *Date:* ${format(new Date(inquiry.createdAt), 'MMMM d, yyyy')}\n` +
+      `🆔 *Quote ID:* INQ${inquiry._id.slice(-6).toUpperCase()}\n\n` +
+      `🛠️ *Requested Services:*\n${details}\n\n` +
+      `----------------------------------\n` +
+      `💰 *GRAND TOTAL: ₹${inquiry.priceOffered.toLocaleString()}*\n` +
+      `----------------------------------\n\n` +
+      `Thank you for choosing Auto Gamma! We look forward to serving you.\n\n` +
+      `📍 *Location:* Auto Gamma Car Care Studio\n` +
+      `📞 *Contact:* +91 [Your Contact]`;
+
     window.open(`https://wa.me/${inquiry.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
