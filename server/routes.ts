@@ -47,6 +47,20 @@ export async function registerRoutes(
         return res.status(400).json({ message: "HTML content is required" });
       }
 
+      // Check for existing PDF for this inquiry to avoid duplicates
+      if (fs.existsSync(quotationsDir)) {
+        const files = fs.readdirSync(quotationsDir);
+        const existingFile = files.find(f => f.startsWith(`quote_${id}_`) && f.endsWith('.pdf'));
+
+        if (existingFile) {
+          const protocol = req.headers['x-forwarded-proto'] || 'http';
+          const host = req.headers['host'];
+          return res.json({ url: `${protocol}://${host}/q/${existingFile}` });
+        }
+      } else {
+        fs.mkdirSync(quotationsDir, { recursive: true });
+      }
+
       const filename = `quote_${id}_${Date.now()}.pdf`;
       const filepath = path.join(quotationsDir, filename);
 
@@ -712,9 +726,28 @@ export async function registerRoutes(
 
   app.delete("/api/price-inquiries/:id", async (req, res) => {
     try {
-      await storage.deletePriceInquiry(req.params.id);
+      const { id } = req.params;
+      
+      // Delete associated quotation files
+      const quotationsDir = path.join(process.cwd(), "public", "quotations");
+      if (fs.existsSync(quotationsDir)) {
+        const files = fs.readdirSync(quotationsDir);
+        files.forEach(file => {
+          if (file.startsWith(`quote_${id}_`)) {
+            try {
+              fs.unlinkSync(path.join(quotationsDir, file));
+              console.log(`Deleted quotation file: ${file}`);
+            } catch (err) {
+              console.error(`Error deleting file ${file}:`, err);
+            }
+          }
+        });
+      }
+
+      await storage.deletePriceInquiry(id);
       res.json({ success: true });
     } catch (error) {
+      console.error("Delete inquiry error:", error);
       res.status(500).json({ message: "Failed to delete price inquiry" });
     }
   });
